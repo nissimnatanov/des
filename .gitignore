@@ -1,0 +1,29 @@
+# Prerequisites
+*.d
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+# Fortran module files
+*.mod
+*.smod
+-
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+-
+# Executables
+*.exe
+*.out
+*.app
+-
+# Other redundant files
+*.DS_Store
+**/bin/
+tmp/*
+.idea
