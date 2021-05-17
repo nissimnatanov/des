@@ -1,0 +1,11 @@
+/SudokuBoard.class
+/SudokuBoardCell.class
+/SudokuConfiguration.class
+/SudokuFormatter.class
+/SudokuIndexes.class
+/SudokuValue.class
+/SudokuValueSet.class
+/SudokuBoardImpl.class
+/SudokuSerializer.class
+/SudokuBoardSerializer.class
+/SudokuBoardSerializer$Builder.class

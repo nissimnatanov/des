@@ -1,0 +1,4 @@
+<SudokuBoard gameLevel="Medium" gameId="21001343">
+  <BoardValues>000700800000040030000009001600500000010030040005001007500200600030080090007000002</BoardValues>
+  <ValueStates>wwwrwwrwwwwwwrwwrwwwwwwrwwrrwwrwwwwwwrwwrwwrwwwrwwrwwrrwwrwwrwwwrwwrwwrwwwrwwwwwr</ValueStates>
+</SudokuBoard>
