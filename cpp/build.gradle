@@ -1,0 +1,19 @@
+
+model {
+    components {
+        core(NativeLibrarySpec) {
+            sources {
+                cpp {
+                    source {
+                        srcDir "./"
+                        exclude "test/**"
+                        include "**/*.cpp"
+                    }
+                    exportedHeaders {
+                        srcDir "inc"
+                    }
+                }
+            }
+        }
+    }
+}
