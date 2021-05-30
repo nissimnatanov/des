@@ -17,7 +17,7 @@ struct LevelStats
     LevelStats() : total_count(0), total_complexity(0), total_value_count(0) {}
 };
 
-void generate()
+void generate(int count)
 {
     map<SudokuLevel, LevelStats> allStats;
 
@@ -26,7 +26,41 @@ void generate()
     auto last = start;
     int less_than_20 = 0;
     int timeouts = 0;
-    while (true)
+    auto printStats = [&](bool always) {
+        auto end = std::chrono::steady_clock::now();
+        double elapsed_seconds = chrono::duration_cast<chrono::duration<double>>(end - last).count();
+        if (always || elapsed_seconds > 60)
+        {
+            double elapsed_minutes_since_start =
+                chrono::duration_cast<chrono::duration<double>>(end - start).count() / 60;
+            last = start + chrono::minutes((int)elapsed_minutes_since_start);
+            cerr << "Status [" << elapsed_minutes_since_start << "] { " << endl;
+            cerr << "  All: total = " << total
+                 << ", 19- = " << less_than_20
+                 << ", timeouts = " << timeouts
+                 << endl;
+            for (auto s : allStats)
+            {
+                int complexity_average = 0;
+                if (s.second.total_count != 0)
+                {
+                    complexity_average = s.second.total_complexity / s.second.total_count;
+                }
+                double value_count_average = s.second.total_value_count;
+                if (s.second.total_value_count != 0)
+                {
+                    value_count_average /= s.second.total_count;
+                }
+                cerr << "  " << s.first << ": total = " << s.second.total_count
+                     << ", complexity average " << complexity_average
+                     << ", value count average " << value_count_average
+                     << endl;
+            }
+            cerr << "}" << endl;
+        }
+    };
+
+    for (int i = 0; i < count; i++)
     {
         SudokuBoardGeneratorShared generator = newBoardGenerator();
         SudokuResultConstShared result = generator->generate(SudokuLevel::BLACKHOLE);
@@ -56,38 +90,10 @@ void generate()
             cout << "TIMEOUT detected: " << serializeBoard(result->getOriginalBoard().get()) << endl;
         }
 
-        auto end = std::chrono::steady_clock::now();
-        double elapsed_seconds = chrono::duration_cast<chrono::duration<double>>(end - last).count();
-        if (elapsed_seconds > 60)
-        {
-            double elapsed_minutes_since_start =
-                chrono::duration_cast<chrono::duration<double>>(end - start).count() / 60;
-            last = start + chrono::minutes((int)elapsed_minutes_since_start);
-            cerr << "Status [" << elapsed_minutes_since_start << "] { " << endl;
-            cerr << "  All: total = " << total
-                 << ", 19- = " << less_than_20
-                 << ", timeouts = " << timeouts
-                 << endl;
-            for (auto s : allStats)
-            {
-                int complexity_average = 0;
-                if (s.second.total_count != 0)
-                {
-                    complexity_average = s.second.total_complexity / s.second.total_count;
-                }
-                double value_count_average = s.second.total_value_count;
-                if (s.second.total_value_count != 0)
-                {
-                    value_count_average /= s.second.total_count;
-                }
-                cerr << "  " << s.first << ": total = " << s.second.total_count
-                     << ", complexity average " << complexity_average
-                     << ", value count average " << value_count_average
-                     << endl;
-            }
-            cerr << "}" << endl;
-        }
+        printStats(false);
     }
+
+    printStats(true);
 }
 
 void runSudokuBoardGeneratorTests()
@@ -96,6 +102,6 @@ void runSudokuBoardGeneratorTests()
     cerr << "Running SudokuBoardGenerator tests..." << endl;
 
     bool prevIntegrityChecks = setIntegrityChecks(false);
-    generate();
+    generate(1);
     setIntegrityChecks(prevIntegrityChecks);
 }

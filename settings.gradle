@@ -8,4 +8,3 @@
  */
 
 rootProject.name = 'Dark Evil Sudoku'
-include 'cpp'
