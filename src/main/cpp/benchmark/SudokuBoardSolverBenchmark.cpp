@@ -1,5 +1,5 @@
 #include <iostream>
-#include "SudokuSolverTest.h"
+#include "SudokuSolver.h"
 #include "asserts.h"
 
 using namespace std;
@@ -516,10 +516,10 @@ void testTimedOutBoards()
     testTimedOutBoards(timeouts);
 }
 
-void runSudokuSolverTests()
+void runSudokuBoardSamplesBenchmark()
 {
     cerr << "-----------------------------" << endl;
-    cerr << "Running SudokuSolver tests..." << endl;
+    cerr << "Running Sudoku Board Samples Benchmark..." << endl;
 
     SteadyTimePoint startTime = SteadyClock::now();
 

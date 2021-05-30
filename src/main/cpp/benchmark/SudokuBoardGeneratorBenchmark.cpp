@@ -2,8 +2,8 @@
 #include <chrono>
 #include <map>
 
-#include "SudokuBoardGeneratorTest.h"
 #include "SudokuSolver.h"
+#include "SudokuBoardGenerator.h"
 #include "asserts.h"
 
 using namespace std;
@@ -17,7 +17,7 @@ struct LevelStats
     LevelStats() : total_count(0), total_complexity(0), total_value_count(0) {}
 };
 
-void generate(int count)
+void generate(SudokuLevel level, int count)
 {
     map<SudokuLevel, LevelStats> allStats;
 
@@ -63,7 +63,7 @@ void generate(int count)
     for (int i = 0; i < count; i++)
     {
         SudokuBoardGeneratorShared generator = newBoardGenerator();
-        SudokuResultConstShared result = generator->generate(SudokuLevel::BLACKHOLE);
+        SudokuResultConstShared result = generator->generate(level);
         if (result->getStatus() == SudokuSolverStatus::SUCCEEDED)
         {
             total++;
@@ -96,12 +96,12 @@ void generate(int count)
     printStats(true);
 }
 
-void runSudokuBoardGeneratorTests()
+void runSudokuBoardGeneratorBenchmark(SudokuLevel level, int count)
 {
     cerr << "-------------------------------------" << endl;
-    cerr << "Running SudokuBoardGenerator tests..." << endl;
+    cerr << "Running Sudoku Board Generator Benchmark..." << endl;
 
     bool prevIntegrityChecks = setIntegrityChecks(false);
-    generate(1);
+    generate(level, count);
     setIntegrityChecks(prevIntegrityChecks);
 }

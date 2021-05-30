@@ -5,8 +5,7 @@
 #include "board/SudokuValueTest.h"
 #include "board/SudokuBoardTest.h"
 #include "generators/SudokuSolutionGeneratorTest.h"
-#include "generators/SudokuBoardGeneratorTest.h"
-#include "solver/SudokuSolverTest.h"
+#include "SudokuBoardBenchmark.h"
 
 using namespace std;
 
@@ -21,8 +20,8 @@ int main(int argc, char *argv[])
         runSudokuValueTests();
         runSudokuBoardTests();
         runSudokuSolutionGeneratorTests();
-        runSudokuBoardGeneratorTests();
-        runSudokuSolverTests();
+        runSudokuBoardGeneratorBenchmark(SudokuLevel::NIGHTMARE, 1);
+        runSudokuBoardSamplesBenchmark();
         cout << "Done!" << endl;
     }
     catch (assertion_error ae)
@@ -30,6 +29,14 @@ int main(int argc, char *argv[])
         cerr << "Test failed!" << endl;
         cerr << "Test case: " << ae.testCase() << endl;
         cerr << "Location: " << ae.file() << ":" << ae.line() << endl;
+    }
+    catch (logic_error le)
+    {
+        cerr << "Test failed!" << endl;
+        cerr << "Exception: " << le.what() << endl;
+    }
+    catch (...) {
+        cerr << "Got exception, cannot understand its type!" << endl;
     }
     // assert(greeter.greeting().compare("Hello, World!") == 0);
     return 0;
