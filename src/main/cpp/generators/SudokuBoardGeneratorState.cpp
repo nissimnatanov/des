@@ -162,7 +162,7 @@ SudokuResultConstShared SudokuBoardGeneratorState::solveInternal() const
     else if (result->getStatus() != SudokuSolverStatus::SUCCEEDED)
     {
         cerr << serializeBoard(board().get());
-        throw logic_error("failed to solve previosly proven board");
+        throw logic_error("failed to solve previously proven board");
     }
 
     checkIntegrity();
@@ -284,6 +284,9 @@ bool SudokuBoardGeneratorState::removeWithRetries(
     {
         keepGoing = tryRemove(r, minToRemove, maxToRemove, maxRetries);
         keepGoing = keepGoing && shouldContinue(r);
+        if (keepGoing) {
+            _lastResult = nullptr;
+        }
     }
 
     // Done!
@@ -305,6 +308,9 @@ void SudokuBoardGeneratorState::removeOneByOne(Random &r)
     {
         keepGoing = tryRemoveOne(r);
         keepGoing = keepGoing && shouldContinue(r);
+        if (keepGoing) {
+            _lastResult = nullptr;
+        }
     }
     checkIntegrity();
 }

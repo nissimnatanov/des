@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
         runSudokuValueTests();
         runSudokuBoardTests();
         runSudokuSolutionGeneratorTests();
-        runSudokuBoardGeneratorBenchmark(SudokuLevel::NIGHTMARE, 1);
+        runSudokuBoardGeneratorBenchmark(SudokuLevel::EVIL, 10);
         runSudokuBoardSamplesBenchmark();
         cout << "Done!" << endl;
     }
