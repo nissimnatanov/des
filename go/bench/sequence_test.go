@@ -7,9 +7,9 @@ import (
 )
 
 func BenchmarkIndexFromSquare(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		for square := 0; square < board.SequenceSize; square++ {
-			for cell := 0; cell < board.SequenceSize; cell++ {
+	for range b.N {
+		for square := range board.SequenceSize {
+			for cell := range board.SequenceSize {
 				if board.IndexFromSquare(square, cell) < 0 {
 					b.FailNow()
 				}

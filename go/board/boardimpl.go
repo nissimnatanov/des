@@ -5,19 +5,17 @@ import "fmt"
 type boardImpl struct {
 	boardBase
 
-	rowSets                  [SequenceSize]ValueSet
-	colSets                  [SequenceSize]ValueSet
-	squareSets               [SequenceSize]ValueSet
-	valueCounts              [SequenceSize + 1]int
-	validFlags               BitSet81
-	userDisallowedValues     [BoardSize]ValueSet
-	suppressRecalculateCount int
-	needToRecalculate        bool
+	rowSets              [SequenceSize]ValueSet
+	colSets              [SequenceSize]ValueSet
+	squareSets           [SequenceSize]ValueSet
+	valueCounts          [SequenceSize + 1]int
+	validFlags           bitSet81
+	userDisallowedValues [BoardSize]ValueSet
 
 	// Allowed values cache is special - the moment at least one value changes, it is easier to invalidate
 	// all indexes instead of recalculating related ones.
 	allowedValuesCache           [BoardSize]ValueSet
-	allowedValuesCacheValidFlags BitSet81
+	allowedValuesCacheValidFlags bitSet81
 }
 
 func (b *boardImpl) RowSet(row int) ValueSet {
@@ -34,15 +32,15 @@ func (b *boardImpl) SquareSet(square int) ValueSet {
 
 func (b *boardImpl) AllowedSet(index int) ValueSet {
 	v := b.Get(index)
-	if !v.IsEmpty() {
-		return EmptySet()
+	if v != 0 {
+		return EmptyValueSet()
 	}
 
 	if b.allowedValuesCacheValidFlags.Get(index) {
 		return b.allowedValuesCache[index]
 	}
 
-	disallowedValues := Union(b.relatedSet(index), b.userDisallowedValues[index])
+	disallowedValues := ValueSetUnion(b.relatedSet(index), b.userDisallowedValues[index])
 	allowedValues := disallowedValues.Complement()
 	b.allowedValuesCacheValidFlags.Set(index, true)
 	b.allowedValuesCache[index] = allowedValues
@@ -50,7 +48,7 @@ func (b *boardImpl) AllowedSet(index int) ValueSet {
 }
 
 func (b *boardImpl) relatedSet(index int) ValueSet {
-	return Union(
+	return ValueSetUnion(
 		b.RowSet(RowFromIndex(index)),
 		b.ColumnSet(ColumnFromIndex(index)),
 		b.SquareSet(SquareFromIndex(index)))
@@ -61,7 +59,7 @@ func (b *boardImpl) Count(v Value) int {
 }
 
 func (b *boardImpl) FreeCellCount() int {
-	return b.Count(Empty)
+	return b.Count(0)
 }
 
 func (b *boardImpl) IsValidCell(index int) bool {
@@ -77,7 +75,7 @@ func (b *boardImpl) IsSolved() bool {
 }
 
 // Empty board in Edit mode
-func NewBoard() Board {
+func New() Board {
 	var b boardImpl
 	b.init(Edit)
 	return &b
@@ -112,16 +110,16 @@ func (b *boardImpl) DisallowSet(index int, vs ValueSet) {
 		panic("Cannot set disallowed values on immutable board")
 	}
 	if vs.IsEmpty() {
-		// does not make sence
+		// does not make sense
 		panic("Nothing to disallow")
 	}
 
-	b.userDisallowedValues[index] = Union(b.userDisallowedValues[index], vs)
+	b.userDisallowedValues[index] = ValueSetUnion(b.userDisallowedValues[index], vs)
 	b.allowedValuesCacheValidFlags.Set(index, false)
 }
 
 func (b *boardImpl) DisallowReset(index int) {
-	b.userDisallowedValues[index] = EmptySet()
+	b.userDisallowedValues[index] = EmptyValueSet()
 	b.allowedValuesCacheValidFlags.Set(index, false)
 }
 
@@ -141,21 +139,20 @@ func (b *boardImpl) Restart() {
 		panic("Cannot restart an immutable board")
 	}
 
-	b.suppressRecalculations()
-
-	for i := 0; i < BoardSize; i++ {
+	// for faster reset, update the values first then force recalculation of all the stats
+	for i := range BoardSize {
 		if !b.IsReadOnly(i) {
-			b.Set(i, Empty)
+			b.setInternal(i, 0, false)
 		}
 	}
 
-	b.resumeRecalculations()
+	b.recalculateAllStats()
 }
 
 // only sets non-zero values
 func (b *boardImpl) init(mode BoardMode) {
 	b.boardBase.init(mode)
-	b.valueCounts[Empty] = BoardSize
+	b.valueCounts[0] = BoardSize
 	b.validFlags.SetAll(true)
 	b.checkIntegrity()
 }
@@ -164,9 +161,7 @@ func (b *boardImpl) copyStats(source *boardImpl) {
 	if source == nil {
 		panic("Cannot copy nil board")
 	}
-	if source.suppressRecalculateCount != 0 {
-		panic("Cannot copy board that has calculations suppressed.")
-	}
+
 	copy(b.rowSets[:], source.rowSets[:])
 	copy(b.colSets[:], source.colSets[:])
 	copy(b.squareSets[:], source.squareSets[:])
@@ -175,8 +170,6 @@ func (b *boardImpl) copyStats(source *boardImpl) {
 	copy(b.userDisallowedValues[:], source.userDisallowedValues[:])
 	copy(b.allowedValuesCache[:], source.allowedValuesCache[:])
 	b.allowedValuesCacheValidFlags = source.allowedValuesCacheValidFlags
-	b.needToRecalculate = source.needToRecalculate
-	b.suppressRecalculateCount = 0
 }
 
 func (b *boardImpl) updateStats(index int, oldValue, newValue Value) bool {
@@ -187,7 +180,7 @@ func (b *boardImpl) updateStats(index int, oldValue, newValue Value) bool {
 	// if board was valid before and the new value does not appear in related cells,
 	// there is no need to re-validate the board.
 	valid := b.IsValid()
-	if !newValue.IsEmpty() {
+	if newValue != 0 {
 		valid = valid && !b.relatedSet(index).Contains(newValue)
 	}
 	if !valid {
@@ -199,14 +192,14 @@ func (b *boardImpl) updateStats(index int, oldValue, newValue Value) bool {
 	col := ColumnFromIndex(index)
 	square := SquareFromIndex(index)
 
-	if !oldValue.IsEmpty() {
+	if oldValue != 0 {
 		b.rowSets[row].Remove(oldValue)
 		b.colSets[col].Remove(oldValue)
 		b.squareSets[square].Remove(oldValue)
 	}
 	b.valueCounts[oldValue]--
 
-	if !newValue.IsEmpty() {
+	if newValue != 0 {
 		b.rowSets[row].Add(newValue)
 		b.colSets[col].Add(newValue)
 		b.squareSets[square].Add(newValue)
@@ -216,48 +209,30 @@ func (b *boardImpl) updateStats(index int, oldValue, newValue Value) bool {
 	return false
 }
 
-func (b *boardImpl) suppressRecalculations() {
-	b.suppressRecalculateCount++
-}
-
-func (b *boardImpl) resumeRecalculations() {
-	b.suppressRecalculateCount--
-	if b.suppressRecalculateCount == 0 && b.needToRecalculate {
-		b.needToRecalculate = false
-		b.recalculateAllStats()
-	}
-}
-
 func (b *boardImpl) recalculateAllStats() {
-	if b.suppressRecalculateCount > 0 {
-		// wait for resume
-		b.needToRecalculate = true
-		return
-	}
-
 	// assume valid unless proven otherwise inside calcSequenceSet
 	b.validFlags.SetAll(true)
 	// force recalculation of allowed values
 	b.allowedValuesCacheValidFlags.Reset()
 
 	// value counts
-	for i := 0; i <= SequenceSize; i++ {
+	for i := range SequenceSize {
 		b.valueCounts[i] = 0
 	}
-	for i := 0; i < BoardSize; i++ {
+	for i := range BoardSize {
 		b.valueCounts[b.Get(i)]++
 	}
 
 	// init rowSets, colSets; and squareSets
 	// validFlags are unset if dupe detected
-	for seq := 0; seq < SequenceSize; seq++ {
+	for seq := range SequenceSize {
 		b.rowSets[seq] = b.validateSequence(RowSequence(seq))
 		b.colSets[seq] = b.validateSequence(ColumnSequence(seq))
 		b.squareSets[seq] = b.validateSequence(SquareSequence(seq))
 	}
 }
 
-func (b *boardImpl) validateSequence(s *Sequence) ValueSet {
+func (b *boardImpl) validateSequence(s Sequence) ValueSet {
 	vs, dupes := b.calcSequence(s)
 	for vi := dupes.Iterator(); vi.Next(); {
 		b.markSequenceInvalid(vi.Value(), s)
@@ -265,12 +240,12 @@ func (b *boardImpl) validateSequence(s *Sequence) ValueSet {
 	return vs
 }
 
-func (b *boardImpl) markSequenceInvalid(v Value, s *Sequence) {
+func (b *boardImpl) markSequenceInvalid(v Value, s Sequence) {
 	readOnly := []int{}
 	foundReadWrite := false
 
-	for si := s.Iterator(); si.Next(); {
-		index := si.Value()
+	for si := range s.Size() {
+		index := s.Get(si)
 		if b.Get(index) != v {
 			continue
 		}
@@ -296,17 +271,17 @@ func (b *boardImpl) checkIntegrity() {
 
 	var valueCounts [SequenceSize + 1]int
 
-	for i := 0; i < BoardSize; i++ {
+	for i := range BoardSize {
 		v := b.Get(i)
 		valueCounts[v] += 1
 
-		if !v.IsEmpty() {
+		if v != 0 {
 			// check this value is disallowed in other places
 			rs := RelatedSequence(i)
-			for ri := rs.Iterator(); ri.Next(); {
-				related := ri.Value()
+			for ri := range rs.Size() {
+				related := rs.Get(ri)
 				rv := b.Get(related)
-				if rv.IsEmpty() {
+				if rv == 0 {
 					if b.AllowedSet(related).Contains(v) {
 						panic("value should not be allowed")
 					}
@@ -336,7 +311,7 @@ func (b *boardImpl) checkIntegrity() {
 			col := ColumnFromIndex(i)
 			square := SquareFromIndex(i)
 
-			disallowedValuesExpected := Union(
+			disallowedValuesExpected := ValueSetUnion(
 				b.rowSets[row],
 				b.colSets[col],
 				b.squareSets[square],
@@ -351,7 +326,7 @@ func (b *boardImpl) checkIntegrity() {
 		}
 	}
 
-	for v := 0; v <= SequenceSize; v++ {
+	for v := range SequenceSize {
 		if valueCounts[v] != b.valueCounts[v] {
 			panic(
 				fmt.Sprintf(

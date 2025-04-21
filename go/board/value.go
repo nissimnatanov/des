@@ -4,40 +4,21 @@ import "fmt"
 
 type Value int8
 
-const (
-	Empty Value = iota // 0
-	One
-	Two
-	Three
-	Four
-	Five
-	Six
-	Seven
-	Eight
-	Nine
-	MinValue = One
-	MaxValue = Nine
-)
-
 type ValueSet struct {
 	mask int16
 }
 
-func EmptySet() ValueSet {
+func EmptyValueSet() ValueSet {
 	return ValueSet{0}
 }
 
-func FullSet() ValueSet {
+func FullValueSet() ValueSet {
 	return ValueSet{0x1FF}
-}
-
-func (v Value) IsEmpty() bool {
-	return v == Empty
 }
 
 func (v Value) Validate() {
 	if v < 0 || v > 9 {
-		panic("Wrong Value")
+		panic("Value out of range")
 	}
 }
 
@@ -47,23 +28,23 @@ func (vs ValueSet) IsEmpty() bool {
 
 func (vs *ValueSet) Add(v Value) {
 	v.Validate()
-	*vs = Union(*vs, v.AsSet())
+	*vs = ValueSetUnion(*vs, v.AsSet())
 }
 
 func (vs *ValueSet) Remove(v Value) {
 	v.Validate()
-	*vs = Intersect(*vs, v.AsSet().Complement())
+	*vs = ValueSetIntersect(*vs, v.AsSet().Complement())
 }
 
 func (v Value) AsSet() ValueSet {
 	v.Validate()
-	if v.IsEmpty() {
-		return EmptySet()
+	if v == 0 {
+		return EmptyValueSet()
 	}
 	return ValueSet{1 << (v - 1)}
 }
 
-func Union(vs1 ValueSet, vs2 ValueSet, more ...ValueSet) ValueSet {
+func ValueSetUnion(vs1 ValueSet, vs2 ValueSet, more ...ValueSet) ValueSet {
 	mask := vs1.mask | vs2.mask
 	for _, vs := range more {
 		mask |= vs.mask
@@ -79,7 +60,7 @@ func NewValueSet(v1 Value, v2 Value, more ...Value) ValueSet {
 	return ValueSet{mask}
 }
 
-func Intersect(vs1 ValueSet, vs2 ValueSet, more ...ValueSet) ValueSet {
+func ValueSetIntersect(vs1 ValueSet, vs2 ValueSet, more ...ValueSet) ValueSet {
 	mask := vs1.mask & vs2.mask
 	for _, vs := range more {
 		mask &= vs.mask
@@ -88,7 +69,7 @@ func Intersect(vs1 ValueSet, vs2 ValueSet, more ...ValueSet) ValueSet {
 }
 
 func (vs ValueSet) Complement() ValueSet {
-	return ValueSet{FullSet().mask &^ vs.mask}
+	return ValueSet{FullValueSet().mask &^ vs.mask}
 }
 
 func (vs ValueSet) ContainsAll(other ValueSet) bool {
@@ -112,7 +93,6 @@ func (vs ValueSet) Combined() int {
 	return valueSetInfoCache[vs.mask].combined
 }
 
-// Use AS IS - implementation is already a reference
 type ValueIterator struct {
 	values []Value
 	cur    int
@@ -153,8 +133,8 @@ func newSetInfo(mask int) valueSetInfo {
 	values := []Value{}
 
 	for v := 1; v <= 9; v++ {
-		vmask := 1 << (v - 1)
-		if mask&vmask != 0 {
+		vMask := 1 << (v - 1)
+		if mask&vMask != 0 {
 			values = append(values, Value(v))
 			combined = combined*10 + v
 		}
@@ -164,7 +144,7 @@ func newSetInfo(mask int) valueSetInfo {
 
 func initValueSetInfo() []valueSetInfo {
 	var valueSets []valueSetInfo
-	for mask := 0; mask <= 0x1FF; mask++ {
+	for mask := range 0x1FF + 1 {
 		valueSets = append(valueSets, newSetInfo(mask))
 	}
 	return valueSets

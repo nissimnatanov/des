@@ -16,7 +16,7 @@ type solutionImpl struct {
 
 func (sol *solutionImpl) validateAndLock() error {
 	var err error
-	for seq := 0; seq < SequenceSize; seq++ {
+	for seq := range SequenceSize {
 		err = sol.validateSequence(RowSequence(seq))
 		if err != nil {
 			return err
@@ -38,6 +38,7 @@ func (sol *solutionImpl) clone(mode BoardMode) Board {
 	var newBoard boardImpl
 	newBoard.init(mode)
 	newBoard.copyValues(&sol.boardBase)
+	newBoard.recalculateAllStats()
 	return &newBoard
 }
 
@@ -51,12 +52,12 @@ func (sol *solutionImpl) Play() Board {
 	return b
 }
 
-func (sol *solutionImpl) validateSequence(s *Sequence) error {
+func (sol *solutionImpl) validateSequence(s Sequence) error {
 	vs, dupes := sol.calcSequence(s)
 	if !dupes.IsEmpty() {
 		return fmt.Errorf("duplicate values")
 	}
-	if vs != FullSet() {
+	if vs != FullValueSet() {
 		return fmt.Errorf("incomplete board")
 	}
 	return nil

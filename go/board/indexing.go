@@ -31,21 +31,21 @@ func IndexFromSquare(square, cell int) int {
 	return indexFromSquareCache[square][cell]
 }
 
-func RowSequence(row int) *Sequence {
-	return &Sequence{indexFromCoordinatesCache[row][:]}
+func RowSequence(row int) Sequence {
+	return Sequence{indexFromCoordinatesCache[row][:]}
 }
 
-func ColumnSequence(col int) *Sequence {
-	return &Sequence{columnIndexes[col][:]}
+func ColumnSequence(col int) Sequence {
+	return Sequence{columnIndexes[col][:]}
 }
 
-func SquareSequence(square int) *Sequence {
-	return &Sequence{indexFromSquareCache[square][:]}
+func SquareSequence(square int) Sequence {
+	return Sequence{indexFromSquareCache[square][:]}
 }
 
 func initRowFromIndex() [BoardSize]int {
 	var cache [BoardSize]int
-	for i := 0; i < BoardSize; i++ {
+	for i := range BoardSize {
 		cache[i] = i / 9
 	}
 	return cache
@@ -53,7 +53,7 @@ func initRowFromIndex() [BoardSize]int {
 
 func initColFromIndex() [BoardSize]int {
 	var cache [BoardSize]int
-	for i := 0; i < BoardSize; i++ {
+	for i := range BoardSize {
 		cache[i] = i % 9
 	}
 	return cache
@@ -61,7 +61,7 @@ func initColFromIndex() [BoardSize]int {
 
 func initSquareFromIndex() [BoardSize]int {
 	var cache [BoardSize]int
-	for i := 0; i < BoardSize; i++ {
+	for i := range BoardSize {
 		square := i / 3
 		square = (square/9)*3 + square%3
 		cache[i] = square
@@ -71,7 +71,7 @@ func initSquareFromIndex() [BoardSize]int {
 
 func initSquareCellFromIndex() [BoardSize]int {
 	var cache [BoardSize]int
-	for i := 0; i < BoardSize; i++ {
+	for i := range BoardSize {
 		// rows (3,4,5) and (6,7,8) are equivalent to (0,1,2)
 		row := (i / 9) % 3
 		squareCell := i%3 + row*3
@@ -82,8 +82,8 @@ func initSquareCellFromIndex() [BoardSize]int {
 
 func initIndexFromCoordinates() [SequenceSize][SequenceSize]int {
 	var cache [SequenceSize][SequenceSize]int
-	for row := 0; row < SequenceSize; row++ {
-		for col := 0; col < SequenceSize; col++ {
+	for row := range SequenceSize {
+		for col := range SequenceSize {
 			cache[row][col] = row*9 + col
 		}
 	}
@@ -92,8 +92,8 @@ func initIndexFromCoordinates() [SequenceSize][SequenceSize]int {
 
 func initColumnIndexes() [SequenceSize][SequenceSize]int {
 	var cache [SequenceSize][SequenceSize]int
-	for col := 0; col < SequenceSize; col++ {
-		for row := 0; row < SequenceSize; row++ {
+	for col := range SequenceSize {
+		for row := range SequenceSize {
 			cache[col][row] = row*9 + col
 		}
 	}
@@ -102,8 +102,8 @@ func initColumnIndexes() [SequenceSize][SequenceSize]int {
 
 func initIndexFromSquare() [SequenceSize][SequenceSize]int {
 	var cache [SequenceSize][SequenceSize]int
-	for square := 0; square < SequenceSize; square++ {
-		for cell := 0; cell < SequenceSize; cell++ {
+	for square := range SequenceSize {
+		for cell := range SequenceSize {
 			// index of the first cell
 			index := (square/3)*27 + (square%3)*3
 			// add cell location relative to first one

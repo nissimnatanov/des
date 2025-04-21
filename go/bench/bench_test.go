@@ -10,6 +10,6 @@ import (
 
 func TestMain(m *testing.M) {
 	board.SetIntegrityChecks(false)
-	fmt.Println("Runing Benchmark Tests")
+	fmt.Println("Running Benchmark Tests")
 	os.Exit(m.Run())
 }

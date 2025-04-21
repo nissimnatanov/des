@@ -7,8 +7,8 @@ import (
 
 type boardBase struct {
 	mode          BoardMode
+	readOnlyFlags bitSet81
 	values        [BoardSize]Value
-	readOnlyFlags BitSet81
 }
 
 func (b *boardBase) Mode() BoardMode {
@@ -20,52 +20,11 @@ func (b *boardBase) Get(index int) Value {
 }
 
 func (b *boardBase) IsEmpty(index int) bool {
-	return b.Get(index).IsEmpty()
+	return b.Get(index) == 0
 }
 
 func (b *boardBase) IsReadOnly(index int) bool {
 	return b.readOnlyFlags.Get(index)
-}
-
-func (b *boardBase) IsEquivalent(other BoardBase) bool {
-	for i := 0; i < BoardSize; i++ {
-		if b.Get(i) != other.Get(i) {
-			return false
-		}
-	}
-	return true
-}
-
-func (b *boardBase) IsEquivalentReadOnly(other BoardBase) bool {
-	for i := 0; i < BoardSize; i++ {
-		readOnly := b.IsReadOnly(i)
-		if readOnly != other.IsReadOnly(i) {
-			return false
-		}
-		if readOnly && b.Get(i) != other.Get(i) {
-			return false
-		}
-	}
-	return true
-}
-
-func (b *boardBase) ContainsAll(other BoardBase) bool {
-	for i := 0; i < BoardSize; i++ {
-		v := other.Get(i)
-		if !v.IsEmpty() && b.Get(i) != v {
-			return false
-		}
-	}
-	return true
-}
-
-func (b *boardBase) ContainsReadOnly(other BoardBase) bool {
-	for i := 0; i < BoardSize; i++ {
-		if other.IsReadOnly(i) && b.Get(i) != other.Get(i) {
-			return false
-		}
-	}
-	return true
 }
 
 func (b *boardBase) String() string {
@@ -86,7 +45,7 @@ func (b *boardBase) setInternal(index int, v Value, readOnly bool) Value {
 		panic("Edit mode is not allowed")
 	}
 
-	if v.IsEmpty() && readOnly {
+	if v == 0 && readOnly {
 		panic("Empty cell cannot be read-only")
 	}
 
@@ -102,11 +61,11 @@ func (b *boardBase) copyValues(other *boardBase) {
 	b.readOnlyFlags = other.readOnlyFlags
 }
 
-func (b *boardBase) calcSequence(s *Sequence) (vs ValueSet, dupes ValueSet) {
-	for si := s.Iterator(); si.Next(); {
-		index := si.Value()
+func (b *boardBase) calcSequence(s Sequence) (vs ValueSet, dupes ValueSet) {
+	for si := range s.Size() {
+		index := s.Get(si)
 		v := b.Get(index)
-		if v.IsEmpty() {
+		if v == 0 {
 			continue
 		}
 		if vs.Contains(v) {

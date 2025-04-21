@@ -1,22 +1,16 @@
-package board
+package board_test
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/nissimnatanov/des/go/board"
+	"gotest.tools/v3/assert"
 )
 
 func assertRelated(t *testing.T, index, related, expected int) {
-	ri := RelatedSequence(index).Iterator()
-	actual := -1
-	for i := 0; i <= related; i++ {
-		assert.Truef(t, ri.Next(), "Expected Next on related index of %v at %v", index, i)
-		actual = ri.Value()
-	}
-	assert.Equal(t, expected, actual, "Got wrong related of %v at %v", index, related)
-	if related == RelatedSize-1 {
-		assert.Falsef(t, ri.Next(), "Expected Next to return false on related end index")
-	}
+	rs := board.RelatedSequence(index)
+	assert.Equal(t, rs.Get(related), expected, "Got wrong related of %v at %v", index, related)
+	assert.Equal(t, rs.Size(), board.RelatedSize, "Got wrong size for related sequence %v", index)
 }
 
 func TestRelatedIterator(t *testing.T) {

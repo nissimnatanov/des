@@ -52,12 +52,12 @@ func Write(b Board, bw *bufio.Writer, fmt string) {
 func WriteValues(b BoardBase, bw *bufio.Writer) {
 	bw.WriteString("╔═══════╦═══════╦═══════╗\n")
 	bw.Flush()
-	for row := 0; row < SequenceSize; row++ {
+	for row := range SequenceSize {
 		if row != 0 && (row%3) == 0 {
 			bw.WriteString("╠═══════╬═══════╬═══════╣\n")
 			bw.Flush()
 		}
-		for col := 0; col < SequenceSize; col++ {
+		for col := range SequenceSize {
 			if col%3 == 0 {
 				bw.WriteString("║ ")
 			}
@@ -114,7 +114,7 @@ func WriteSquareSets(b Board, bw *bufio.Writer) {
 }
 
 func writeSets(fs func(si int) ValueSet, bw *bufio.Writer) {
-	for si := 0; si < SequenceSize; si++ {
+	for si := range SequenceSize {
 		bw.WriteString(" [")
 		bw.WriteString(fs(si).String())
 		bw.WriteRune(']')
@@ -143,9 +143,9 @@ func writeEmpty(count int, bw *bufio.Writer) {
 
 func writeSerialized(b BoardBase, bw *bufio.Writer) {
 	empty := 0
-	for i := 0; i < BoardSize; i++ {
+	for i := range BoardSize {
 		v := b.Get(i)
-		if v.IsEmpty() {
+		if v == 0 {
 			empty++
 		} else {
 			writeEmpty(empty, bw)
@@ -172,77 +172,65 @@ func Serialize(b BoardBase) string {
 // Deserialize accepts more than one consecutive zero
 // (while Serialize replaces them with letters, starting from 2)
 func Deserialize(s string) (Board, error) {
-	b := NewBoard()
+	b := New().(*boardImpl)
+	if err := deserializeInternal(s, &b.boardBase); err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+func deserializeInternal(s string, b boardBaseInternal) error {
 	i := 0
-	for c := range s {
+	for _, c := range s {
 		if c == ' ' || c == '\t' || c == '\r' || c == '\n' {
 			continue
 		}
 
-		if c >= 'a' && c <= 'z' {
-			i += 1 + c - 'a'
-		} else if c >= 'A' && c <= 'Z' {
-			i += 1 + c - 'A'
-		} else if c == '0' {
+		if i >= BoardSize {
+			return fmt.Errorf("unexpected board character '%v', at board index: %v", c, i)
+		}
+
+		switch {
+		case c >= 'a' && c <= 'z':
+			i += int(1 + c - 'a')
+		case c >= 'A' && c <= 'Z':
+			i += int(1 + c - 'A')
+		case c == '0':
 			i++
-		} else if c >= '0' && c <= '9' {
+		case c >= '1' && c <= '9':
 			v := Value(c - '0')
-			if !v.IsEmpty() {
-				b.SetReadOnly(i, v)
+			if v != 0 {
+				b.setInternal(i, v, false)
 			}
 			i++
-		} else if c == '_' {
+		case c == '_':
 			v := b.Get(i)
-			if v.IsEmpty() {
-				return nil, fmt.Errorf("misplaced _ sign")
+			if v == 0 {
+				return fmt.Errorf("misplaced _ sign")
 			} else if !b.IsReadOnly(i) {
-				return nil, fmt.Errorf("duplicate _ sign")
+				return fmt.Errorf("duplicate _ sign")
 			}
-			b.Set(i, Empty)
-			b.Set(i, v)
-		} else {
-			return nil, fmt.Errorf("invalid board character '%v', at index: %v", c, i)
+			b.setInternal(i, 0, false)
+			b.setInternal(i, v, false)
+		default:
+			return fmt.Errorf("invalid board character %q, at board index: %v", c, i)
 		}
 	}
 
 	if i != BoardSize {
-		return nil, fmt.Errorf("incomplete board, stopped at index: %v", i)
+		return fmt.Errorf("final board index is incorrect: %v", i)
 	}
 
-	return b, nil
+	return nil
 }
 
-// DeserializeSolution only accepts exactly 81 digits of [1, 9], and whitespaces
+// DeserializeSolution only accepts 81 digits of [1, 9], '_' to indicate originally editable cells and whitespaces
 func DeserializeSolution(s string) (Solution, error) {
 	var sol solutionImpl
 	// start in edit mode
 	sol.init(Edit)
-	i := 0
-	for c := range s {
-		if c == ' ' || c == '\t' || c == '\r' || c == '\n' {
-			continue
-		}
-
-		if c >= '1' && c <= '9' {
-			v := Value(c - '0')
-			sol.setInternal(i, v, true)
-			i++
-		} else if c == '_' {
-			v := sol.Get(i)
-			if v.IsEmpty() {
-				return nil, fmt.Errorf("misplaced _ sign")
-			} else if !sol.IsReadOnly(i) {
-				return nil, fmt.Errorf("duplicate _ sign")
-			}
-			sol.setInternal(i, Empty, false)
-			sol.setInternal(i, v, false)
-		} else {
-			return nil, fmt.Errorf("invalid board character '%v', at index: %v", c, i)
-		}
-	}
-
-	if i != BoardSize {
-		return nil, fmt.Errorf("incomplete board, stopped at index: %v", i)
+	if err := deserializeInternal(s, &sol.boardBase); err != nil {
+		return nil, err
 	}
 
 	err := sol.validateAndLock()

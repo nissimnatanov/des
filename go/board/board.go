@@ -20,12 +20,12 @@ type BoardBase interface {
 	IsEmpty(index int) bool
 	IsReadOnly(index int) bool
 
-	IsEquivalent(board BoardBase) bool
-	IsEquivalentReadOnly(board BoardBase) bool
-	ContainsAll(board BoardBase) bool
-	ContainsReadOnly(board BoardBase) bool
-
 	String() string
+}
+
+type boardBaseInternal interface {
+	BoardBase
+	setInternal(index int, v Value, readOnly bool) Value
 }
 
 type Board interface {

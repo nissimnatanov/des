@@ -1,39 +1,39 @@
-package board
+package board_test
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/nissimnatanov/des/go/board"
+	"gotest.tools/v3/assert"
 )
 
 func TestBitSet81(t *testing.T) {
-	var bs BitSet81
-	assert := assert.New(t)
+	var bs board.BitSet81
 
-	assert.False(bs.Get(0))
-	assert.False(bs.Get(55))
-	assert.False(bs.Get(80))
-	assert.False(bs.AllSet())
+	assert.Assert(t, !bs.Get(0))
+	assert.Assert(t, !bs.Get(55))
+	assert.Assert(t, !bs.Get(80))
+	assert.Assert(t, !bs.AllSet())
 
 	bs.SetAll(true)
-	assert.True(bs.Get(0))
-	assert.True(bs.Get(44))
-	assert.True(bs.Get(80))
-	assert.True(bs.AllSet())
+	assert.Assert(t, bs.Get(0))
+	assert.Assert(t, bs.Get(44))
+	assert.Assert(t, bs.Get(80))
+	assert.Assert(t, bs.AllSet())
 
 	bs.Set(80, false)
-	assert.False(bs.AllSet())
-	assert.False(bs.Get(80))
-	assert.True(bs.Get(79))
+	assert.Assert(t, !bs.AllSet())
+	assert.Assert(t, !bs.Get(80))
+	assert.Assert(t, bs.Get(79))
 
 	bs.Set(80, true)
-	assert.True(bs.AllSet())
+	assert.Assert(t, bs.AllSet())
 
 	bs.Set(33, false)
-	assert.False(bs.AllSet())
+	assert.Assert(t, !bs.AllSet())
 
 	bs.Reset()
-	assert.False(bs.Get(0))
-	assert.False(bs.Get(55))
-	assert.False(bs.Get(80))
+	assert.Assert(t, !bs.Get(0))
+	assert.Assert(t, !bs.Get(55))
+	assert.Assert(t, !bs.Get(80))
 }
