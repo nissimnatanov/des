@@ -1,29 +1,39 @@
-package board
+package indexes
 
 const (
 	RelatedSize = 20
 )
 
 func RelatedSequence(index int) Sequence {
-	return Sequence{relatedCache[index][:]}
+	return Sequence{relatedCache[index].indexes[:]}
 }
 
-func initRelatedIndexes() [BoardSize][RelatedSize]int {
-	cache := [BoardSize][RelatedSize]int{}
+func RelatedSet(index int) BitSet81 {
+	return relatedCache[index].mask
+}
+
+type relatedInfo struct {
+	indexes [RelatedSize]int
+	mask    BitSet81
+}
+
+func initRelatedIndexes() [BoardSize]relatedInfo {
+	cache := [BoardSize]relatedInfo{}
 	for i := range BoardSize {
 		related := 0
 		row := RowFromIndex(i)
 		col := ColumnFromIndex(i)
 		square := SquareFromIndex(i)
-		rs := RowSequence(row)
 
+		rs := RowSequence(row)
 		for ri := range rs.Size() {
 			rowIndex := rs.Get(ri)
 			if rowIndex == i {
 				continue
 			}
-			cache[i][related] = rowIndex
+			cache[i].indexes[related] = rowIndex
 			related++
+			cache[i].mask.Set(rowIndex, true)
 		}
 
 		cs := ColumnSequence(col)
@@ -32,8 +42,9 @@ func initRelatedIndexes() [BoardSize][RelatedSize]int {
 			if colIndex == i {
 				continue
 			}
-			cache[i][related] = colIndex
+			cache[i].indexes[related] = colIndex
 			related++
+			cache[i].mask.Set(colIndex, true)
 		}
 		ss := SquareSequence(square)
 		for si := range ss.Size() {
@@ -42,9 +53,11 @@ func initRelatedIndexes() [BoardSize][RelatedSize]int {
 				col == ColumnFromIndex(squareIndex) {
 				continue
 			}
-			cache[i][related] = squareIndex
+			cache[i].indexes[related] = squareIndex
 			related++
+			cache[i].mask.Set(squareIndex, true)
 		}
+
 		if related != RelatedSize {
 			panic("expected # of related indexes to be 20")
 		}

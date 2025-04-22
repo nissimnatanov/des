@@ -1,14 +1,14 @@
-package board_test
+package indexes_test
 
 import (
 	"testing"
 
-	"github.com/nissimnatanov/des/go/board"
+	"github.com/nissimnatanov/des/go/board/indexes"
 	"gotest.tools/v3/assert"
 )
 
 func TestBitSet81(t *testing.T) {
-	var bs board.BitSet81
+	var bs indexes.BitSet81
 
 	assert.Assert(t, !bs.Get(0))
 	assert.Assert(t, !bs.Get(55))

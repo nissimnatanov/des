@@ -1,4 +1,6 @@
-package board
+package indexes
+
+const BoardSize = 81
 
 func CheckBoardIndex(index int) {
 	if index < 0 || index >= BoardSize {

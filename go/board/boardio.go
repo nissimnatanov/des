@@ -4,6 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"strings"
+
+	"github.com/nissimnatanov/des/go/board/indexes"
+	"github.com/nissimnatanov/des/go/board/values"
 )
 
 type write2log struct {
@@ -49,42 +52,33 @@ func Write(b Board, bw *bufio.Writer, fmt string) {
 	}
 }
 
-func WriteValues(b BoardBase, bw *bufio.Writer) {
+func WriteValues(b Board, bw *bufio.Writer) {
 	bw.WriteString("╔═══════╦═══════╦═══════╗\n")
 	bw.Flush()
-	for row := range SequenceSize {
+	for row := range indexes.SequenceSize {
 		if row != 0 && (row%3) == 0 {
 			bw.WriteString("╠═══════╬═══════╬═══════╣\n")
 			bw.Flush()
 		}
-		for col := range SequenceSize {
+		for col := range indexes.SequenceSize {
 			if col%3 == 0 {
 				bw.WriteString("║ ")
 			}
-			i := IndexFromCoordinates(row, col)
+			i := indexes.IndexFromCoordinates(row, col)
 			c := rune('0' + b.Get(i))
 			bw.WriteRune(c)
 
-			switch b := b.(type) {
-			case Board:
-				if b.IsReadOnly(i) {
-					if b.IsValidCell(i) {
-						c = ' '
-					} else {
-						c = 'X'
-					}
-				} else {
-					if b.IsValidCell(i) {
-						c = '.'
-					} else {
-						c = '!'
-					}
-				}
-			default:
-				if b.IsReadOnly(i) {
+			if b.IsReadOnly(i) {
+				if b.IsValidCell(i) {
 					c = ' '
 				} else {
+					c = 'X'
+				}
+			} else {
+				if b.IsValidCell(i) {
 					c = '.'
+				} else {
+					c = '!'
 				}
 			}
 
@@ -100,21 +94,21 @@ func WriteValues(b BoardBase, bw *bufio.Writer) {
 
 func WriteRowSets(b Board, bw *bufio.Writer) {
 	bw.WriteString("Rows:")
-	writeSets(func(row int) ValueSet { return b.RowSet(row) }, bw)
+	writeSets(func(row int) values.Set { return b.RowSet(row) }, bw)
 }
 
 func WriteColumnSets(b Board, bw *bufio.Writer) {
 	bw.WriteString("Columns:")
-	writeSets(func(col int) ValueSet { return b.ColumnSet(col) }, bw)
+	writeSets(func(col int) values.Set { return b.ColumnSet(col) }, bw)
 }
 
 func WriteSquareSets(b Board, bw *bufio.Writer) {
 	bw.WriteString("Squares:")
-	writeSets(func(square int) ValueSet { return b.SquareSet(square) }, bw)
+	writeSets(func(square int) values.Set { return b.SquareSet(square) }, bw)
 }
 
-func writeSets(fs func(si int) ValueSet, bw *bufio.Writer) {
-	for si := range SequenceSize {
+func writeSets(fs func(si int) values.Set, bw *bufio.Writer) {
+	for si := range indexes.SequenceSize {
 		bw.WriteString(" [")
 		bw.WriteString(fs(si).String())
 		bw.WriteRune(']')
@@ -141,9 +135,9 @@ func writeEmpty(count int, bw *bufio.Writer) {
 	}
 }
 
-func writeSerialized(b BoardBase, bw *bufio.Writer) {
+func writeSerialized(b Board, bw *bufio.Writer) {
 	empty := 0
-	for i := range BoardSize {
+	for i := range Size {
 		v := b.Get(i)
 		if v == 0 {
 			empty++
@@ -161,7 +155,7 @@ func writeSerialized(b BoardBase, bw *bufio.Writer) {
 	writeEmpty(empty, bw)
 }
 
-func Serialize(b BoardBase) string {
+func Serialize(b Board) string {
 	var sb strings.Builder
 	bw := bufio.NewWriter(&sb)
 	writeSerialized(b, bw)
@@ -173,20 +167,21 @@ func Serialize(b BoardBase) string {
 // (while Serialize replaces them with letters, starting from 2)
 func Deserialize(s string) (Board, error) {
 	b := New().(*boardImpl)
-	if err := deserializeInternal(s, &b.boardBase); err != nil {
+	if err := deserializeBase(s, &b.base); err != nil {
 		return nil, err
 	}
+	b.recalculateAllStats()
 	return b, nil
 }
 
-func deserializeInternal(s string, b boardBaseInternal) error {
+func deserializeBase(s string, b *base) error {
 	i := 0
 	for _, c := range s {
 		if c == ' ' || c == '\t' || c == '\r' || c == '\n' {
 			continue
 		}
 
-		if i >= BoardSize {
+		if i >= Size {
 			return fmt.Errorf("unexpected board character '%v', at board index: %v", c, i)
 		}
 
@@ -198,9 +193,9 @@ func deserializeInternal(s string, b boardBaseInternal) error {
 		case c == '0':
 			i++
 		case c >= '1' && c <= '9':
-			v := Value(c - '0')
+			v := values.Value(c - '0')
 			if v != 0 {
-				b.setInternal(i, v, false)
+				b.setInternal(i, v, true)
 			}
 			i++
 		case c == '_':
@@ -217,7 +212,7 @@ func deserializeInternal(s string, b boardBaseInternal) error {
 		}
 	}
 
-	if i != BoardSize {
+	if i != Size {
 		return fmt.Errorf("final board index is incorrect: %v", i)
 	}
 
@@ -229,7 +224,7 @@ func DeserializeSolution(s string) (Solution, error) {
 	var sol solutionImpl
 	// start in edit mode
 	sol.init(Edit)
-	if err := deserializeInternal(s, &sol.boardBase); err != nil {
+	if err := deserializeBase(s, &sol.base); err != nil {
 		return nil, err
 	}
 

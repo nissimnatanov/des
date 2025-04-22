@@ -1,19 +1,19 @@
-package board_test
+package values_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/nissimnatanov/des/go/board"
+	"github.com/nissimnatanov/des/go/board/values"
 )
 
 func TestValueProperties(t *testing.T) {
 	cases := []struct {
-		value    board.Value
+		value    values.Value
 		stringer string
 	}{
-		{board.Value(0), "0"},
-		{board.Value(0), "0"},
+		{values.Value(0), "0"},
+		{values.Value(0), "0"},
 		{1, "1"},
 		{5, "5"},
 		{9, "9"},
@@ -28,15 +28,15 @@ func TestValueProperties(t *testing.T) {
 
 func TestValueSetProperties(t *testing.T) {
 	cases := []struct {
-		vs         board.ValueSet
+		vs         values.Set
 		combined   int32
 		size       int
-		complement board.ValueSet
+		complement values.Set
 	}{
-		{board.FullValueSet(), 123456789, 9, board.EmptyValueSet()},
-		{board.EmptyValueSet(), 0, 0, board.FullValueSet()},
-		{board.Value(5).AsSet(), 5, 1, board.NewValueSet(1, 2, 3, 4, 6, 7, 8, 9)},
-		{board.NewValueSet(1, 9, 5), 159, 3, board.NewValueSet(2, 3, 4, 6, 7, 8)},
+		{values.FullSet(), 123456789, 9, values.EmptySet()},
+		{values.EmptySet(), 0, 0, values.FullSet()},
+		{values.Value(5).AsSet(), 5, 1, values.NewSet(1, 2, 3, 4, 6, 7, 8, 9)},
+		{values.NewSet(1, 9, 5), 159, 3, values.NewSet(2, 3, 4, 6, 7, 8)},
 	}
 	for _, c := range cases {
 		combined := c.vs.Combined()
@@ -74,19 +74,18 @@ func TestValueSetProperties(t *testing.T) {
 
 func TestValueSetValueIterator(t *testing.T) {
 	cases := []struct {
-		vs   board.ValueSet
+		vs   values.Set
 		want string
 	}{
-		{board.FullValueSet(), "123456789"},
-		{board.EmptyValueSet(), ""},
-		{board.Value(5).AsSet(), "5"},
-		{board.NewValueSet(1, 9, 5), "159"},
+		{values.FullSet(), "123456789"},
+		{values.EmptySet(), ""},
+		{values.Value(5).AsSet(), "5"},
+		{values.NewSet(1, 9, 5), "159"},
 	}
 	for _, c := range cases {
 		var got string
-		values := c.vs.Iterator()
-		for values.Next() {
-			got += values.Value().String()
+		for vi := range c.vs.Size() {
+			got += c.vs.At(vi).String()
 		}
 		if got != c.want {
 			t.Errorf("ValueIterator(%q) == %q, want %q", c.vs, got, c.want)
@@ -96,17 +95,17 @@ func TestValueSetValueIterator(t *testing.T) {
 
 func TestValueSetContainsValueSet(t *testing.T) {
 	cases := []struct {
-		vs          board.ValueSet
-		other       board.ValueSet
+		vs          values.Set
+		other       values.Set
 		containsAll bool
 		containsAny bool
 	}{
-		{board.FullValueSet(), board.Value(5).AsSet(), true, true},
-		{board.FullValueSet(), board.EmptyValueSet(), true, false},
-		{board.EmptyValueSet(), board.Value(5).AsSet(), false, false},
-		{board.Value(6).AsSet(), board.Value(5).AsSet(), false, false},
-		{board.NewValueSet(1, 5), board.Value(3).AsSet(), false, false},
-		{board.NewValueSet(9, 5, 7), board.NewValueSet(9, 4), false, true},
+		{values.FullSet(), values.Value(5).AsSet(), true, true},
+		{values.FullSet(), values.EmptySet(), true, false},
+		{values.EmptySet(), values.Value(5).AsSet(), false, false},
+		{values.Value(6).AsSet(), values.Value(5).AsSet(), false, false},
+		{values.NewSet(1, 5), values.Value(3).AsSet(), false, false},
+		{values.NewSet(9, 5, 7), values.NewSet(9, 4), false, true},
 	}
 
 	for _, c := range cases {
@@ -124,15 +123,15 @@ func TestValueSetContainsValueSet(t *testing.T) {
 
 func TestValueSetContainsValue(t *testing.T) {
 	cases := []struct {
-		vs       board.ValueSet
-		other    board.Value
+		vs       values.Set
+		other    values.Value
 		contains bool
 	}{
-		{board.FullValueSet(), 5, true},
-		{board.FullValueSet(), 0, false},
-		{board.EmptyValueSet(), 5, false},
-		{board.Value(6).AsSet(), 5, false},
-		{board.NewValueSet(1, 5), 3, false},
+		{values.FullSet(), 5, true},
+		{values.FullSet(), 0, false},
+		{values.EmptySet(), 5, false},
+		{values.Value(6).AsSet(), 5, false},
+		{values.NewSet(1, 5), 3, false},
 	}
 
 	for _, c := range cases {
@@ -146,19 +145,19 @@ func TestValueSetContainsValue(t *testing.T) {
 
 func TestValueSetSetOperations(t *testing.T) {
 	cases := []struct {
-		vs1       board.ValueSet
-		vs2       board.ValueSet
-		vs3       board.ValueSet
-		union     board.ValueSet
-		intersect board.ValueSet
+		vs1       values.Set
+		vs2       values.Set
+		vs3       values.Set
+		union     values.Set
+		intersect values.Set
 	}{
-		{board.FullValueSet(), board.NewValueSet(5, 6), board.NewValueSet(1, 5), board.FullValueSet(), board.Value(5).AsSet()},
-		{board.EmptyValueSet(), board.NewValueSet(5, 6), board.NewValueSet(1, 5), board.NewValueSet(1, 5, 6), board.EmptyValueSet()},
+		{values.FullSet(), values.NewSet(5, 6), values.NewSet(1, 5), values.FullSet(), values.Value(5).AsSet()},
+		{values.EmptySet(), values.NewSet(5, 6), values.NewSet(1, 5), values.NewSet(1, 5, 6), values.EmptySet()},
 	}
 
 	for _, c := range cases {
-		union := board.ValueSetUnion(c.vs1, c.vs2, c.vs3)
-		intersect := board.ValueSetIntersect(c.vs1, c.vs2, c.vs3)
+		union := values.Union(c.vs1, c.vs2, c.vs3)
+		intersect := values.Intersect(c.vs1, c.vs2, c.vs3)
 
 		if union != c.union {
 			t.Errorf("Union(%v, %v, %v) == %v, want %v", c.vs1, c.vs2, c.vs3, union, c.union)

@@ -1,16 +1,16 @@
-package board_test
+package indexes_test
 
 import (
 	"testing"
 
-	"github.com/nissimnatanov/des/go/board"
+	"github.com/nissimnatanov/des/go/board/indexes"
 	"gotest.tools/v3/assert"
 )
 
 func assertRelated(t *testing.T, index, related, expected int) {
-	rs := board.RelatedSequence(index)
+	rs := indexes.RelatedSequence(index)
 	assert.Equal(t, rs.Get(related), expected, "Got wrong related of %v at %v", index, related)
-	assert.Equal(t, rs.Size(), board.RelatedSize, "Got wrong size for related sequence %v", index)
+	assert.Equal(t, rs.Size(), indexes.RelatedSize, "Got wrong size for related sequence %v", index)
 }
 
 func TestRelatedIterator(t *testing.T) {

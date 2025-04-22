@@ -1,4 +1,6 @@
-package board
+package indexes
+
+const SequenceSize = 9
 
 type Sequence struct {
 	indexes []int

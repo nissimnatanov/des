@@ -1,63 +1,63 @@
 package board
 
+import (
+	"github.com/nissimnatanov/des/go/board/indexes"
+	"github.com/nissimnatanov/des/go/board/values"
+)
+
 const (
-	BoardSize         = 81
-	SequenceSize      = 9
+	Size = indexes.BoardSize
+
 	MinValidBoardSize = 17
 )
 
-type BoardMode int
+type Mode int
 
 const (
-	Immutable BoardMode = iota
+	// Immutable mode means input board shall not be modified.
+	Immutable Mode = iota
 	Edit
 	Play
 )
 
-// BoardBase is a board interface that only allows reads
-type BoardBase interface {
-	Get(index int) Value
+type Board interface {
+	Mode() Mode
+
+	Get(index int) values.Value
 	IsEmpty(index int) bool
 	IsReadOnly(index int) bool
 
-	String() string
-}
+	RowSet(row int) values.Set
+	ColumnSet(col int) values.Set
+	SquareSet(square int) values.Set
 
-type boardBaseInternal interface {
-	BoardBase
-	setInternal(index int, v Value, readOnly bool) Value
-}
-
-type Board interface {
-	BoardBase
-
-	Mode() BoardMode
-
-	RowSet(row int) ValueSet
-	ColumnSet(col int) ValueSet
-	SquareSet(square int) ValueSet
-
-	AllowedSet(index int) ValueSet
-	Count(v Value) int
+	AllowedSet(index int) values.Set
+	Count(v values.Value) int
 	FreeCellCount() int
 
 	IsValidCell(index int) bool
 	IsValid() bool
 	IsSolved() bool
 
-	// available in Play and Edit modes only
-	Set(index int, v Value)
-	// available in Edit modes only
-	SetReadOnly(index int, v Value)
+	Clone(mode Mode) Board
+
+	// CloneInto copies the current board into the dst board, both must be boards
+	// created with New (not NewSolution) or cloned from such.
+	CloneInto(mode Mode, dst Board)
+
+	String() string
 
 	// available in Play and Edit modes only
-	Disallow(index int, v Value)
-	DisallowSet(index int, vs ValueSet)
+	Set(index int, v values.Value)
+
+	// available in Play and Edit modes only
+	Disallow(index int, v values.Value)
+	DisallowSet(index int, vs values.Set)
 	DisallowReset(index int)
 
 	// available in Play and Edit modes only
 	Restart()
 
-	// available in any mode
-	Clone(mode BoardMode) Board
+	// available in Edit mode only
+	SetReadOnly(index int, v values.Value)
 }

@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/nissimnatanov/des/go/board"
+	"github.com/nissimnatanov/des/go/board/indexes"
+	"github.com/nissimnatanov/des/go/board/values"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/assert/cmp"
 )
@@ -18,16 +20,16 @@ func TestEmptyBoard(t *testing.T) {
 	assert.Assert(t, b.IsValidCell(80))
 	assert.Assert(t, !b.IsSolved())
 	assert.Assert(t, b.IsEmpty(33))
-	assert.Equal(t, board.Value(0), b.Get(0))
-	assert.Equal(t, board.Value(0), b.Get(80))
-	assert.Equal(t, board.EmptyValueSet(), b.RowSet(0))
-	assert.Equal(t, board.EmptyValueSet(), b.ColumnSet(8))
-	assert.Equal(t, board.EmptyValueSet(), b.SquareSet(2))
+	assert.Equal(t, values.Value(0), b.Get(0))
+	assert.Equal(t, values.Value(0), b.Get(80))
+	assert.Equal(t, values.EmptySet(), b.RowSet(0))
+	assert.Equal(t, values.EmptySet(), b.ColumnSet(8))
+	assert.Equal(t, values.EmptySet(), b.SquareSet(2))
 	assert.Equal(t, 81, b.FreeCellCount())
 	assert.Equal(t, 0, b.Count(7))
 
-	assert.Equal(t, board.FullValueSet(), b.AllowedSet(0))
-	assert.Equal(t, board.FullValueSet(), b.AllowedSet(80))
+	assert.Equal(t, values.FullSet(), b.AllowedSet(0))
+	assert.Equal(t, values.FullSet(), b.AllowedSet(80))
 
 	assert.Assert(t, board.ContainsAll(b, b))
 	assert.Assert(t, board.ContainsReadOnly(b, b))
@@ -49,10 +51,10 @@ func TestEmptyBoard(t *testing.T) {
 	assert.Assert(t, cmp.Panics(func() { b.AllowedSet(-1) }))
 	assert.Assert(t, cmp.Panics(func() { b.AllowedSet(81) }))
 	assert.Assert(t, cmp.Panics(func() { b.Disallow(81, 7) }))
-	assert.Assert(t, cmp.Panics(func() { b.DisallowSet(-1, board.Value(8).AsSet()) }))
-	assert.Assert(t, cmp.Panics(func() { b.SetReadOnly(-1, board.Value(8)) }))
-	assert.Assert(t, cmp.Panics(func() { b.SetReadOnly(81, board.Value(5)) }))
-	assert.Assert(t, cmp.Panics(func() { b.Set(81, board.Value(4)) }))
+	assert.Assert(t, cmp.Panics(func() { b.DisallowSet(-1, values.Value(8).AsSet()) }))
+	assert.Assert(t, cmp.Panics(func() { b.SetReadOnly(-1, values.Value(8)) }))
+	assert.Assert(t, cmp.Panics(func() { b.SetReadOnly(81, values.Value(5)) }))
+	assert.Assert(t, cmp.Panics(func() { b.Set(81, values.Value(4)) }))
 
 	// special cases
 	assert.Assert(t, cmp.Panics(func() { b.SetReadOnly(0, 0) }))
@@ -67,14 +69,13 @@ func newSampleBoard() board.Board {
 	col1 := 3
 	col2 := 6
 
-	for vi := board.FullValueSet().Iterator(); vi.Next(); {
-		v := vi.Value()
+	for v := values.Value(1); v <= 9; v++ {
 		b.SetReadOnly(col0, v)
 		b.Set(9+col1, v)
 		b.Set(18+col2, v)
-		col0 = (col0 + 1) % board.SequenceSize
-		col1 = (col1 + 1) % board.SequenceSize
-		col2 = (col2 + 1) % board.SequenceSize
+		col0 = (col0 + 1) % indexes.SequenceSize
+		col1 = (col1 + 1) % indexes.SequenceSize
+		col2 = (col2 + 1) % indexes.SequenceSize
 	}
 	return b
 }
@@ -92,7 +93,7 @@ func TestValidBoard(t *testing.T) {
 	board.Write(b, board.NewWriter(func(s string) { t.Log(strings.ReplaceAll(s, "\n", "")) }), "vrcst")
 	assertSampleBoard(t, b)
 
-	b.Set(40, board.Value(5))
+	b.Set(40, values.Value(5))
 	assert.Assert(t, !b.IsValid())
 
 	assert.Assert(t, !b.IsValidCell(40))
@@ -120,34 +121,34 @@ func TestPlay(t *testing.T) {
 	assertSampleBoard(t, play)
 	assert.Equal(t, board.Play, play.Mode())
 
-	assert.Assert(t, cmp.Panics(func() { play.SetReadOnly(55, board.Value(6)) }))
-	assert.Equal(t, board.Value(0), play.Get(55))
+	assert.Assert(t, cmp.Panics(func() { play.SetReadOnly(55, values.Value(6)) }))
+	assert.Equal(t, values.Value(0), play.Get(55))
 	assertSampleBoard(t, play)
 
-	play.Set(55, board.Value(6))
-	assert.Equal(t, board.Value(6), play.Get(55))
+	play.Set(55, values.Value(6))
+	assert.Equal(t, values.Value(6), play.Get(55))
 	assert.Assert(t, play.IsValid())
 	assert.Assert(t, board.ContainsReadOnly(play, b))
 	assert.Assert(t, board.ContainsAll(play, b))
 
-	play.Set(40, board.Value(5))
-	assert.Equal(t, board.Value(5), play.Get(40))
+	play.Set(40, values.Value(5))
+	assert.Equal(t, values.Value(5), play.Get(40))
 	assert.Assert(t, !play.IsValid())
 	assert.Assert(t, board.ContainsReadOnly(play, b))
 	assert.Assert(t, board.ContainsAll(play, b))
 
-	play.Set(40, board.Value(9))
+	play.Set(40, values.Value(9))
 	assert.Assert(t, play.IsValid())
 	assert.Assert(t, board.ContainsReadOnly(play, b))
 	assert.Assert(t, board.ContainsAll(play, b))
 
 	play.Restart()
-	assert.Equal(t, board.Value(0), play.Get(55))
-	assert.Equal(t, board.Value(0), play.Get(40))
+	assert.Equal(t, values.Value(0), play.Get(55))
+	assert.Equal(t, values.Value(0), play.Get(40))
 	// only the first row is read-only
-	assert.Equal(t, board.FullValueSet(), play.RowSet(0))
+	assert.Equal(t, values.FullSet(), play.RowSet(0))
 	for row := 1; row < 9; row++ {
-		assert.Equal(t, board.EmptyValueSet(), play.RowSet(row))
+		assert.Equal(t, values.EmptySet(), play.RowSet(row))
 	}
 	assert.Assert(t, board.ContainsReadOnly(b, play))
 }

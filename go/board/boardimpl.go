@@ -1,60 +1,67 @@
 package board
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"strings"
+
+	"github.com/nissimnatanov/des/go/board/indexes"
+	"github.com/nissimnatanov/des/go/board/values"
+)
 
 type boardImpl struct {
-	boardBase
+	base
 
-	rowSets              [SequenceSize]ValueSet
-	colSets              [SequenceSize]ValueSet
-	squareSets           [SequenceSize]ValueSet
-	valueCounts          [SequenceSize + 1]int
-	validFlags           bitSet81
-	userDisallowedValues [BoardSize]ValueSet
+	rowSets              [indexes.SequenceSize]values.Set
+	colSets              [indexes.SequenceSize]values.Set
+	squareSets           [indexes.SequenceSize]values.Set
+	valueCounts          [indexes.SequenceSize + 1]int
+	validFlags           indexes.BitSet81
+	userDisallowedValues [Size]values.Set
 
 	// Allowed values cache is special - the moment at least one value changes, it is easier to invalidate
 	// all indexes instead of recalculating related ones.
-	allowedValuesCache           [BoardSize]ValueSet
-	allowedValuesCacheValidFlags bitSet81
+	allowedValuesCache           [Size]values.Set
+	allowedValuesCacheValidFlags indexes.BitSet81
 }
 
-func (b *boardImpl) RowSet(row int) ValueSet {
+func (b *boardImpl) RowSet(row int) values.Set {
 	return b.rowSets[row]
 }
 
-func (b *boardImpl) ColumnSet(col int) ValueSet {
+func (b *boardImpl) ColumnSet(col int) values.Set {
 	return b.colSets[col]
 }
 
-func (b *boardImpl) SquareSet(square int) ValueSet {
+func (b *boardImpl) SquareSet(square int) values.Set {
 	return b.squareSets[square]
 }
 
-func (b *boardImpl) AllowedSet(index int) ValueSet {
+func (b *boardImpl) AllowedSet(index int) values.Set {
 	v := b.Get(index)
 	if v != 0 {
-		return EmptyValueSet()
+		return values.EmptySet()
 	}
 
 	if b.allowedValuesCacheValidFlags.Get(index) {
 		return b.allowedValuesCache[index]
 	}
 
-	disallowedValues := ValueSetUnion(b.relatedSet(index), b.userDisallowedValues[index])
+	disallowedValues := values.Union(b.relatedSet(index), b.userDisallowedValues[index])
 	allowedValues := disallowedValues.Complement()
 	b.allowedValuesCacheValidFlags.Set(index, true)
 	b.allowedValuesCache[index] = allowedValues
 	return allowedValues
 }
 
-func (b *boardImpl) relatedSet(index int) ValueSet {
-	return ValueSetUnion(
-		b.RowSet(RowFromIndex(index)),
-		b.ColumnSet(ColumnFromIndex(index)),
-		b.SquareSet(SquareFromIndex(index)))
+func (b *boardImpl) relatedSet(index int) values.Set {
+	return values.Union(
+		b.RowSet(indexes.RowFromIndex(index)),
+		b.ColumnSet(indexes.ColumnFromIndex(index)),
+		b.SquareSet(indexes.SquareFromIndex(index)))
 }
 
-func (b *boardImpl) Count(v Value) int {
+func (b *boardImpl) Count(v values.Value) int {
 	return b.valueCounts[v]
 }
 
@@ -81,31 +88,43 @@ func New() Board {
 	return &b
 }
 
-func (b *boardImpl) Clone(mode BoardMode) Board {
+func (b *boardImpl) Clone(mode Mode) Board {
 	if mode == Immutable && b.mode == Immutable {
 		return b
 	}
 
-	var newBoard boardImpl
-	newBoard.init(mode)
-	newBoard.copyValues(&b.boardBase)
-	newBoard.copyStats(b)
-	return &newBoard
+	newBoard := &boardImpl{}
+	b.cloneInto(mode, newBoard)
+	return newBoard
 }
 
-func (b *boardImpl) Set(index int, v Value) {
+func (b *boardImpl) cloneInto(mode Mode, dst *boardImpl) {
+	dst.init(mode)
+	dst.copyValues(&b.base)
+	dst.copyStats(b)
+}
+
+func (b *boardImpl) CloneInto(mode Mode, dst Board) {
+	dstImpl, ok := dst.(*boardImpl)
+	if !ok {
+		panic(fmt.Errorf("Cannot CloneInto into a board of type %T", dst))
+	}
+	b.cloneInto(mode, dstImpl)
+}
+
+func (b *boardImpl) Set(index int, v values.Value) {
 	b.setInternal(index, v, false)
 }
 
-func (b *boardImpl) SetReadOnly(index int, v Value) {
+func (b *boardImpl) SetReadOnly(index int, v values.Value) {
 	b.setInternal(index, v, true)
 }
 
-func (b *boardImpl) Disallow(index int, v Value) {
+func (b *boardImpl) Disallow(index int, v values.Value) {
 	b.DisallowSet(index, v.AsSet())
 }
 
-func (b *boardImpl) DisallowSet(index int, vs ValueSet) {
+func (b *boardImpl) DisallowSet(index int, vs values.Set) {
 	if b.mode == Immutable {
 		panic("Cannot set disallowed values on immutable board")
 	}
@@ -114,17 +133,18 @@ func (b *boardImpl) DisallowSet(index int, vs ValueSet) {
 		panic("Nothing to disallow")
 	}
 
-	b.userDisallowedValues[index] = ValueSetUnion(b.userDisallowedValues[index], vs)
-	b.allowedValuesCacheValidFlags.Set(index, false)
+	b.userDisallowedValues[index] = values.Union(b.userDisallowedValues[index], vs)
+	// if the flags are not valid, this op is useless, but also harmless
+	b.allowedValuesCache[index] = b.allowedValuesCache[index].Without(vs)
 }
 
 func (b *boardImpl) DisallowReset(index int) {
-	b.userDisallowedValues[index] = EmptyValueSet()
+	b.userDisallowedValues[index] = values.EmptySet()
 	b.allowedValuesCacheValidFlags.Set(index, false)
 }
 
-func (b *boardImpl) setInternal(index int, v Value, readOnly bool) Value {
-	previousValue := b.boardBase.setInternal(index, v, readOnly)
+func (b *boardImpl) setInternal(index int, v values.Value, readOnly bool) values.Value {
+	previousValue := b.base.setInternal(index, v, readOnly)
 
 	// stats
 	needToRecalculateAll := b.updateStats(index, previousValue, v)
@@ -140,9 +160,9 @@ func (b *boardImpl) Restart() {
 	}
 
 	// for faster reset, update the values first then force recalculation of all the stats
-	for i := range BoardSize {
+	for i := range Size {
 		if !b.IsReadOnly(i) {
-			b.setInternal(i, 0, false)
+			b.base.setInternal(i, 0, false)
 		}
 	}
 
@@ -150,11 +170,17 @@ func (b *boardImpl) Restart() {
 }
 
 // only sets non-zero values
-func (b *boardImpl) init(mode BoardMode) {
-	b.boardBase.init(mode)
-	b.valueCounts[0] = BoardSize
+func (b *boardImpl) init(mode Mode) {
+	b.base.init(mode)
+	b.valueCounts[0] = Size
 	b.validFlags.SetAll(true)
 	b.checkIntegrity()
+}
+
+func (b *boardImpl) String() string {
+	var sb strings.Builder
+	WriteValues(b, bufio.NewWriter(&sb))
+	return sb.String()
 }
 
 func (b *boardImpl) copyStats(source *boardImpl) {
@@ -172,7 +198,7 @@ func (b *boardImpl) copyStats(source *boardImpl) {
 	b.allowedValuesCacheValidFlags = source.allowedValuesCacheValidFlags
 }
 
-func (b *boardImpl) updateStats(index int, oldValue, newValue Value) bool {
+func (b *boardImpl) updateStats(index int, oldValue, newValue values.Value) bool {
 	if oldValue == newValue {
 		return false
 	}
@@ -188,24 +214,24 @@ func (b *boardImpl) updateStats(index int, oldValue, newValue Value) bool {
 		return true
 	}
 
-	row := RowFromIndex(index)
-	col := ColumnFromIndex(index)
-	square := SquareFromIndex(index)
+	row := indexes.RowFromIndex(index)
+	col := indexes.ColumnFromIndex(index)
+	square := indexes.SquareFromIndex(index)
 
 	if oldValue != 0 {
-		b.rowSets[row].Remove(oldValue)
-		b.colSets[col].Remove(oldValue)
-		b.squareSets[square].Remove(oldValue)
+		b.rowSets[row] = b.rowSets[row].Without(oldValue.AsSet())
+		b.colSets[col] = b.colSets[col].Without(oldValue.AsSet())
+		b.squareSets[square] = b.squareSets[square].Without(oldValue.AsSet())
 	}
 	b.valueCounts[oldValue]--
 
 	if newValue != 0 {
-		b.rowSets[row].Add(newValue)
-		b.colSets[col].Add(newValue)
-		b.squareSets[square].Add(newValue)
+		b.rowSets[row] = b.rowSets[row].With(newValue.AsSet())
+		b.colSets[col] = b.colSets[col].With(newValue.AsSet())
+		b.squareSets[square] = b.squareSets[square].With(newValue.AsSet())
 	}
 	b.valueCounts[newValue]++
-	b.allowedValuesCacheValidFlags.Reset()
+	b.allowedValuesCacheValidFlags.ResetMask(indexes.RelatedSet(index))
 	return false
 }
 
@@ -216,31 +242,31 @@ func (b *boardImpl) recalculateAllStats() {
 	b.allowedValuesCacheValidFlags.Reset()
 
 	// value counts
-	for i := range SequenceSize {
+	for i := range indexes.SequenceSize {
 		b.valueCounts[i] = 0
 	}
-	for i := range BoardSize {
+	for i := range Size {
 		b.valueCounts[b.Get(i)]++
 	}
 
 	// init rowSets, colSets; and squareSets
 	// validFlags are unset if dupe detected
-	for seq := range SequenceSize {
-		b.rowSets[seq] = b.validateSequence(RowSequence(seq))
-		b.colSets[seq] = b.validateSequence(ColumnSequence(seq))
-		b.squareSets[seq] = b.validateSequence(SquareSequence(seq))
+	for seq := range indexes.SequenceSize {
+		b.rowSets[seq] = b.validateSequence(indexes.RowSequence(seq))
+		b.colSets[seq] = b.validateSequence(indexes.ColumnSequence(seq))
+		b.squareSets[seq] = b.validateSequence(indexes.SquareSequence(seq))
 	}
 }
 
-func (b *boardImpl) validateSequence(s Sequence) ValueSet {
+func (b *boardImpl) validateSequence(s indexes.Sequence) values.Set {
 	vs, dupes := b.calcSequence(s)
-	for vi := dupes.Iterator(); vi.Next(); {
-		b.markSequenceInvalid(vi.Value(), s)
+	for vi := range dupes.Size() {
+		b.markSequenceInvalid(dupes.At(vi), s)
 	}
 	return vs
 }
 
-func (b *boardImpl) markSequenceInvalid(v Value, s Sequence) {
+func (b *boardImpl) markSequenceInvalid(v values.Value, s indexes.Sequence) {
 	readOnly := []int{}
 	foundReadWrite := false
 
@@ -269,15 +295,15 @@ func (b *boardImpl) checkIntegrity() {
 		return
 	}
 
-	var valueCounts [SequenceSize + 1]int
+	var valueCounts [indexes.SequenceSize + 1]int
 
-	for i := range BoardSize {
+	for i := range Size {
 		v := b.Get(i)
 		valueCounts[v] += 1
 
 		if v != 0 {
 			// check this value is disallowed in other places
-			rs := RelatedSequence(i)
+			rs := indexes.RelatedSequence(i)
 			for ri := range rs.Size() {
 				related := rs.Get(ri)
 				rv := b.Get(related)
@@ -307,11 +333,11 @@ func (b *boardImpl) checkIntegrity() {
 			}
 		} else {
 			// check that disallowed values are a union of row/column/square
-			row := RowFromIndex(i)
-			col := ColumnFromIndex(i)
-			square := SquareFromIndex(i)
+			row := indexes.RowFromIndex(i)
+			col := indexes.ColumnFromIndex(i)
+			square := indexes.SquareFromIndex(i)
 
-			disallowedValuesExpected := ValueSetUnion(
+			disallowedValuesExpected := values.Union(
 				b.rowSets[row],
 				b.colSets[col],
 				b.squareSets[square],
@@ -326,7 +352,7 @@ func (b *boardImpl) checkIntegrity() {
 		}
 	}
 
-	for v := range SequenceSize {
+	for v := range indexes.SequenceSize {
 		if valueCounts[v] != b.valueCounts[v] {
 			panic(
 				fmt.Sprintf(
