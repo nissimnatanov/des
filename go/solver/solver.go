@@ -70,6 +70,7 @@ func (s *Solver) Run(ctx context.Context, b board.Board) *Result {
 			// stop once two solutions are found
 			Solutions: result.Solutions,
 		},
+		algorithms: GetAlgorithms(s.opts.Action),
 	}
 	if board.GetIntegrityChecks() {
 		// capture the original board for integrity checks to make sure algos do not corrupt
@@ -131,6 +132,7 @@ type runner struct {
 
 	// to reduce calls into alloc, cache nested runner to speed up its access
 	nestedCache *runner
+	algorithms  []Algorithm
 }
 
 func (r *runner) run(ctx context.Context) *Result {
@@ -179,7 +181,7 @@ func (r *runner) run(ctx context.Context) *Result {
 }
 
 func (r *runner) tryAlgorithms(ctx context.Context) Status {
-	for _, algo := range algorithms {
+	for _, algo := range r.algorithms {
 		if ctx.Err() != nil {
 			r.result.completeErr(ctx.Err())
 			return StatusError
@@ -234,11 +236,11 @@ func (r *runner) MaxRecursionDepth() int {
 	return int(r.maxRecursionDepth)
 }
 func (r *runner) AddStep(step Step, complexity StepComplexity, count int) {
-	r.result.StepStats.AddStep(step, complexity, count)
+	r.result.Steps.AddStep(step, complexity, count)
 }
 
 func (r *runner) MergeSteps(steps *StepStats) {
-	r.result.StepStats.Merge(steps)
+	r.result.Steps.Merge(steps)
 }
 
 func (r *runner) recursiveRun(ctx context.Context, b board.Board) *Result {
@@ -255,6 +257,7 @@ func (r *runner) recursiveRun(ctx context.Context, b board.Board) *Result {
 				Status:    StatusUnknown,
 				Solutions: r.result.Solutions,
 			},
+			algorithms: r.algorithms,
 		}
 		r.nestedCache = nested
 
@@ -264,7 +267,7 @@ func (r *runner) recursiveRun(ctx context.Context, b board.Board) *Result {
 		nested.currentRecursionDepth = r.currentRecursionDepth + 1
 		nested.result.Status = StatusUnknown
 		nested.result.Error = nil
-		nested.result.StepStats.reset()
+		nested.result.Steps.reset()
 	}
 
 	if ctx.Err() != nil {

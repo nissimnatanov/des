@@ -44,6 +44,7 @@ func (l Level) String() string {
 type LevelComplexityBar int64
 
 const (
+	// TODO: need to adjust level bars
 	LevelEasyBar      LevelComplexityBar = 100
 	LevelMediumBar    LevelComplexityBar = 250
 	LevelHardBar      LevelComplexityBar = 500

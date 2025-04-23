@@ -1,6 +1,7 @@
 package solver_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/nissimnatanov/des/go/board"
@@ -8,69 +9,41 @@ import (
 	"gotest.tools/v3/assert"
 )
 
-/*
->>> Game Hardest 28
-╔═══════╦═══════╦═══════╗
-║ 6 0.0.║ 0.0.8 ║ 9 4 0.║
-║ 9 0.0.║ 0.0.6 ║ 1 0.0.║
-║ 0.7 0.║ 0.4 0.║ 0.0.0.║
-╠═══════╬═══════╬═══════╣
-║ 2 0.0.║ 6 1 0.║ 0.0.0.║
-║ 0.0.0.║ 0.0.0.║ 2 0.0.║
-║ 0.8 9 ║ 0.0.2 ║ 0.0.0.║
-╠═══════╬═══════╬═══════╣
-║ 0.0.0.║ 0.6 0.║ 0.0.5 ║
-║ 0.0.0.║ 0.0.0.║ 0.3 0.║
-║ 8 0.0.║ 0.0.1 ║ 6 0.0.║
-╚═══════╩═══════╩═══════╝
-
-	Sudoku Result {
-	  action: Solve
-	  status: Succeeded
-	  level (complexity): BlackHole (26301)
-	  board:  6D894A9D61C7B4D2B61J2C89B2G6C5G3A8D16B
-	  elapsed (microseconds): 581739
-	  value count: 22
-	  steps: {
-	    Easy [Single In Square, 1] X 305: 305
-	    Easy [Single In Row, 1] X 17: 17
-	    Easy [Single In Column, 1] X 19: 19
-	    Medium [The Only Choice, 5] X 32: 160
-	    Hard [Identify Pairs, 20] X 15: 300
-	    Recursion1 [Trial & Error, 100] X 5: 500
-	    Recursion2 [Trial & Error, 1000] X 25: 25000
-	  }
-	}
-*/
-const hardest28 = "6D894A9D61C7B4D2B61J2C89B2G6C5G3A8D16B" // complexity: 26301
-const hardest28Sol = "62_5_1_7_8943_94_8_3_2_615_7_3_71_9_45_8_6_2_25_7_619_3_8_4_4_6_3_5_8_7_29_1_1_894_3_25_7_6_7_9_2_8_63_4_1_55_1_6_2_9_4_7_38_83_4_7_5_162_9_"
-
 func TestSolveSanity(t *testing.T) {
 	board.SetIntegrityChecks(true)
 
 	ctx := t.Context()
 
-	b, err := board.Deserialize(hardest28)
-	assert.NilError(t, err)
+	for _, sample := range sampleBoards {
+		t.Run(sample.name, func(t *testing.T) {
+			b, err := board.Deserialize(sample.board)
+			assert.NilError(t, err)
 
-	s := solver.New(&solver.Options{
-		Action:            solver.ActionSolve,
-		MaxRecursionDepth: 5,
-	})
+			s := solver.New(&solver.Options{
+				Action:            solver.ActionSolve,
+				MaxRecursionDepth: 5,
+			})
 
-	// Solve the board
-	res := s.Run(ctx, b)
-	assert.NilError(t, res.Error)
+			// Solve the board
+			res := s.Run(ctx, b)
+			assert.NilError(t, res.Error)
 
-	assert.Equal(t, res.Status, solver.StatusSucceeded)
-	assert.Assert(t, res.StepStats.Level >= solver.LevelNightmare)
-	assert.Equal(t, res.Solutions.Size(), 1)
-	sol := res.Solutions.At(0)
-	assert.Assert(t, sol.IsValid())
-	assert.Assert(t, sol.IsSolved())
+			assert.Equal(t, res.Status, solver.StatusSucceeded)
+			assert.Assert(t, res.Steps.Level >= solver.LevelNightmare)
+			assert.Equal(t, res.Solutions.Size(), 1)
+			sol := res.Solutions.At(0)
+			assert.Assert(t, sol.IsValid())
+			assert.Assert(t, sol.IsSolved())
 
-	solStr := board.Serialize(sol)
-	assert.Equal(t, solStr, hardest28Sol)
+			solStr := board.Serialize(sol)
+			assert.Equal(t, solStr, sample.solution)
+
+			resJSON, err := json.MarshalIndent(res, "", "  ")
+			assert.NilError(t, err)
+			t.Log(string(resJSON))
+			t.Fail()
+		})
+	}
 }
 
 // start: BenchmarkSolve-10		2    899252146 ns/op    840329088 B/op   3602781 allocs/op
@@ -95,26 +68,34 @@ func TestSolveSanity(t *testing.T) {
 // the only choice find all instead of return on the first:
 // 								13	  87288247 ns/op	13644072 B/op	   55795 allocs/op
 // intro identify pairs:		30	  37168156 ns/op	 3566422 B/op	   14393 allocs/op
+//
+// same, change solve to prove:	19	  61008452 ns/op	 5671026 B/op	   23082 allocs/op
+// trial and error indexes and board cache:
+// 								19	  59378553 ns/op	  343362 B/op	   11614 allocs/op
+// trial and error cache allowed+index:
+// 								20	  57833294 ns/op	  530829 B/op	   17364 allocs/op
+// trial and error only sort by allowed size, ignore combined value, and use slices.SortFunc:
+// 								44	  27610850 ns/op	   20978 B/op	      58 allocs/op
 
-func BenchmarkSolve(b *testing.B) {
+func BenchmarkProve(b *testing.B) {
 	// board.SetIntegrityChecks(true)
 
 	ctx := b.Context()
 
 	// Create a new board
-	bd, err := board.Deserialize(hardest28)
+	bd, err := board.Deserialize(sampleBoards[0].board)
 	assert.NilError(b, err)
 
 	// Create a new solver
 	s := solver.New(&solver.Options{
-		Action: solver.ActionSolve,
+		Action: solver.ActionProve,
 	})
 
 	for b.Loop() {
 		res := s.Run(ctx, bd.Clone(board.Play))
 		assert.NilError(b, res.Error)
 		assert.Equal(b, res.Status, solver.StatusSucceeded)
-		assert.Assert(b, res.StepStats.Level >= solver.LevelNightmare)
+		assert.Assert(b, res.Steps.Level >= solver.LevelNightmare)
 		assert.Equal(b, res.Solutions.Size(), 1)
 	}
 }

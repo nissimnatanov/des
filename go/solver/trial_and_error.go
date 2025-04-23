@@ -2,19 +2,46 @@ package solver
 
 import (
 	"context"
-	"sort"
+	"slices"
 
 	"github.com/nissimnatanov/des/go/board"
+	"github.com/nissimnatanov/des/go/board/values"
 )
 
+type trialAndErrorIndex struct {
+	index   int
+	allowed values.Set
+}
+
 type trialAndError struct {
+	indexesCache cache[[]trialAndErrorIndex]
+	testBoard    cache[board.Board]
+}
+
+func newTrialAndError() *trialAndError {
+	return &trialAndError{
+		indexesCache: cache[[]trialAndErrorIndex]{
+			factory: func() []trialAndErrorIndex {
+				return make([]trialAndErrorIndex, 0, board.Size-17)
+			},
+			reset: func(v []trialAndErrorIndex) []trialAndErrorIndex {
+				// reset the slice to be empty but keep the capacity
+				return v[:0]
+			},
+		},
+		testBoard: cache[board.Board]{
+			factory: func() board.Board {
+				return board.New()
+			},
+		},
+	}
 }
 
 func (a trialAndError) String() string {
 	return "Trial and Error"
 }
 
-func (a trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
+func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	// TODO: check if we need the same layered recursion as in the C++ code
 	if state.CurrentRecursionDepth() >= state.MaxRecursionDepth() {
 		// this algorithm activates recursion
@@ -22,13 +49,16 @@ func (a trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	}
 
 	b := state.Board()
-	indexes := make([]int, 0, b.FreeCellCount())
+	indexes := a.indexesCache.get()
+	defer a.indexesCache.put(indexes) // slice is reset on next get
+
 	for i := range board.Size {
-		if b.IsEmpty(i) {
-			indexes = append(indexes, i)
+		if !b.IsEmpty(i) {
+			continue
 		}
-		if b.AllowedSet(i).Size() == 1 {
-			// if this algorithm is used only by itself (without other algorithms),
+		allowed := b.AllowedSet(i)
+		if allowed.Size() == 1 {
+			// if the trial algorithm is used only by itself (without other algorithms),
 			// we can skip the recursion and just set the value if this is the only option
 			// if we do not do this, recursion depth won't be enough to solve the board
 			b.Set(i, b.AllowedSet(i).At(0))
@@ -36,25 +66,30 @@ func (a trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			state.AddStep(Step(theOnlyChoiceAlgo.String()), theOnlyChoiceAlgo.Complexity(), 1)
 			return StatusSucceeded
 		}
+
+		indexes = append(indexes, trialAndErrorIndex{
+			index:   i,
+			allowed: b.AllowedSet(i),
+		})
+
 	}
 
-	//	if !state.Action().LevelRequested() {
-	// sort for faster performance (it runs ~twice faster)
-	sort.Slice(indexes, func(i, j int) bool {
-		allowed1 := b.AllowedSet(indexes[i])
-		allowed2 := b.AllowedSet(indexes[j])
-		if allowed1.Size() != allowed2.Size() {
-			// the less allowed the better
-			return allowed1.Size() < allowed2.Size()
-		}
-		return allowed1.Combined() < allowed2.Combined()
+	// sort for faster performance (it runs ~30% faster)
+	slices.SortFunc(indexes, func(tae1, tae2 trialAndErrorIndex) int {
+		// Important: only use the allowed size, not the 'combined' value of it,
+		// adding combined value to the picture slows down the sort X 3 because
+		// it needs to unnecessarily calculate the combined value and shuffle elements
+		// by it even though technically speaking it is not needed at all
+		return tae1.allowed.Size() - tae2.allowed.Size()
 	})
 
 	// create testBoard once and reuse it
-	testBoard := board.New()
+	testBoard := a.testBoard.get()
+	defer a.testBoard.put(testBoard)
 
-	for _, index := range indexes {
-		testValues := b.AllowedSet(index)
+	for _, tei := range indexes {
+		index := tei.index
+		testValues := tei.allowed
 		var foundBoards []board.Board
 		foundUnknown := false
 		for ti := range testValues.Size() {
@@ -78,7 +113,7 @@ func (a trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			}
 
 			a.reportStep(state)
-			state.MergeSteps(&result.StepStats)
+			state.MergeSteps(&result.Steps)
 
 			if result.Status == StatusNoSolution {
 				// when settings this value, the board cannot be solved, disallow it for future use
@@ -125,7 +160,7 @@ func (a trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	return StatusUnknown
 }
 
-func (a trialAndError) reportStep(state AlgorithmState) {
+func (a *trialAndError) reportStep(state AlgorithmState) {
 	var complexity StepComplexity
 	switch state.CurrentRecursionDepth() {
 	case 0:
@@ -134,8 +169,10 @@ func (a trialAndError) reportStep(state AlgorithmState) {
 		complexity = StepComplexityRecursion2
 	case 2:
 		complexity = StepComplexityRecursion3
-	default:
+	case 3:
 		complexity = StepComplexityRecursion4
+	default:
+		complexity = StepComplexityRecursion5
 	}
 	state.AddStep(Step(a.String()), complexity, 1)
 }

@@ -25,13 +25,18 @@ type Algorithm interface {
 }
 
 // for now hardcoded algorithms, we can allow dynamic register for the algorithms later
-var algorithms = []Algorithm{
+func GetAlgorithms(action Action) []Algorithm {
+	// for now - same algos for all actions
+	return []Algorithm{
+		theOnlyChoice{},
+		identifyPairs{},
+		newTrialAndError(),
+	}
+
 	/*
+		missing for Solve that requires accurate leveling (but not solve fast nor prove):
 			make_shared<SingleInSquare>(),
 		    make_shared<SingleInRow>(),
 		    make_shared<SingleInColumn>(),
 	*/
-	theOnlyChoice{},
-	identifyPairs{},
-	trialAndError{},
 }

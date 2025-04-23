@@ -1,10 +1,10 @@
 package solver
 
 type Result struct {
-	Status    Status
-	Error     error
-	StepStats StepStats
-	Solutions *Solutions
+	Status    Status     `json:"status"`
+	Error     error      `json:"error,omitempty"`
+	Steps     StepStats  `json:"steps"`
+	Solutions *Solutions `json:"-"`
 }
 
 func (r *Result) complete(status Status) *Result {

@@ -12,13 +12,14 @@ type Step string
 type StepComplexity int64
 
 const (
-	StepComplexityEasy       StepComplexity = 1      // single in square
-	StepComplexityMedium     StepComplexity = 5      // single in row/column
-	StepComplexityHard       StepComplexity = 20     // identify pairs
-	StepComplexityRecursion1 StepComplexity = 100    // single recursion
-	StepComplexityRecursion2 StepComplexity = 1000   // second-level recursion
-	StepComplexityRecursion3 StepComplexity = 10000  // third-level recursion
-	StepComplexityRecursion4 StepComplexity = 100000 // fourth-level recursion and beyond
+	StepComplexityEasy       StepComplexity = 1     // single in square
+	StepComplexityMedium     StepComplexity = 5     // single in row/column
+	StepComplexityHard       StepComplexity = 20    // identify pairs
+	StepComplexityRecursion1 StepComplexity = 100   // single recursion
+	StepComplexityRecursion2 StepComplexity = 500   // second-level recursion
+	StepComplexityRecursion3 StepComplexity = 2000  // third-level recursion
+	StepComplexityRecursion4 StepComplexity = 5000  // fourth-level recursion
+	StepComplexityRecursion5 StepComplexity = 10000 // fifth-level recursion and beyond
 )
 
 type StepStats struct {
