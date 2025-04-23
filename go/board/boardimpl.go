@@ -47,14 +47,14 @@ func (b *boardImpl) AllowedSet(index int) values.Set {
 		return b.allowedValuesCache[index]
 	}
 
-	disallowedValues := values.Union(b.relatedSet(index), b.userDisallowedValues[index])
+	disallowedValues := values.Union(b.relatedValues(index), b.userDisallowedValues[index])
 	allowedValues := disallowedValues.Complement()
 	b.allowedValuesCacheValidFlags.Set(index, true)
 	b.allowedValuesCache[index] = allowedValues
 	return allowedValues
 }
 
-func (b *boardImpl) relatedSet(index int) values.Set {
+func (b *boardImpl) relatedValues(index int) values.Set {
 	return values.Union(
 		b.RowSet(indexes.RowFromIndex(index)),
 		b.ColumnSet(indexes.ColumnFromIndex(index)),
@@ -85,6 +85,7 @@ func (b *boardImpl) IsSolved() bool {
 func New() Board {
 	var b boardImpl
 	b.init(Edit)
+	b.checkIntegrity()
 	return &b
 }
 
@@ -102,6 +103,7 @@ func (b *boardImpl) cloneInto(mode Mode, dst *boardImpl) {
 	dst.init(mode)
 	dst.copyValues(&b.base)
 	dst.copyStats(b)
+	dst.checkIntegrity()
 }
 
 func (b *boardImpl) CloneInto(mode Mode, dst Board) {
@@ -174,7 +176,6 @@ func (b *boardImpl) init(mode Mode) {
 	b.base.init(mode)
 	b.valueCounts[0] = Size
 	b.validFlags.SetAll(true)
-	b.checkIntegrity()
 }
 
 func (b *boardImpl) String() string {
@@ -207,7 +208,7 @@ func (b *boardImpl) updateStats(index int, oldValue, newValue values.Value) bool
 	// there is no need to re-validate the board.
 	valid := b.IsValid()
 	if newValue != 0 {
-		valid = valid && !b.relatedSet(index).Contains(newValue)
+		valid = valid && !b.relatedValues(index).Contains(newValue)
 	}
 	if !valid {
 		// recalculate all - do not care about performance for this case ...
@@ -231,7 +232,27 @@ func (b *boardImpl) updateStats(index int, oldValue, newValue values.Value) bool
 		b.squareSets[square] = b.squareSets[square].With(newValue.AsSet())
 	}
 	b.valueCounts[newValue]++
-	b.allowedValuesCacheValidFlags.ResetMask(indexes.RelatedSet(index))
+	if oldValue != 0 || newValue == 0 {
+		// If old value was present, we cannot just remove it from the allowed set of
+		// related indexes since the same value may appear in other related cells.
+		// It is faster to just invalidate the allowed values cache and let them
+		// be recalculated on demand.
+		b.allowedValuesCacheValidFlags.ResetMask(indexes.RelatedSet(index))
+		return false
+	}
+	// if we added new value over empty space, than it is totally safe to exclude this
+	// value from the allowed values of related cells.
+	relatedIndexes := indexes.RelatedSequence(index)
+	for ri := range relatedIndexes.Size() {
+		relatedIndex := relatedIndexes.Get(ri)
+		if relatedIndex == index || !b.IsEmpty(relatedIndex) ||
+			!b.allowedValuesCacheValidFlags.Get(relatedIndex) {
+			continue
+		}
+		b.allowedValuesCache[relatedIndex] =
+			b.allowedValuesCache[relatedIndex].Without(newValue.AsSet())
+	}
+
 	return false
 }
 
@@ -256,6 +277,8 @@ func (b *boardImpl) recalculateAllStats() {
 		b.colSets[seq] = b.validateSequence(indexes.ColumnSequence(seq))
 		b.squareSets[seq] = b.validateSequence(indexes.SquareSequence(seq))
 	}
+
+	b.checkIntegrity()
 }
 
 func (b *boardImpl) validateSequence(s indexes.Sequence) values.Set {

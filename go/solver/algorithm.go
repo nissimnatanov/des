@@ -32,10 +32,6 @@ var algorithms = []Algorithm{
 		    make_shared<SingleInColumn>(),
 	*/
 	theOnlyChoice{},
-
-	/*
-	   // elimination algorithms
-	   make_shared<IdentifyPairs>(),
-	*/
+	identifyPairs{},
 	trialAndError{},
 }

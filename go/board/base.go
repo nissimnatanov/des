@@ -6,9 +6,9 @@ import (
 )
 
 type base struct {
-	mode          Mode
-	readOnlyFlags indexes.BitSet81
 	values        [Size]values.Value
+	readOnlyFlags indexes.BitSet81
+	mode          Mode
 }
 
 func (b *base) Mode() Mode {

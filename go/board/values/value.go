@@ -15,7 +15,7 @@ func (v Value) AsSet() Set {
 	if v == 0 {
 		return EmptySet()
 	}
-	return Set{1 << (v - 1)}
+	return Set(1 << (v - 1))
 }
 
 func (v Value) String() string {

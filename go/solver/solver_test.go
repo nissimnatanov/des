@@ -46,17 +46,13 @@ const hardest28 = "6D894A9D61C7B4D2B61J2C89B2G6C5G3A8D16B" // complexity: 26301
 const hardest28Sol = "62_5_1_7_8943_94_8_3_2_615_7_3_71_9_45_8_6_2_25_7_619_3_8_4_4_6_3_5_8_7_29_1_1_894_3_25_7_6_7_9_2_8_63_4_1_55_1_6_2_9_4_7_38_83_4_7_5_162_9_"
 
 func TestSolveSanity(t *testing.T) {
-	// board.SetIntegrityChecks(true)
+	board.SetIntegrityChecks(true)
 
 	ctx := t.Context()
-	//ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	//defer cancel()
 
-	// Create a new board
 	b, err := board.Deserialize(hardest28)
 	assert.NilError(t, err)
 
-	// Create a new solver
 	s := solver.New(&solver.Options{
 		Action:            solver.ActionSolve,
 		MaxRecursionDepth: 5,
@@ -86,6 +82,19 @@ func TestSolveSanity(t *testing.T) {
 // remove extra opts, use int8:	2	 587739542 ns/op	90374112 B/op	  750795 allocs/op
 // cache nested runner:         2	 535637146 ns/op	10718752 B/op	   39626 allocs/op
 // reset only related mask: 	2	 501356520 ns/op	10721440 B/op	   39630 allocs/op
+// max recursion = 3:           2	 617901208 ns/op	10625184 B/op	   37093 allocs/op
+// max recursion = 6:           4	 308006740 ns/op	 8763860 B/op	   33233 allocs/op
+// max recursion = 8:           8	 125123255 ns/op	 9652900 B/op	   38615 allocs/op
+// max recursion = 8:           8	 125123255 ns/op	 9652900 B/op	   38615 allocs/op
+// max recursion = 9:           10	 100261408 ns/op	11426868 B/op	   46389 allocs/op
+// max recursion = 10:			12	  99804208 ns/op	13643776 B/op	   55795 allocs/op
+// max recursion = 11: 			12	  99433708 ns/op	13644170 B/op	   55795 allocs/op
+// max recursion = 12: 			10	 101927704 ns/op	15431537 B/op	   63405 allocs/op
+// max recursion = 14:			10	 105331192 ns/op	18319923 B/op	   75798 allocs/op
+// values first in base board   12	  98538781 ns/op	13643741 B/op	   55795 allocs/op
+// the only choice find all instead of return on the first:
+// 								13	  87288247 ns/op	13644072 B/op	   55795 allocs/op
+// intro identify pairs:		30	  37168156 ns/op	 3566422 B/op	   14393 allocs/op
 
 func BenchmarkSolve(b *testing.B) {
 	// board.SetIntegrityChecks(true)
@@ -98,8 +107,7 @@ func BenchmarkSolve(b *testing.B) {
 
 	// Create a new solver
 	s := solver.New(&solver.Options{
-		Action:            solver.ActionSolve,
-		MaxRecursionDepth: 5,
+		Action: solver.ActionSolve,
 	})
 
 	for b.Loop() {

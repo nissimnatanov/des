@@ -78,9 +78,13 @@ func (s *Solver) Run(ctx context.Context, b board.Board) *Result {
 	}
 
 	switch {
-	case s.opts.MaxRecursionDepth > 127:
-		r.maxRecursionDepth = 127
-	case s.opts.MaxRecursionDepth < 0:
+	case s.opts.MaxRecursionDepth > 32:
+		// 32 is way too deep, best perf achieved around 10-15 and from there usually
+		// the-only-choice algo completes the board, anything above that is useless
+		r.maxRecursionDepth = 32
+	case s.opts.MaxRecursionDepth <= 0:
+		// without recursion it is virtually impossible to solve many boards,
+		// zero is not a valid value
 		r.maxRecursionDepth = 10
 	default:
 		r.maxRecursionDepth = int8(s.opts.MaxRecursionDepth)

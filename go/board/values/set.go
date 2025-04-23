@@ -4,49 +4,48 @@ import (
 	"strconv"
 )
 
+// Set represents a set of values using a bit mask, it is considered immutable.
+// Only the first 9 bits are used
+type Set uint16
+
 func EmptySet() Set {
-	return Set{0}
+	return Set(0)
 }
 
 func FullSet() Set {
-	return Set{0x1FF}
+	return Set(0x1FF)
 }
 
 func Intersect(vs1 Set, vs2 Set, more ...Set) Set {
-	mask := vs1.mask & vs2.mask
+	mask := vs1 & vs2
 	for _, vs := range more {
-		mask &= vs.mask
+		mask &= vs
 	}
-	return Set{mask}
+	return Set(mask)
 }
 
 func Union(vs1 Set, vs2 Set, more ...Set) Set {
-	mask := vs1.mask | vs2.mask
+	mask := vs1 | vs2
 	for _, vs := range more {
-		mask |= vs.mask
+		mask |= vs
 	}
-	return Set{mask}
+	return Set(mask)
 }
 
 func NewSet(vs ...Value) Set {
-	var mask int16
+	var mask Set
 	for _, v := range vs {
-		mask |= v.AsSet().mask
+		mask |= v.AsSet()
 	}
-	return Set{mask}
-}
-
-// Set represents a set of values using a bit mask, it is considered immutable.
-type Set struct {
-	mask int16
+	return Set(mask)
 }
 
 func (vs Set) IsEmpty() bool {
-	return vs.mask == 0
+	return vs == 0
 }
 
 func (vs Set) At(i int) Value {
-	return setInfoCache[vs.mask].values[i]
+	return setInfoCache[vs].values[i]
 }
 
 func (vs Set) With(other Set) Set {
@@ -58,15 +57,15 @@ func (vs Set) Without(other Set) Set {
 }
 
 func (vs Set) Complement() Set {
-	return Set{FullSet().mask &^ vs.mask}
+	return FullSet() &^ vs
 }
 
 func (vs Set) ContainsAll(other Set) bool {
-	return (vs.mask & other.mask) == other.mask
+	return (vs & other) == other
 }
 
 func (vs Set) ContainsAny(other Set) bool {
-	return (vs.mask & other.mask) != 0
+	return (vs & other) != 0
 }
 
 func (vs Set) Contains(v Value) bool {
@@ -75,11 +74,11 @@ func (vs Set) Contains(v Value) bool {
 }
 
 func (vs Set) Size() int {
-	return len(setInfoCache[vs.mask].values)
+	return len(setInfoCache[vs].values)
 }
 
 func (vs Set) Combined() int {
-	return setInfoCache[vs.mask].combined
+	return setInfoCache[vs].combined
 }
 
 func (vs Set) String() string {
