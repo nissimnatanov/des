@@ -14,11 +14,9 @@ type identifyPairs struct {
 func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 	b := state.Board()
 	for index := range board.Size {
-		if !b.IsEmpty(index) {
-			continue
-		}
 		allowedValues := b.AllowedSet(index)
 		if allowedValues.Size() != 2 {
+			// this includes non-empty cells too (allowed set is empty)
 			continue
 		}
 		peerIndex := a.findPeer(b, allowedValues, indexes.RelatedSequence(index))
@@ -59,11 +57,11 @@ func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 
 func (a identifyPairs) tryEliminate(
 	board board.Board, ignore1, ignore2 int,
-	allowedValues values.Set, indexes indexes.Sequence,
+	allowedValues values.Set, seq indexes.Sequence,
 ) bool {
 	found := false
-	for temp := 0; temp < 9; temp++ {
-		index := indexes.Get(temp)
+	for temp := range seq.Size() {
+		index := seq.Get(temp)
 		if index == ignore1 || index == ignore2 || !board.IsEmpty(index) {
 			continue
 		}
@@ -79,9 +77,9 @@ func (a identifyPairs) tryEliminate(
 	return found
 }
 
-func (a identifyPairs) findPeer(board board.Board, allowedValues values.Set, indexes indexes.Sequence) int {
-	for pi := range indexes.Size() {
-		peerIndex := indexes.Get(pi)
+func (a identifyPairs) findPeer(board board.Board, allowedValues values.Set, seq indexes.Sequence) int {
+	for pi := range seq.Size() {
+		peerIndex := seq.Get(pi)
 		if !board.IsEmpty(peerIndex) {
 			continue
 		}

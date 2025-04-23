@@ -71,7 +71,6 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			index:   i,
 			allowed: b.AllowedSet(i),
 		})
-
 	}
 
 	// sort for faster performance (it runs ~30% faster)

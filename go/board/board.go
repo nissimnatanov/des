@@ -32,7 +32,6 @@ type Board interface {
 	SquareSet(square int) values.Set
 
 	AllowedSet(index int) values.Set
-	Count(v values.Value) int
 	FreeCellCount() int
 
 	IsValidCell(index int) bool

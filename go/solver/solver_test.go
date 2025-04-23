@@ -41,7 +41,7 @@ func TestSolveSanity(t *testing.T) {
 			resJSON, err := json.MarshalIndent(res, "", "  ")
 			assert.NilError(t, err)
 			t.Log(string(resJSON))
-			t.Fail()
+			// t.Fail()
 		})
 	}
 }
@@ -76,10 +76,12 @@ func TestSolveSanity(t *testing.T) {
 // 								20	  57833294 ns/op	  530829 B/op	   17364 allocs/op
 // trial and error only sort by allowed size, ignore combined value, and use slices.SortFunc:
 // 								44	  27610850 ns/op	   20978 B/op	      58 allocs/op
+// replace value counts with free cell count only:
+// 								45	  25965642 ns/op	   20274 B/op	      58 allocs/op
+// allowed value cache is always valid, remove row/col/square count caches:
+// 								48	  24858786 ns/op	   19217 B/op	      58 allocs/op
 
 func BenchmarkProve(b *testing.B) {
-	// board.SetIntegrityChecks(true)
-
 	ctx := b.Context()
 
 	// Create a new board

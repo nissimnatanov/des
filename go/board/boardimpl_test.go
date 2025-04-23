@@ -26,7 +26,6 @@ func TestEmptyBoard(t *testing.T) {
 	assert.Equal(t, values.EmptySet(), b.ColumnSet(8))
 	assert.Equal(t, values.EmptySet(), b.SquareSet(2))
 	assert.Equal(t, 81, b.FreeCellCount())
-	assert.Equal(t, 0, b.Count(7))
 
 	assert.Equal(t, values.FullSet(), b.AllowedSet(0))
 	assert.Equal(t, values.FullSet(), b.AllowedSet(80))
@@ -46,8 +45,6 @@ func TestEmptyBoard(t *testing.T) {
 	assert.Assert(t, cmp.Panics(func() { b.RowSet(-3) }))
 	assert.Assert(t, cmp.Panics(func() { b.ColumnSet(9) }))
 	assert.Assert(t, cmp.Panics(func() { b.SquareSet(111) }))
-	assert.Assert(t, cmp.Panics(func() { b.Count(-1) }))
-	assert.Assert(t, cmp.Panics(func() { b.Count(10) }))
 	assert.Assert(t, cmp.Panics(func() { b.AllowedSet(-1) }))
 	assert.Assert(t, cmp.Panics(func() { b.AllowedSet(81) }))
 	assert.Assert(t, cmp.Panics(func() { b.Disallow(81, 7) }))

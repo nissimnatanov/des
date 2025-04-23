@@ -12,61 +12,51 @@ import (
 type boardImpl struct {
 	base
 
-	rowSets              [indexes.SequenceSize]values.Set
-	colSets              [indexes.SequenceSize]values.Set
-	squareSets           [indexes.SequenceSize]values.Set
-	valueCounts          [indexes.SequenceSize + 1]int
+	freeCellCount        int
 	validFlags           indexes.BitSet81
 	userDisallowedValues [Size]values.Set
 
-	// Allowed values cache is special - the moment at least one value changes, it is easier to invalidate
-	// all indexes instead of recalculating related ones.
-	allowedValuesCache           [Size]values.Set
-	allowedValuesCacheValidFlags indexes.BitSet81
+	// AllowedValuesCache must be always up-2-date, it does not include used disallowed values
+	// (user disallowed values are excluded from the public AllowedSet API).
+	// If cell is empty, it contains the allowed values for the cell.
+	// If cell is not empty, it is empty.
+	allowedValuesCache [Size]values.Set
 }
 
+// TODO: we may remove RowSet, ColumnSet, SquareSet if not needed or leave for non-fast solver
 func (b *boardImpl) RowSet(row int) values.Set {
-	return b.rowSets[row]
+	return b.sequenceValues(indexes.RowSequence(row))
 }
 
 func (b *boardImpl) ColumnSet(col int) values.Set {
-	return b.colSets[col]
+	return b.sequenceValues(indexes.ColumnSequence(col))
 }
 
 func (b *boardImpl) SquareSet(square int) values.Set {
-	return b.squareSets[square]
+	return b.sequenceValues(indexes.SquareSequence(square))
 }
 
 func (b *boardImpl) AllowedSet(index int) values.Set {
-	v := b.Get(index)
-	if v != 0 {
-		return values.EmptySet()
-	}
-
-	if b.allowedValuesCacheValidFlags.Get(index) {
-		return b.allowedValuesCache[index]
-	}
-
-	disallowedValues := values.Union(b.relatedValues(index), b.userDisallowedValues[index])
-	allowedValues := disallowedValues.Complement()
-	b.allowedValuesCacheValidFlags.Set(index, true)
-	b.allowedValuesCache[index] = allowedValues
-	return allowedValues
+	return b.allowedValuesCache[index].Without(b.userDisallowedValues[index])
 }
 
 func (b *boardImpl) relatedValues(index int) values.Set {
-	return values.Union(
-		b.RowSet(indexes.RowFromIndex(index)),
-		b.ColumnSet(indexes.ColumnFromIndex(index)),
-		b.SquareSet(indexes.SquareFromIndex(index)))
+	return b.sequenceValues(indexes.RelatedSequence(index))
 }
 
-func (b *boardImpl) Count(v values.Value) int {
-	return b.valueCounts[v]
+func (b *boardImpl) sequenceValues(s indexes.Sequence) values.Set {
+	values := values.EmptySet()
+	for ri := range s.Size() {
+		v := b.Get(s.Get(ri))
+		if v != 0 {
+			values = values.With(v.AsSet())
+		}
+	}
+	return values
 }
 
 func (b *boardImpl) FreeCellCount() int {
-	return b.Count(0)
+	return b.freeCellCount
 }
 
 func (b *boardImpl) IsValidCell(index int) bool {
@@ -84,8 +74,7 @@ func (b *boardImpl) IsSolved() bool {
 // Empty board in Edit mode
 func New() Board {
 	var b boardImpl
-	b.init(Edit)
-	b.checkIntegrity()
+	b.initZeroStats(Edit)
 	return &b
 }
 
@@ -100,7 +89,7 @@ func (b *boardImpl) Clone(mode Mode) Board {
 }
 
 func (b *boardImpl) cloneInto(mode Mode, dst *boardImpl) {
-	dst.init(mode)
+	dst.base.init(mode)
 	dst.copyValues(&b.base)
 	dst.copyStats(b)
 	dst.checkIntegrity()
@@ -136,23 +125,15 @@ func (b *boardImpl) DisallowSet(index int, vs values.Set) {
 	}
 
 	b.userDisallowedValues[index] = values.Union(b.userDisallowedValues[index], vs)
-	// if the flags are not valid, this op is useless, but also harmless
-	b.allowedValuesCache[index] = b.allowedValuesCache[index].Without(vs)
 }
 
 func (b *boardImpl) DisallowReset(index int) {
 	b.userDisallowedValues[index] = values.EmptySet()
-	b.allowedValuesCacheValidFlags.Set(index, false)
 }
 
 func (b *boardImpl) setInternal(index int, v values.Value, readOnly bool) values.Value {
 	previousValue := b.base.setInternal(index, v, readOnly)
-
-	// stats
-	needToRecalculateAll := b.updateStats(index, previousValue, v)
-	if needToRecalculateAll {
-		b.recalculateAllStats()
-	}
+	b.updateStats(index, previousValue, v)
 	return previousValue
 }
 
@@ -172,10 +153,14 @@ func (b *boardImpl) Restart() {
 }
 
 // only sets non-zero values
-func (b *boardImpl) init(mode Mode) {
+func (b *boardImpl) initZeroStats(mode Mode) {
 	b.base.init(mode)
-	b.valueCounts[0] = Size
+	b.freeCellCount = Size
+	for i := range b.allowedValuesCache {
+		b.allowedValuesCache[i] = values.FullSet()
+	}
 	b.validFlags.SetAll(true)
+	b.checkIntegrity()
 }
 
 func (b *boardImpl) String() string {
@@ -189,104 +174,103 @@ func (b *boardImpl) copyStats(source *boardImpl) {
 		panic("Cannot copy nil board")
 	}
 
-	copy(b.rowSets[:], source.rowSets[:])
-	copy(b.colSets[:], source.colSets[:])
-	copy(b.squareSets[:], source.squareSets[:])
-	copy(b.valueCounts[:], source.valueCounts[:])
+	b.freeCellCount = source.freeCellCount
 	b.validFlags = source.validFlags
 	copy(b.userDisallowedValues[:], source.userDisallowedValues[:])
 	copy(b.allowedValuesCache[:], source.allowedValuesCache[:])
-	b.allowedValuesCacheValidFlags = source.allowedValuesCacheValidFlags
 }
 
-func (b *boardImpl) updateStats(index int, oldValue, newValue values.Value) bool {
+func (b *boardImpl) updateStats(index int, oldValue, newValue values.Value) {
 	if oldValue == newValue {
-		return false
+		return
 	}
 
 	// if board was valid before and the new value does not appear in related cells,
 	// there is no need to re-validate the board.
-	valid := b.IsValid()
-	if newValue != 0 {
-		valid = valid && !b.relatedValues(index).Contains(newValue)
+	isValid := b.IsValid()
+	if isValid && newValue != 0 {
+		var allowedValues values.Set
+		if oldValue != 0 {
+			// If cell had a value before, its allowed values cache was 0, hence we cannot use it
+			// to validate the new value. Instead, recalculate it based on the related cells.
+			allowedValues = b.relatedValues(index).Complement()
+		} else {
+			// if cell was empty before, its allowed values cache was valid
+			allowedValues = b.allowedValuesCache[index]
+		}
+		isValid = isValid && allowedValues.Contains(newValue)
 	}
-	if !valid {
-		// recalculate all - do not care about performance for this case ...
-		return true
+	if !isValid {
+		// Recalculate the whole board to update Valid state on the cells. Since the built-in
+		// solvers should never hit it, do not care about performance for this case.
+		b.recalculateAllStats()
+		return
 	}
 
-	row := indexes.RowFromIndex(index)
-	col := indexes.ColumnFromIndex(index)
-	square := indexes.SquareFromIndex(index)
+	if oldValue == 0 {
+		b.freeCellCount--
+	}
+	if newValue == 0 {
+		b.freeCellCount++
+		// if we set non-empty to empty, recalculate the allowed values
+		b.allowedValuesCache[index] = b.relatedValues(index).Complement()
+	} else {
+		b.allowedValuesCache[index] = values.EmptySet()
+	}
 
-	if oldValue != 0 {
-		b.rowSets[row] = b.rowSets[row].Without(oldValue.AsSet())
-		b.colSets[col] = b.colSets[col].Without(oldValue.AsSet())
-		b.squareSets[square] = b.squareSets[square].Without(oldValue.AsSet())
-	}
-	b.valueCounts[oldValue]--
-
-	if newValue != 0 {
-		b.rowSets[row] = b.rowSets[row].With(newValue.AsSet())
-		b.colSets[col] = b.colSets[col].With(newValue.AsSet())
-		b.squareSets[square] = b.squareSets[square].With(newValue.AsSet())
-	}
-	b.valueCounts[newValue]++
-	if oldValue != 0 || newValue == 0 {
-		// If old value was present, we cannot just remove it from the allowed set of
-		// related indexes since the same value may appear in other related cells.
-		// It is faster to just invalidate the allowed values cache and let them
-		// be recalculated on demand.
-		b.allowedValuesCacheValidFlags.ResetMask(indexes.RelatedSet(index))
-		return false
-	}
-	// if we added new value over empty space, than it is totally safe to exclude this
-	// value from the allowed values of related cells.
-	relatedIndexes := indexes.RelatedSequence(index)
-	for ri := range relatedIndexes.Size() {
-		relatedIndex := relatedIndexes.Get(ri)
-		if relatedIndex == index || !b.IsEmpty(relatedIndex) ||
-			!b.allowedValuesCacheValidFlags.Get(relatedIndex) {
+	relatedSeq := indexes.RelatedSequence(index)
+	for ri := range relatedSeq.Size() {
+		relatedIndex := relatedSeq.Get(ri)
+		if relatedIndex == index || !b.IsEmpty(relatedIndex) {
 			continue
 		}
-		b.allowedValuesCache[relatedIndex] =
-			b.allowedValuesCache[relatedIndex].Without(newValue.AsSet())
-	}
 
-	return false
+		if oldValue != 0 {
+			// If old value was present, we cannot just add it to the allowed set of
+			// related indexes since the same value may appear in other related cells.
+			b.allowedValuesCache[relatedIndex] = b.relatedValues(relatedIndex).Complement()
+		}
+		if newValue != 0 {
+			// if we added new value than it is totally safe to exclude this
+			// value from the allowed values of related cells.
+			b.allowedValuesCache[relatedIndex] =
+				b.allowedValuesCache[relatedIndex].Without(newValue.AsSet())
+		}
+	}
+	b.checkIntegrity()
 }
 
 func (b *boardImpl) recalculateAllStats() {
 	// assume valid unless proven otherwise inside calcSequenceSet
 	b.validFlags.SetAll(true)
-	// force recalculation of allowed values
-	b.allowedValuesCacheValidFlags.Reset()
 
 	// value counts
-	for i := range indexes.SequenceSize {
-		b.valueCounts[i] = 0
-	}
+	b.freeCellCount = 0
 	for i := range Size {
-		b.valueCounts[b.Get(i)]++
+		if b.IsEmpty(i) {
+			b.freeCellCount++
+			b.allowedValuesCache[i] = b.relatedValues(i).Complement()
+		} else {
+			b.allowedValuesCache[i] = values.EmptySet()
+		}
 	}
 
 	// init rowSets, colSets; and squareSets
 	// validFlags are unset if dupe detected
 	for seq := range indexes.SequenceSize {
-		b.rowSets[seq] = b.validateSequence(indexes.RowSequence(seq))
-		b.colSets[seq] = b.validateSequence(indexes.ColumnSequence(seq))
-		b.squareSets[seq] = b.validateSequence(indexes.SquareSequence(seq))
+		b.validateSequence(indexes.RowSequence(seq))
+		b.validateSequence(indexes.ColumnSequence(seq))
+		b.validateSequence(indexes.SquareSequence(seq))
 	}
 
 	b.checkIntegrity()
 }
 
-func (b *boardImpl) validateSequence(s indexes.Sequence) values.Set {
-	vs, dupes := b.calcSequence(s)
+func (b *boardImpl) validateSequence(s indexes.Sequence) {
+	_, dupes := b.calcSequence(s)
 	for vi := range dupes.Size() {
 		b.markSequenceInvalid(dupes.At(vi), s)
 	}
-	return vs
 }
 
 func (b *boardImpl) markSequenceInvalid(v values.Value, s indexes.Sequence) {
@@ -318,11 +302,13 @@ func (b *boardImpl) checkIntegrity() {
 		return
 	}
 
-	var valueCounts [indexes.SequenceSize + 1]int
+	var freeCellCount int
 
 	for i := range Size {
 		v := b.Get(i)
-		valueCounts[v] += 1
+		if v == 0 {
+			freeCellCount++
+		}
 
 		if v != 0 {
 			// check this value is disallowed in other places
@@ -354,33 +340,28 @@ func (b *boardImpl) checkIntegrity() {
 					}
 				}
 			}
+			if b.AllowedSet(i) != values.EmptySet() {
+				panic(fmt.Sprintf(
+					"allowed values for non-empty cell %v must be empty: actual %v\n%v",
+					i, b.AllowedSet(i), b.String()))
+			}
 		} else {
 			// check that disallowed values are a union of row/column/square
-			row := indexes.RowFromIndex(i)
-			col := indexes.ColumnFromIndex(i)
-			square := indexes.SquareFromIndex(i)
-
 			disallowedValuesExpected := values.Union(
-				b.rowSets[row],
-				b.colSets[col],
-				b.squareSets[square],
+				b.relatedValues(i),
 				b.userDisallowedValues[i])
 
 			if b.AllowedSet(i) != disallowedValuesExpected.Complement() {
-				panic(
-					fmt.Sprintf(
-						"wrong allowed values for cell %v: expected %v, actual %v\n%v",
-						i, disallowedValuesExpected.Complement(), b.AllowedSet(i), b.String()))
+				panic(fmt.Sprintf(
+					"wrong allowed values for cell %v: expected %v, actual %v\n%v",
+					i, disallowedValuesExpected.Complement(), b.AllowedSet(i), b.String()))
 			}
 		}
 	}
 
-	for v := range indexes.SequenceSize {
-		if valueCounts[v] != b.valueCounts[v] {
-			panic(
-				fmt.Sprintf(
-					"wrong value counts for %v: expected %v, actual %v\n%v",
-					v, valueCounts[v], b.valueCounts[v], b.String()))
-		}
+	if freeCellCount != b.freeCellCount {
+		panic(fmt.Sprintf(
+			"wrong free cell counts: expected %v, actual %v\n%v",
+			freeCellCount, b.freeCellCount, b.String()))
 	}
 }

@@ -136,11 +136,11 @@ func (sol *solutionImpl) Clone(mode Mode) Board {
 		return sol
 	}
 
-	var newBoard boardImpl
-	newBoard.init(mode)
+	newBoard := &boardImpl{}
+	newBoard.base.init(mode)
 	newBoard.copyValues(&sol.base)
 	newBoard.recalculateAllStats()
-	return &newBoard
+	return newBoard
 }
 
 func (sol *solutionImpl) CloneInto(mode Mode, dst Board) {

@@ -11,7 +11,7 @@ type theOnlyChoice struct {
 
 func (a theOnlyChoice) Run(ctx context.Context, state AlgorithmState) Status {
 	b := state.Board()
-	status := StatusUnknown
+	found := 0
 	for i := range board.Size {
 		if !b.IsEmpty(i) {
 			continue
@@ -22,11 +22,15 @@ func (a theOnlyChoice) Run(ctx context.Context, state AlgorithmState) Status {
 			return StatusNoSolution
 		case 1:
 			b.Set(i, allowed.At(0))
-			state.AddStep(Step(a.String()), a.Complexity(), 1)
-			status = StatusSucceeded
+			found++
 		}
 	}
-	return status
+	if found == 0 {
+		return StatusUnknown
+	}
+
+	state.AddStep(Step(a.String()), a.Complexity(), found)
+	return StatusSucceeded
 }
 
 func (a theOnlyChoice) Complexity() StepComplexity {
