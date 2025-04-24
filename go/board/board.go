@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	Size = indexes.BoardSize
+	SequenceSize = indexes.BoardSequenceSize
+	Size         = indexes.BoardSize
 
 	MinValidBoardSize = 17
 )

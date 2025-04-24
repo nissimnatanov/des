@@ -56,8 +56,7 @@ func (b *base) copyValues(other *base) {
 }
 
 func (b *base) calcSequence(s indexes.Sequence) (vs values.Set, dupes values.Set) {
-	for si := range s.Size() {
-		index := s.Get(si)
+	for index := range s.Indexes() {
 		v := b.Get(index)
 		if v == 0 {
 			continue

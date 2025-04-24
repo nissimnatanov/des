@@ -6,7 +6,6 @@ import (
 	"runtime/debug"
 
 	"github.com/nissimnatanov/des/go/board"
-	"github.com/nissimnatanov/des/go/board/indexes"
 	"github.com/nissimnatanov/des/go/board/values"
 )
 
@@ -45,13 +44,12 @@ func (s *Solver) Run(ctx context.Context, b board.Board) *Result {
 		return result.complete(StatusLessThan17)
 	}
 
-	var valueCounts [indexes.SequenceSize]int
+	var valueCounts [board.SequenceSize]int
 	for i := range board.Size {
 		v := b.Get(i)
-		if v == 0 {
-			continue
+		if v != 0 {
+			valueCounts[v-1]++
 		}
-		valueCounts[v-1]++
 	}
 	missingValues := 0
 	for v := values.Value(1); v <= 9; v++ {
@@ -269,7 +267,6 @@ func (r *runner) recursiveRun(ctx context.Context, b board.Board) *Result {
 			algorithms: r.algorithms,
 		}
 		r.nestedCache = nested
-
 	} else {
 		// we just need to set the board and reset the result's status
 		nested.board = b

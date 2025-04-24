@@ -46,8 +46,8 @@ func (b *boardImpl) relatedValues(index int) values.Set {
 
 func (b *boardImpl) sequenceValues(s indexes.Sequence) values.Set {
 	values := values.EmptySet()
-	for ri := range s.Size() {
-		v := b.Get(s.Get(ri))
+	for i := range s.Indexes() {
+		v := b.Get(i)
 		if v != 0 {
 			values = values.With(v.AsSet())
 		}
@@ -219,8 +219,7 @@ func (b *boardImpl) updateStats(index int, oldValue, newValue values.Value) {
 	}
 
 	relatedSeq := indexes.RelatedSequence(index)
-	for ri := range relatedSeq.Size() {
-		relatedIndex := relatedSeq.Get(ri)
+	for relatedIndex := range relatedSeq.Indexes() {
 		if relatedIndex == index || !b.IsEmpty(relatedIndex) {
 			continue
 		}
@@ -257,7 +256,7 @@ func (b *boardImpl) recalculateAllStats() {
 
 	// init rowSets, colSets; and squareSets
 	// validFlags are unset if dupe detected
-	for seq := range indexes.SequenceSize {
+	for seq := range SequenceSize {
 		b.validateSequence(indexes.RowSequence(seq))
 		b.validateSequence(indexes.ColumnSequence(seq))
 		b.validateSequence(indexes.SquareSequence(seq))
@@ -268,8 +267,8 @@ func (b *boardImpl) recalculateAllStats() {
 
 func (b *boardImpl) validateSequence(s indexes.Sequence) {
 	_, dupes := b.calcSequence(s)
-	for vi := range dupes.Size() {
-		b.markSequenceInvalid(dupes.At(vi), s)
+	for v := range dupes.Values() {
+		b.markSequenceInvalid(v, s)
 	}
 }
 
@@ -277,8 +276,7 @@ func (b *boardImpl) markSequenceInvalid(v values.Value, s indexes.Sequence) {
 	readOnly := []int{}
 	foundReadWrite := false
 
-	for si := range s.Size() {
-		index := s.Get(si)
+	for index := range s.Indexes() {
 		if b.Get(index) != v {
 			continue
 		}
@@ -313,8 +311,7 @@ func (b *boardImpl) checkIntegrity() {
 		if v != 0 {
 			// check this value is disallowed in other places
 			rs := indexes.RelatedSequence(i)
-			for ri := range rs.Size() {
-				related := rs.Get(ri)
+			for related := range rs.Indexes() {
 				rv := b.Get(related)
 				if rv == 0 {
 					if b.AllowedSet(related).Contains(v) {

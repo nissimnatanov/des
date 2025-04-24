@@ -55,12 +55,12 @@ func Write(b Board, bw *bufio.Writer, fmt string) {
 func WriteValues(b Board, bw *bufio.Writer) {
 	bw.WriteString("╔═══════╦═══════╦═══════╗\n")
 	bw.Flush()
-	for row := range indexes.SequenceSize {
+	for row := range SequenceSize {
 		if row != 0 && (row%3) == 0 {
 			bw.WriteString("╠═══════╬═══════╬═══════╣\n")
 			bw.Flush()
 		}
-		for col := range indexes.SequenceSize {
+		for col := range SequenceSize {
 			if col%3 == 0 {
 				bw.WriteString("║ ")
 			}
@@ -108,7 +108,7 @@ func WriteSquareSets(b Board, bw *bufio.Writer) {
 }
 
 func writeSets(fs func(si int) values.Set, bw *bufio.Writer) {
-	for si := range indexes.SequenceSize {
+	for si := range SequenceSize {
 		bw.WriteString(" [")
 		bw.WriteString(fs(si).String())
 		bw.WriteRune(']')

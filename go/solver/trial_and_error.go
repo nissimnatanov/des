@@ -61,7 +61,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			// if the trial algorithm is used only by itself (without other algorithms),
 			// we can skip the recursion and just set the value if this is the only option
 			// if we do not do this, recursion depth won't be enough to solve the board
-			b.Set(i, b.AllowedSet(i).At(0))
+			b.Set(i, allowed.At(0))
 			theOnlyChoiceAlgo := theOnlyChoice{}
 			state.AddStep(Step(theOnlyChoiceAlgo.String()), theOnlyChoiceAlgo.Complexity(), 1)
 			return StatusSucceeded
@@ -69,7 +69,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 
 		indexes = append(indexes, trialAndErrorIndex{
 			index:   i,
-			allowed: b.AllowedSet(i),
+			allowed: allowed,
 		})
 	}
 
@@ -91,12 +91,11 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 		testValues := tei.allowed
 		var foundBoards []board.Board
 		foundUnknown := false
-		for ti := range testValues.Size() {
+		for testValue := range testValues.Values() {
 			if ctx.Err() != nil {
 				// if the context is done, we should stop
 				return StatusError
 			}
-			testValue := testValues.At(ti)
 
 			b.CloneInto(board.Play, testBoard)
 			testBoard.Set(index, testValue)
@@ -133,7 +132,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			if !state.Action().ProofRequested() {
 				// if we do not need to prove >=1 solution, just bail report success
 				// with the test board set
-				copyTestBoard(testBoard, b)
+				copyFromTestBoard(testBoard, b)
 				return StatusSucceeded
 			}
 
@@ -151,7 +150,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			// no solution is possible, we can use the found value
 			// If, however, foundUnknown is true, we cannot use the found value since we do not
 			// have a hard proof that it is the only option available on the cell.
-			copyTestBoard(foundBoards[0], b)
+			copyFromTestBoard(foundBoards[0], b)
 			return StatusSucceeded
 		}
 	}
@@ -176,16 +175,18 @@ func (a *trialAndError) reportStep(state AlgorithmState) {
 	state.AddStep(Step(a.String()), complexity, 1)
 }
 
-func copyTestBoard(testBoard, b board.Board) {
+func copyFromTestBoard(testBoard, b board.Board) {
 	for i := range board.Size {
-		if b.IsEmpty(i) {
-			if testBoard.IsEmpty(i) {
+		bv := b.Get(i)
+		tv := testBoard.Get(i)
+		if bv == 0 {
+			if tv == 0 {
 				continue
 			}
-			b.Set(i, testBoard.Get(i))
+			b.Set(i, tv)
 			continue
 		}
-		if b.Get(i) != testBoard.Get(i) {
+		if bv != tv {
 			// this should never happen
 			panic(
 				"test board and original board have different values:\n" +

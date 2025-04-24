@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/nissimnatanov/des/go/board"
-	"github.com/nissimnatanov/des/go/board/indexes"
 	"github.com/nissimnatanov/des/go/board/values"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/assert/cmp"
@@ -70,9 +69,9 @@ func newSampleBoard() board.Board {
 		b.SetReadOnly(col0, v)
 		b.Set(9+col1, v)
 		b.Set(18+col2, v)
-		col0 = (col0 + 1) % indexes.SequenceSize
-		col1 = (col1 + 1) % indexes.SequenceSize
-		col2 = (col2 + 1) % indexes.SequenceSize
+		col0 = (col0 + 1) % board.SequenceSize
+		col1 = (col1 + 1) % board.SequenceSize
+		col2 = (col2 + 1) % board.SequenceSize
 	}
 	return b
 }

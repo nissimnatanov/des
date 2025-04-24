@@ -1,5 +1,6 @@
 package indexes
 
+const BoardSequenceSize = 9
 const BoardSize = 81
 
 func CheckBoardIndex(index int) {
@@ -48,7 +49,7 @@ func SquareSequence(square int) Sequence {
 func initRowFromIndex() [BoardSize]int {
 	var cache [BoardSize]int
 	for i := range BoardSize {
-		cache[i] = i / 9
+		cache[i] = i / BoardSequenceSize
 	}
 	return cache
 }
@@ -56,7 +57,7 @@ func initRowFromIndex() [BoardSize]int {
 func initColFromIndex() [BoardSize]int {
 	var cache [BoardSize]int
 	for i := range BoardSize {
-		cache[i] = i % 9
+		cache[i] = i % BoardSequenceSize
 	}
 	return cache
 }
@@ -82,30 +83,30 @@ func initSquareCellFromIndex() [BoardSize]int {
 	return cache
 }
 
-func initIndexFromCoordinates() [SequenceSize][SequenceSize]int {
-	var cache [SequenceSize][SequenceSize]int
-	for row := range SequenceSize {
-		for col := range SequenceSize {
+func initIndexFromCoordinates() [BoardSequenceSize][BoardSequenceSize]int {
+	var cache [BoardSequenceSize][BoardSequenceSize]int
+	for row := range BoardSequenceSize {
+		for col := range BoardSequenceSize {
 			cache[row][col] = row*9 + col
 		}
 	}
 	return cache
 }
 
-func initColumnIndexes() [SequenceSize][SequenceSize]int {
-	var cache [SequenceSize][SequenceSize]int
-	for col := range SequenceSize {
-		for row := range SequenceSize {
+func initColumnIndexes() [BoardSequenceSize][BoardSequenceSize]int {
+	var cache [BoardSequenceSize][BoardSequenceSize]int
+	for col := range BoardSequenceSize {
+		for row := range BoardSequenceSize {
 			cache[col][row] = row*9 + col
 		}
 	}
 	return cache
 }
 
-func initIndexFromSquare() [SequenceSize][SequenceSize]int {
-	var cache [SequenceSize][SequenceSize]int
-	for square := range SequenceSize {
-		for cell := range SequenceSize {
+func initIndexFromSquare() [BoardSequenceSize][BoardSequenceSize]int {
+	var cache [BoardSequenceSize][BoardSequenceSize]int
+	for square := range BoardSequenceSize {
+		for cell := range BoardSequenceSize {
 			// index of the first cell
 			index := (square/3)*27 + (square%3)*3
 			// add cell location relative to first one

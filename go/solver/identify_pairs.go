@@ -60,8 +60,7 @@ func (a identifyPairs) tryEliminate(
 	allowedValues values.Set, seq indexes.Sequence,
 ) bool {
 	found := false
-	for temp := range seq.Size() {
-		index := seq.Get(temp)
+	for index := range seq.Indexes() {
 		if index == ignore1 || index == ignore2 || !board.IsEmpty(index) {
 			continue
 		}
@@ -78,8 +77,7 @@ func (a identifyPairs) tryEliminate(
 }
 
 func (a identifyPairs) findPeer(board board.Board, allowedValues values.Set, seq indexes.Sequence) int {
-	for pi := range seq.Size() {
-		peerIndex := seq.Get(pi)
+	for peerIndex := range seq.Indexes() {
 		if !board.IsEmpty(peerIndex) {
 			continue
 		}

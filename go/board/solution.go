@@ -50,7 +50,7 @@ type solutionImpl struct {
 
 func (sol *solutionImpl) validateAndLock() error {
 	var err error
-	for seq := range indexes.SequenceSize {
+	for seq := range SequenceSize {
 		err = sol.validateSequence(indexes.RowSequence(seq))
 		if err != nil {
 			return err
@@ -71,21 +71,21 @@ func (sol *solutionImpl) validateAndLock() error {
 func (sol *solutionImpl) isSolution() {}
 
 func (sol *solutionImpl) RowSet(row int) values.Set {
-	if row < 0 || row >= indexes.SequenceSize {
+	if row < 0 || row >= SequenceSize {
 		panic(fmt.Sprintf("Row %d is out of bounds", row))
 	}
 	return values.FullSet()
 }
 
 func (sol *solutionImpl) ColumnSet(col int) values.Set {
-	if col < 0 || col >= indexes.SequenceSize {
+	if col < 0 || col >= SequenceSize {
 		panic(fmt.Sprintf("Column %d is out of bounds", col))
 	}
 	return values.FullSet()
 }
 
 func (sol *solutionImpl) SquareSet(sq int) values.Set {
-	if sq < 0 || sq >= indexes.SequenceSize {
+	if sq < 0 || sq >= SequenceSize {
 		panic(fmt.Sprintf("Square %d is out of bounds", sq))
 	}
 	return values.FullSet()
@@ -103,7 +103,7 @@ func (sol *solutionImpl) Count(v values.Value) int {
 	if v == 0 {
 		return 0
 	}
-	return indexes.SequenceSize
+	return SequenceSize
 }
 
 func (sol *solutionImpl) FreeCellCount() int {

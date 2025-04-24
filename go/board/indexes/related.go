@@ -26,8 +26,7 @@ func initRelatedIndexes() [BoardSize]relatedInfo {
 		square := SquareFromIndex(i)
 
 		rs := RowSequence(row)
-		for ri := range rs.Size() {
-			rowIndex := rs.Get(ri)
+		for rowIndex := range rs.Indexes() {
 			if rowIndex == i {
 				continue
 			}
@@ -37,8 +36,7 @@ func initRelatedIndexes() [BoardSize]relatedInfo {
 		}
 
 		cs := ColumnSequence(col)
-		for ci := range cs.Size() {
-			colIndex := cs.Get(ci)
+		for colIndex := range cs.Indexes() {
 			if colIndex == i {
 				continue
 			}
@@ -47,8 +45,7 @@ func initRelatedIndexes() [BoardSize]relatedInfo {
 			cache[i].mask.Set(colIndex, true)
 		}
 		ss := SquareSequence(square)
-		for si := range ss.Size() {
-			squareIndex := ss.Get(si)
+		for squareIndex := range ss.Indexes() {
 			if row == RowFromIndex(squareIndex) ||
 				col == ColumnFromIndex(squareIndex) {
 				continue
