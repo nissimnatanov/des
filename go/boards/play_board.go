@@ -1,15 +1,15 @@
-package board
+package boards
 
 import (
 	"bufio"
 	"fmt"
 	"strings"
 
-	"github.com/nissimnatanov/des/go/board/indexes"
-	"github.com/nissimnatanov/des/go/board/values"
+	"github.com/nissimnatanov/des/go/boards/indexes"
+	"github.com/nissimnatanov/des/go/boards/values"
 )
 
-type boardImpl struct {
+type Play struct {
 	base
 
 	freeCellCount        int
@@ -23,30 +23,48 @@ type boardImpl struct {
 	allowedValuesCache [Size]values.Set
 }
 
+func (b *Play) Mode() Mode {
+	return b.mode
+}
+
+func (b *Play) IsEmpty(index int) bool {
+	return b.Get(index) == 0
+}
+
+func (b *Play) AllowedSets(yield func(int, values.Set) bool) {
+	//for i := range b.readOnlyFlags.Complement().Indexes {
+	//	if b.values[i] == 0 && !yield(i, b.AllowedSet(i)) {
+	for i, v := range b.values {
+		if v == 0 && !yield(i, b.AllowedSet(i)) {
+			return
+		}
+	}
+}
+
 // TODO: we may remove RowSet, ColumnSet, SquareSet if not needed or leave for non-fast solver
-func (b *boardImpl) RowSet(row int) values.Set {
+func (b *Play) RowSet(row int) values.Set {
 	return b.sequenceValues(indexes.RowSequence(row))
 }
 
-func (b *boardImpl) ColumnSet(col int) values.Set {
+func (b *Play) ColumnSet(col int) values.Set {
 	return b.sequenceValues(indexes.ColumnSequence(col))
 }
 
-func (b *boardImpl) SquareSet(square int) values.Set {
+func (b *Play) SquareSet(square int) values.Set {
 	return b.sequenceValues(indexes.SquareSequence(square))
 }
 
-func (b *boardImpl) AllowedSet(index int) values.Set {
+func (b *Play) AllowedSet(index int) values.Set {
 	return b.allowedValuesCache[index].Without(b.userDisallowedValues[index])
 }
 
-func (b *boardImpl) relatedValues(index int) values.Set {
+func (b *Play) relatedValues(index int) values.Set {
 	return b.sequenceValues(indexes.RelatedSequence(index))
 }
 
-func (b *boardImpl) sequenceValues(s indexes.Sequence) values.Set {
+func (b *Play) sequenceValues(s indexes.Sequence) values.Set {
 	values := values.EmptySet()
-	for i := range s.Indexes() {
+	for i := range s.Indexes {
 		v := b.Get(i)
 		if v != 0 {
 			values = values.With(v.AsSet())
@@ -55,68 +73,64 @@ func (b *boardImpl) sequenceValues(s indexes.Sequence) values.Set {
 	return values
 }
 
-func (b *boardImpl) FreeCellCount() int {
+func (b *Play) FreeCellCount() int {
 	return b.freeCellCount
 }
 
-func (b *boardImpl) IsValidCell(index int) bool {
+func (b *Play) IsValidCell(index int) bool {
 	return b.validFlags.Get(index)
 }
 
-func (b *boardImpl) IsValid() bool {
+func (b *Play) IsValid() bool {
 	return b.validFlags.AllSet()
 }
 
-func (b *boardImpl) IsSolved() bool {
+func (b *Play) IsSolved() bool {
 	return b.IsValid() && b.FreeCellCount() == 0
 }
 
 // Empty board in Edit mode
-func New() Board {
-	var b boardImpl
-	b.initZeroStats(Edit)
+func New() *Play {
+	var b Play
+	b.initZeroStats(EditMode)
 	return &b
 }
 
-func (b *boardImpl) Clone(mode Mode) Board {
-	if mode == Immutable && b.mode == Immutable {
+func (b *Play) Clone(mode Mode) *Play {
+	if mode == ImmutableMode && b.mode == ImmutableMode {
 		return b
 	}
 
-	newBoard := &boardImpl{}
+	newBoard := &Play{}
 	b.cloneInto(mode, newBoard)
 	return newBoard
 }
 
-func (b *boardImpl) cloneInto(mode Mode, dst *boardImpl) {
-	dst.base.init(mode)
+func (b *Play) cloneInto(mode Mode, dst *Play) {
+	dst.init(mode)
 	dst.copyValues(&b.base)
 	dst.copyStats(b)
 	dst.checkIntegrity()
 }
 
-func (b *boardImpl) CloneInto(mode Mode, dst Board) {
-	dstImpl, ok := dst.(*boardImpl)
-	if !ok {
-		panic(fmt.Errorf("Cannot CloneInto into a board of type %T", dst))
-	}
-	b.cloneInto(mode, dstImpl)
+func (b *Play) CloneInto(mode Mode, dst *Play) {
+	b.cloneInto(mode, dst)
 }
 
-func (b *boardImpl) Set(index int, v values.Value) {
+func (b *Play) Set(index int, v values.Value) {
 	b.setInternal(index, v, false)
 }
 
-func (b *boardImpl) SetReadOnly(index int, v values.Value) {
+func (b *Play) SetReadOnly(index int, v values.Value) {
 	b.setInternal(index, v, true)
 }
 
-func (b *boardImpl) Disallow(index int, v values.Value) {
+func (b *Play) Disallow(index int, v values.Value) {
 	b.DisallowSet(index, v.AsSet())
 }
 
-func (b *boardImpl) DisallowSet(index int, vs values.Set) {
-	if b.mode == Immutable {
+func (b *Play) DisallowSet(index int, vs values.Set) {
+	if b.mode == ImmutableMode {
 		panic("Cannot set disallowed values on immutable board")
 	}
 	if vs.IsEmpty() {
@@ -127,18 +141,18 @@ func (b *boardImpl) DisallowSet(index int, vs values.Set) {
 	b.userDisallowedValues[index] = values.Union(b.userDisallowedValues[index], vs)
 }
 
-func (b *boardImpl) DisallowReset(index int) {
+func (b *Play) DisallowReset(index int) {
 	b.userDisallowedValues[index] = values.EmptySet()
 }
 
-func (b *boardImpl) setInternal(index int, v values.Value, readOnly bool) values.Value {
+func (b *Play) setInternal(index int, v values.Value, readOnly bool) values.Value {
 	previousValue := b.base.setInternal(index, v, readOnly)
 	b.updateStats(index, previousValue, v)
 	return previousValue
 }
 
-func (b *boardImpl) Restart() {
-	if b.mode == Immutable {
+func (b *Play) Restart() {
+	if b.mode == ImmutableMode {
 		panic("Cannot restart an immutable board")
 	}
 
@@ -153,8 +167,8 @@ func (b *boardImpl) Restart() {
 }
 
 // only sets non-zero values
-func (b *boardImpl) initZeroStats(mode Mode) {
-	b.base.init(mode)
+func (b *Play) initZeroStats(mode Mode) {
+	b.init(mode)
 	b.freeCellCount = Size
 	for i := range b.allowedValuesCache {
 		b.allowedValuesCache[i] = values.FullSet()
@@ -163,13 +177,13 @@ func (b *boardImpl) initZeroStats(mode Mode) {
 	b.checkIntegrity()
 }
 
-func (b *boardImpl) String() string {
+func (b *Play) String() string {
 	var sb strings.Builder
 	WriteValues(b, bufio.NewWriter(&sb))
 	return sb.String()
 }
 
-func (b *boardImpl) copyStats(source *boardImpl) {
+func (b *Play) copyStats(source *Play) {
 	if source == nil {
 		panic("Cannot copy nil board")
 	}
@@ -180,7 +194,7 @@ func (b *boardImpl) copyStats(source *boardImpl) {
 	copy(b.allowedValuesCache[:], source.allowedValuesCache[:])
 }
 
-func (b *boardImpl) updateStats(index int, oldValue, newValue values.Value) {
+func (b *Play) updateStats(index int, oldValue, newValue values.Value) {
 	if oldValue == newValue {
 		return
 	}
@@ -219,7 +233,7 @@ func (b *boardImpl) updateStats(index int, oldValue, newValue values.Value) {
 	}
 
 	relatedSeq := indexes.RelatedSequence(index)
-	for relatedIndex := range relatedSeq.Indexes() {
+	for relatedIndex := range relatedSeq.Indexes {
 		if relatedIndex == index || !b.IsEmpty(relatedIndex) {
 			continue
 		}
@@ -239,14 +253,14 @@ func (b *boardImpl) updateStats(index int, oldValue, newValue values.Value) {
 	b.checkIntegrity()
 }
 
-func (b *boardImpl) recalculateAllStats() {
+func (b *Play) recalculateAllStats() {
 	// assume valid unless proven otherwise inside calcSequenceSet
 	b.validFlags.SetAll(true)
 
 	// value counts
 	b.freeCellCount = 0
 	for i := range Size {
-		if b.IsEmpty(i) {
+		if b.values[i] == 0 {
 			b.freeCellCount++
 			b.allowedValuesCache[i] = b.relatedValues(i).Complement()
 		} else {
@@ -265,18 +279,18 @@ func (b *boardImpl) recalculateAllStats() {
 	b.checkIntegrity()
 }
 
-func (b *boardImpl) validateSequence(s indexes.Sequence) {
+func (b *Play) validateSequence(s indexes.Sequence) {
 	_, dupes := b.calcSequence(s)
-	for v := range dupes.Values() {
+	for v := range dupes.Values {
 		b.markSequenceInvalid(v, s)
 	}
 }
 
-func (b *boardImpl) markSequenceInvalid(v values.Value, s indexes.Sequence) {
+func (b *Play) markSequenceInvalid(v values.Value, s indexes.Sequence) {
 	readOnly := []int{}
 	foundReadWrite := false
 
-	for index := range s.Indexes() {
+	for index := range s.Indexes {
 		if b.Get(index) != v {
 			continue
 		}
@@ -295,7 +309,7 @@ func (b *boardImpl) markSequenceInvalid(v values.Value, s indexes.Sequence) {
 	}
 }
 
-func (b *boardImpl) checkIntegrity() {
+func (b *Play) checkIntegrity() {
 	if !GetIntegrityChecks() {
 		return
 	}
@@ -311,7 +325,7 @@ func (b *boardImpl) checkIntegrity() {
 		if v != 0 {
 			// check this value is disallowed in other places
 			rs := indexes.RelatedSequence(i)
-			for related := range rs.Indexes() {
+			for related := range rs.Indexes {
 				rv := b.Get(related)
 				if rv == 0 {
 					if b.AllowedSet(related).Contains(v) {

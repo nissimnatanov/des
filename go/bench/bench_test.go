@@ -5,11 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/nissimnatanov/des/go/board"
+	"github.com/nissimnatanov/des/go/boards"
 )
 
 func TestMain(m *testing.M) {
-	board.SetIntegrityChecks(false)
+	boards.SetIntegrityChecks(false)
 	fmt.Println("Running Benchmark Tests")
 	os.Exit(m.Run())
 }

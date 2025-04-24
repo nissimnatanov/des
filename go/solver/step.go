@@ -3,7 +3,7 @@ package solver
 import (
 	"encoding/json"
 
-	"github.com/nissimnatanov/des/go/board"
+	"github.com/nissimnatanov/des/go/boards"
 )
 
 // Steps are reported by each algorithm
@@ -44,7 +44,7 @@ func (s *StepStats) AddStep(step Step, complexity StepComplexity, count int) {
 	s.Count += int64(count)
 	s.Complexity += complexity * StepComplexity(count)
 	s.Level = LevelFromComplexity(int64(s.Complexity))
-	if !board.GetIntegrityChecks() {
+	if !boards.GetIntegrityChecks() {
 		return
 	}
 	if s.Steps == nil {
@@ -75,7 +75,7 @@ func (s *StepStats) Merge(other *StepStats) {
 	s.Count += other.Count
 	s.Complexity += other.Complexity
 	s.Level = LevelFromComplexity(int64(s.Complexity))
-	if !board.GetIntegrityChecks() || len(other.Steps) == 0 {
+	if !boards.GetIntegrityChecks() || len(other.Steps) == 0 {
 		return
 	}
 	if s.Steps == nil {

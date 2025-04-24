@@ -3,7 +3,7 @@ package indexes_test
 import (
 	"testing"
 
-	"github.com/nissimnatanov/des/go/board/indexes"
+	"github.com/nissimnatanov/des/go/boards/indexes"
 	"gotest.tools/v3/assert"
 )
 

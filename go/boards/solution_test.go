@@ -1,21 +1,17 @@
-package board_test
+package boards_test
 
 import (
 	"testing"
 
-	"github.com/nissimnatanov/des/go/board"
+	"github.com/nissimnatanov/des/go/boards"
 	"gotest.tools/v3/assert"
 )
 
 func TestDeserializeSolution(t *testing.T) {
-	sol, err := board.DeserializeSolution("534678912 672195348 198342567 859761423 426853791 713924856 961537284 287419635 345286179")
+	sol, err := boards.DeserializeSolution("534678912 672195348 198342567 859761423 426853791 713924856 961537284 287419635 345286179")
 	assert.NilError(t, err)
 
-	for i := range board.Size {
-		assert.Assert(t, !sol.IsEmpty(i))
-	}
-
-	b := sol.Clone(board.Edit)
+	b := sol.Clone(boards.EditMode)
 	assert.Assert(t, b != nil)
 	assert.Assert(t, b.IsSolved(), "board is not solved: %q", b)
 	// ╔═══════╦═══════╦═══════╗
@@ -32,7 +28,7 @@ func TestDeserializeSolution(t *testing.T) {
 	// ║ 3.4.5.║ 2.8.6.║ 1.7.9.║
 	// ╚═══════╩═══════╩═══════╝
 
-	b = sol.Clone(board.Play)
+	b = sol.Clone(boards.PlayMode)
 	assert.Assert(t, b != nil)
-	assert.Assert(t, board.ContainsAll(sol, b))
+	assert.Assert(t, boards.ContainsAll(sol, b))
 }

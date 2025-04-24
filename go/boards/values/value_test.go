@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/nissimnatanov/des/go/board/values"
+	"github.com/nissimnatanov/des/go/boards/values"
 )
 
 func TestValueProperties(t *testing.T) {
@@ -84,7 +84,7 @@ func TestValueSetValueIterator(t *testing.T) {
 	}
 	for _, c := range cases {
 		var got string
-		for v := range c.vs.Values() {
+		for v := range c.vs.Values {
 			got += v.String()
 		}
 		if got != c.want {

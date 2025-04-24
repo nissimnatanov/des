@@ -1,6 +1,8 @@
 package indexes
 
-import "math"
+import (
+	"math"
+)
 
 type BitSet81 struct {
 	low uint64 // indexes < 64
@@ -65,4 +67,28 @@ func (bs *BitSet81) SetAll(val bool) {
 	}
 	bs.low = 0
 	bs.hi = 0
+}
+
+func (bs BitSet81) Indexes(yield func(int) bool) {
+	mask64 := uint64(1)
+	for i := range 64 {
+		if (bs.low&mask64) != 0 && !yield(i) {
+			return
+		}
+		mask64 <<= 1
+	}
+	mask32 := uint32(1)
+	for i := 64; i < 81; i++ {
+		if (bs.hi&mask32) != 0 && !yield(i) {
+			return
+		}
+		mask32 <<= 1
+	}
+}
+
+func (bs BitSet81) Complement() BitSet81 {
+	return BitSet81{
+		low: ^bs.low,
+		hi:  (^bs.hi & hiFullMask),
+	}
 }

@@ -1,12 +1,12 @@
-package board
+package boards
 
 import (
 	"bufio"
 	"fmt"
 	"strings"
 
-	"github.com/nissimnatanov/des/go/board/indexes"
-	"github.com/nissimnatanov/des/go/board/values"
+	"github.com/nissimnatanov/des/go/boards/indexes"
+	"github.com/nissimnatanov/des/go/boards/values"
 )
 
 type write2log struct {
@@ -23,7 +23,7 @@ func NewWriter(log func(s string)) *bufio.Writer {
 	return bufio.NewWriterSize(&write2log{log}, 1024)
 }
 
-func Write(b Board, bw *bufio.Writer, fmt string) {
+func Write(b *Play, bw *bufio.Writer, fmt string) {
 	if len(fmt) == 0 {
 		fmt = "v"
 	}
@@ -52,7 +52,12 @@ func Write(b Board, bw *bufio.Writer, fmt string) {
 	}
 }
 
-func WriteValues(b Board, bw *bufio.Writer) {
+func WriteValues(board Base, bw *bufio.Writer) {
+	var b *base
+	isValidCell := func(i int) bool { return true }
+	if play, ok := board.(*Play); ok {
+		isValidCell = play.IsValidCell
+	}
 	bw.WriteString("╔═══════╦═══════╦═══════╗\n")
 	bw.Flush()
 	for row := range SequenceSize {
@@ -69,13 +74,13 @@ func WriteValues(b Board, bw *bufio.Writer) {
 			bw.WriteRune(c)
 
 			if b.IsReadOnly(i) {
-				if b.IsValidCell(i) {
+				if isValidCell(i) {
 					c = ' '
 				} else {
 					c = 'X'
 				}
 			} else {
-				if b.IsValidCell(i) {
+				if isValidCell(i) {
 					c = '.'
 				} else {
 					c = '!'
@@ -92,17 +97,17 @@ func WriteValues(b Board, bw *bufio.Writer) {
 	bw.Flush()
 }
 
-func WriteRowSets(b Board, bw *bufio.Writer) {
+func WriteRowSets(b *Play, bw *bufio.Writer) {
 	bw.WriteString("Rows:")
 	writeSets(func(row int) values.Set { return b.RowSet(row) }, bw)
 }
 
-func WriteColumnSets(b Board, bw *bufio.Writer) {
+func WriteColumnSets(b *Play, bw *bufio.Writer) {
 	bw.WriteString("Columns:")
 	writeSets(func(col int) values.Set { return b.ColumnSet(col) }, bw)
 }
 
-func WriteSquareSets(b Board, bw *bufio.Writer) {
+func WriteSquareSets(b *Play, bw *bufio.Writer) {
 	bw.WriteString("Squares:")
 	writeSets(func(square int) values.Set { return b.SquareSet(square) }, bw)
 }
@@ -135,7 +140,7 @@ func writeEmpty(count int, bw *bufio.Writer) {
 	}
 }
 
-func writeSerialized(b Board, bw *bufio.Writer) {
+func writeSerialized(b Base, bw *bufio.Writer) {
 	empty := 0
 	for i := range Size {
 		v := b.Get(i)
@@ -155,7 +160,7 @@ func writeSerialized(b Board, bw *bufio.Writer) {
 	writeEmpty(empty, bw)
 }
 
-func Serialize(b Board) string {
+func Serialize(b Base) string {
 	var sb strings.Builder
 	bw := bufio.NewWriter(&sb)
 	writeSerialized(b, bw)
@@ -165,8 +170,8 @@ func Serialize(b Board) string {
 
 // Deserialize accepts more than one consecutive zero
 // (while Serialize replaces them with letters, starting from 2)
-func Deserialize(s string) (Board, error) {
-	b := New().(*boardImpl)
+func Deserialize(s string) (*Play, error) {
+	b := New()
 	if err := deserializeBase(s, &b.base); err != nil {
 		return nil, err
 	}
@@ -220,10 +225,9 @@ func deserializeBase(s string, b *base) error {
 }
 
 // DeserializeSolution only accepts 81 digits of [1, 9], '_' to indicate originally editable cells and whitespaces
-func DeserializeSolution(s string) (Solution, error) {
-	var sol solutionImpl
+func DeserializeSolution(s string) (*Solution, error) {
+	sol := &Solution{}
 	// start in edit mode
-	sol.init(Edit)
 	if err := deserializeBase(s, &sol.base); err != nil {
 		return nil, err
 	}
@@ -232,5 +236,5 @@ func DeserializeSolution(s string) (Solution, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &sol, nil
+	return sol, nil
 }

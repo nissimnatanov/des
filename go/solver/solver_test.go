@@ -4,24 +4,23 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/nissimnatanov/des/go/board"
+	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/solver"
 	"gotest.tools/v3/assert"
 )
 
 func TestSolveSanity(t *testing.T) {
-	board.SetIntegrityChecks(true)
+	boards.SetIntegrityChecks(true)
 
 	ctx := t.Context()
 
 	for _, sample := range sampleBoards {
 		t.Run(sample.name, func(t *testing.T) {
-			b, err := board.Deserialize(sample.board)
+			b, err := boards.Deserialize(sample.board)
 			assert.NilError(t, err)
 
 			s := solver.New(&solver.Options{
-				Action:            solver.ActionSolve,
-				MaxRecursionDepth: 5,
+				Action: solver.ActionSolve,
 			})
 
 			// Solve the board
@@ -32,10 +31,8 @@ func TestSolveSanity(t *testing.T) {
 			assert.Assert(t, res.Steps.Level >= solver.LevelNightmare)
 			assert.Equal(t, res.Solutions.Size(), 1)
 			sol := res.Solutions.At(0)
-			assert.Assert(t, sol.IsValid())
-			assert.Assert(t, sol.IsSolved())
 
-			solStr := board.Serialize(sol)
+			solStr := boards.Serialize(sol)
 			assert.Equal(t, solStr, sample.solution)
 
 			resJSON, err := json.MarshalIndent(res, "", "  ")
@@ -80,12 +77,14 @@ func TestSolveSanity(t *testing.T) {
 // 								45	  25965642 ns/op	   20274 B/op	      58 allocs/op
 // allowed value cache is always valid, remove row/col/square count caches:
 // 								48	  24858786 ns/op	   19217 B/op	      58 allocs/op
+// make Board and Solution structs instead of interfaces for performance (allows inlining):
+// 								16647002 ns/op	   22024 B/op	      64 allocs/op
 
 func BenchmarkProve(b *testing.B) {
 	ctx := b.Context()
 
 	// Create a new board
-	bd, err := board.Deserialize(sampleBoards[0].board)
+	bd, err := boards.Deserialize(sampleBoards[0].board)
 	assert.NilError(b, err)
 
 	// Create a new solver
@@ -94,7 +93,7 @@ func BenchmarkProve(b *testing.B) {
 	})
 
 	for b.Loop() {
-		res := s.Run(ctx, bd.Clone(board.Play))
+		res := s.Run(ctx, bd.Clone(boards.PlayMode))
 		assert.NilError(b, res.Error)
 		assert.Equal(b, res.Status, solver.StatusSucceeded)
 		assert.Assert(b, res.Steps.Level >= solver.LevelNightmare)

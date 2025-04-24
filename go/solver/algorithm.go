@@ -3,11 +3,11 @@ package solver
 import (
 	"context"
 
-	"github.com/nissimnatanov/des/go/board"
+	"github.com/nissimnatanov/des/go/boards"
 )
 
 type AlgorithmState interface {
-	Board() board.Board
+	Board() *boards.Play
 
 	Action() Action
 	CurrentRecursionDepth() int
@@ -16,7 +16,7 @@ type AlgorithmState interface {
 	MergeSteps(steps *StepStats)
 
 	// recursiveRun is used to run the algorithm recursively
-	recursiveRun(ctx context.Context, b board.Board) *Result
+	recursiveRun(ctx context.Context, b *boards.Play) *Result
 }
 
 type Algorithm interface {

@@ -3,9 +3,9 @@ package solver
 import (
 	"context"
 
-	"github.com/nissimnatanov/des/go/board"
-	"github.com/nissimnatanov/des/go/board/indexes"
-	"github.com/nissimnatanov/des/go/board/values"
+	"github.com/nissimnatanov/des/go/boards"
+	"github.com/nissimnatanov/des/go/boards/indexes"
+	"github.com/nissimnatanov/des/go/boards/values"
 )
 
 type identifyPairs struct {
@@ -13,13 +13,12 @@ type identifyPairs struct {
 
 func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 	b := state.Board()
-	for index := range board.Size {
-		allowedValues := b.AllowedSet(index)
-		if allowedValues.Size() != 2 {
+	for index, allowed := range b.AllowedSets {
+		if allowed.Size() != 2 {
 			// this includes non-empty cells too (allowed set is empty)
 			continue
 		}
-		peerIndex := a.findPeer(b, allowedValues, indexes.RelatedSequence(index))
+		peerIndex := a.findPeer(b, allowed, indexes.RelatedSequence(index))
 		if peerIndex < 0 {
 			continue
 		}
@@ -29,21 +28,21 @@ func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 		row := indexes.RowFromIndex(index)
 		if row == indexes.RowFromIndex(peerIndex) {
 			// same row
-			if a.tryEliminate(b, index, peerIndex, allowedValues, indexes.RowSequence(row)) {
+			if a.tryEliminate(b, index, peerIndex, allowed, indexes.RowSequence(row)) {
 				eliminationCount++
 			}
 		}
 		col := indexes.ColumnFromIndex(index)
 		if col == indexes.ColumnFromIndex(peerIndex) {
 			// same column
-			if a.tryEliminate(b, index, peerIndex, allowedValues, indexes.ColumnSequence(col)) {
+			if a.tryEliminate(b, index, peerIndex, allowed, indexes.ColumnSequence(col)) {
 				eliminationCount++
 			}
 		}
 		square := indexes.SquareFromIndex(index)
 		if square == indexes.SquareFromIndex(peerIndex) {
 			// same square
-			if a.tryEliminate(b, index, peerIndex, allowedValues, indexes.SquareSequence(square)) {
+			if a.tryEliminate(b, index, peerIndex, allowed, indexes.SquareSequence(square)) {
 				eliminationCount++
 			}
 		}
@@ -52,23 +51,24 @@ func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 			return StatusSucceeded
 		}
 	}
+
 	return StatusUnknown
 }
 
 func (a identifyPairs) tryEliminate(
-	board board.Board, ignore1, ignore2 int,
-	allowedValues values.Set, seq indexes.Sequence,
+	board *boards.Play, ignore1, ignore2 int,
+	allowed values.Set, seq indexes.Sequence,
 ) bool {
 	found := false
-	for index := range seq.Indexes() {
+	for index := range seq.Indexes {
 		if index == ignore1 || index == ignore2 || !board.IsEmpty(index) {
 			continue
 		}
 
-		tempAllowedValues := board.AllowedSet(index)
-		if values.Intersect(tempAllowedValues, allowedValues).Size() > 0 {
+		tempAllowed := board.AllowedSet(index)
+		if values.Intersect(tempAllowed, allowed).Size() > 0 {
 			// found a cell that we can remove values - turn them off
-			board.DisallowSet(index, allowedValues)
+			board.DisallowSet(index, allowed)
 			found = true
 		}
 	}
@@ -76,13 +76,13 @@ func (a identifyPairs) tryEliminate(
 	return found
 }
 
-func (a identifyPairs) findPeer(board board.Board, allowedValues values.Set, seq indexes.Sequence) int {
-	for peerIndex := range seq.Indexes() {
+func (a identifyPairs) findPeer(board *boards.Play, allowed values.Set, seq indexes.Sequence) int {
+	for peerIndex := range seq.Indexes {
 		if !board.IsEmpty(peerIndex) {
 			continue
 		}
-		peerAllowedValues := board.AllowedSet(peerIndex)
-		if peerAllowedValues == allowedValues {
+		peerAllowed := board.AllowedSet(peerIndex)
+		if peerAllowed == allowed {
 			return peerIndex
 		}
 	}

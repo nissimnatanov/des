@@ -1,8 +1,6 @@
 package values
 
 import (
-	"iter"
-	"slices"
 	"strconv"
 )
 
@@ -42,8 +40,12 @@ func NewSet(vs ...Value) Set {
 	return Set(mask)
 }
 
-func (vs Set) Values() iter.Seq[Value] {
-	return slices.Values(setInfoCache[vs].values)
+func (vs Set) Values(yield func(Value) bool) {
+	for _, v := range setInfoCache[vs].values {
+		if !yield(v) {
+			return
+		}
+	}
 }
 
 func (vs Set) IsEmpty() bool {

@@ -1,9 +1,15 @@
-package board
+package boards
 
 import (
-	"github.com/nissimnatanov/des/go/board/indexes"
-	"github.com/nissimnatanov/des/go/board/values"
+	"github.com/nissimnatanov/des/go/boards/indexes"
+	"github.com/nissimnatanov/des/go/boards/values"
 )
+
+type Base interface {
+	Get(i int) values.Value
+	IsReadOnly(i int) bool
+	IsValidCell(i int) bool
+}
 
 type base struct {
 	values        [Size]values.Value
@@ -11,16 +17,8 @@ type base struct {
 	mode          Mode
 }
 
-func (b *base) Mode() Mode {
-	return b.mode
-}
-
 func (b *base) Get(index int) values.Value {
 	return b.values[index]
-}
-
-func (b *base) IsEmpty(index int) bool {
-	return b.Get(index) == 0
 }
 
 func (b *base) IsReadOnly(index int) bool {
@@ -32,10 +30,10 @@ func (b *base) init(mode Mode) {
 }
 
 func (b *base) setInternal(index int, v values.Value, readOnly bool) values.Value {
-	if b.mode == Immutable {
+	if b.mode == ImmutableMode {
 		panic("Cannot play in immutable or solution mode")
 	}
-	if b.mode == Play && (readOnly || b.IsReadOnly(index)) {
+	if b.mode == PlayMode && (readOnly || b.IsReadOnly(index)) {
 		panic("Edit mode is not allowed")
 	}
 
@@ -56,7 +54,7 @@ func (b *base) copyValues(other *base) {
 }
 
 func (b *base) calcSequence(s indexes.Sequence) (vs values.Set, dupes values.Set) {
-	for index := range s.Indexes() {
+	for index := range s.Indexes {
 		v := b.Get(index)
 		if v == 0 {
 			continue

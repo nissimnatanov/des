@@ -4,8 +4,8 @@ import (
 	"context"
 	"slices"
 
-	"github.com/nissimnatanov/des/go/board"
-	"github.com/nissimnatanov/des/go/board/values"
+	"github.com/nissimnatanov/des/go/boards"
+	"github.com/nissimnatanov/des/go/boards/values"
 )
 
 type trialAndErrorIndex struct {
@@ -15,23 +15,23 @@ type trialAndErrorIndex struct {
 
 type trialAndError struct {
 	indexesCache cache[[]trialAndErrorIndex]
-	testBoard    cache[board.Board]
+	testBoard    cache[*boards.Play]
 }
 
 func newTrialAndError() *trialAndError {
 	return &trialAndError{
 		indexesCache: cache[[]trialAndErrorIndex]{
 			factory: func() []trialAndErrorIndex {
-				return make([]trialAndErrorIndex, 0, board.Size-17)
+				return make([]trialAndErrorIndex, 0, boards.Size-17)
 			},
 			reset: func(v []trialAndErrorIndex) []trialAndErrorIndex {
 				// reset the slice to be empty but keep the capacity
 				return v[:0]
 			},
 		},
-		testBoard: cache[board.Board]{
-			factory: func() board.Board {
-				return board.New()
+		testBoard: cache[*boards.Play]{
+			factory: func() *boards.Play {
+				return boards.New()
 			},
 		},
 	}
@@ -52,11 +52,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	indexes := a.indexesCache.get()
 	defer a.indexesCache.put(indexes) // slice is reset on next get
 
-	for i := range board.Size {
-		if !b.IsEmpty(i) {
-			continue
-		}
-		allowed := b.AllowedSet(i)
+	for i, allowed := range b.AllowedSets {
 		if allowed.Size() == 1 {
 			// if the trial algorithm is used only by itself (without other algorithms),
 			// we can skip the recursion and just set the value if this is the only option
@@ -89,15 +85,15 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	for _, tei := range indexes {
 		index := tei.index
 		testValues := tei.allowed
-		var foundBoards []board.Board
+		var foundBoards []*boards.Play
 		foundUnknown := false
-		for testValue := range testValues.Values() {
+		for testValue := range testValues.Values {
 			if ctx.Err() != nil {
 				// if the context is done, we should stop
 				return StatusError
 			}
 
-			b.CloneInto(board.Play, testBoard)
+			b.CloneInto(boards.PlayMode, testBoard)
 			testBoard.Set(index, testValue)
 			result := state.recursiveRun(ctx, testBoard)
 
@@ -175,8 +171,8 @@ func (a *trialAndError) reportStep(state AlgorithmState) {
 	state.AddStep(Step(a.String()), complexity, 1)
 }
 
-func copyFromTestBoard(testBoard, b board.Board) {
-	for i := range board.Size {
+func copyFromTestBoard(testBoard, b *boards.Play) {
+	for i := range boards.Size {
 		bv := b.Get(i)
 		tv := testBoard.Get(i)
 		if bv == 0 {
