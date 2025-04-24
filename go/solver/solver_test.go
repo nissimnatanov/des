@@ -78,7 +78,7 @@ func TestSolveSanity(t *testing.T) {
 // allowed value cache is always valid, remove row/col/square count caches:
 // 								48	  24858786 ns/op	   19217 B/op	      58 allocs/op
 // make Board and Solution structs instead of interfaces for performance (allows inlining):
-// 								16647002 ns/op	   22024 B/op	      64 allocs/op
+// 								70	  16535683 ns/op	   22024 B/op	      64 allocs/op
 
 func BenchmarkProve(b *testing.B) {
 	ctx := b.Context()
@@ -93,7 +93,7 @@ func BenchmarkProve(b *testing.B) {
 	})
 
 	for b.Loop() {
-		res := s.Run(ctx, bd.Clone(boards.PlayMode))
+		res := s.Run(ctx, bd.Clone(boards.Play))
 		assert.NilError(b, res.Error)
 		assert.Equal(b, res.Status, solver.StatusSucceeded)
 		assert.Assert(b, res.Steps.Level >= solver.LevelNightmare)

@@ -11,7 +11,7 @@ func TestDeserializeSolution(t *testing.T) {
 	sol, err := boards.DeserializeSolution("534678912 672195348 198342567 859761423 426853791 713924856 961537284 287419635 345286179")
 	assert.NilError(t, err)
 
-	b := sol.Clone(boards.EditMode)
+	b := sol.Clone(boards.Edit)
 	assert.Assert(t, b != nil)
 	assert.Assert(t, b.IsSolved(), "board is not solved: %q", b)
 	// ╔═══════╦═══════╦═══════╗
@@ -28,7 +28,7 @@ func TestDeserializeSolution(t *testing.T) {
 	// ║ 3.4.5.║ 2.8.6.║ 1.7.9.║
 	// ╚═══════╩═══════╩═══════╝
 
-	b = sol.Clone(boards.PlayMode)
+	b = sol.Clone(boards.Play)
 	assert.Assert(t, b != nil)
 	assert.Assert(t, boards.ContainsAll(sol, b))
 }

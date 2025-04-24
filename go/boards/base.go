@@ -30,10 +30,10 @@ func (b *base) init(mode Mode) {
 }
 
 func (b *base) setInternal(index int, v values.Value, readOnly bool) values.Value {
-	if b.mode == ImmutableMode {
+	if b.mode == Immutable {
 		panic("Cannot play in immutable or solution mode")
 	}
-	if b.mode == PlayMode && (readOnly || b.IsReadOnly(index)) {
+	if b.mode == Play && (readOnly || b.IsReadOnly(index)) {
 		panic("Edit mode is not allowed")
 	}
 

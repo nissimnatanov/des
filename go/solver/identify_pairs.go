@@ -56,7 +56,7 @@ func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 }
 
 func (a identifyPairs) tryEliminate(
-	board *boards.Play, ignore1, ignore2 int,
+	board *boards.Game, ignore1, ignore2 int,
 	allowed values.Set, seq indexes.Sequence,
 ) bool {
 	found := false
@@ -76,7 +76,7 @@ func (a identifyPairs) tryEliminate(
 	return found
 }
 
-func (a identifyPairs) findPeer(board *boards.Play, allowed values.Set, seq indexes.Sequence) int {
+func (a identifyPairs) findPeer(board *boards.Game, allowed values.Set, seq indexes.Sequence) int {
 	for peerIndex := range seq.Indexes {
 		if !board.IsEmpty(peerIndex) {
 			continue

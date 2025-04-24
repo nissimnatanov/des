@@ -14,8 +14,8 @@ const (
 type Mode int
 
 const (
-	// ImmutableMode mode means input board shall not be modified.
-	ImmutableMode Mode = iota
-	PlayMode
-	EditMode
+	// Immutable mode means input board shall not be modified.
+	Immutable Mode = iota
+	Play
+	Edit
 )

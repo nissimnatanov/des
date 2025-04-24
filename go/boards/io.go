@@ -23,7 +23,7 @@ func NewWriter(log func(s string)) *bufio.Writer {
 	return bufio.NewWriterSize(&write2log{log}, 1024)
 }
 
-func Write(b *Play, bw *bufio.Writer, fmt string) {
+func Write(b Base, bw *bufio.Writer, fmt string) {
 	if len(fmt) == 0 {
 		fmt = "v"
 	}
@@ -32,12 +32,6 @@ func Write(b *Play, bw *bufio.Writer, fmt string) {
 		switch f {
 		case 'v', 'V':
 			WriteValues(b, bw)
-		case 'r', 'R':
-			WriteRowSets(b, bw)
-		case 'c', 'C':
-			WriteColumnSets(b, bw)
-		case 's', 'S':
-			WriteSquareSets(b, bw)
 		case 't', 'T':
 			bw.WriteString("Serialized: ")
 			writeSerialized(b, bw)
@@ -52,12 +46,7 @@ func Write(b *Play, bw *bufio.Writer, fmt string) {
 	}
 }
 
-func WriteValues(board Base, bw *bufio.Writer) {
-	var b *base
-	isValidCell := func(i int) bool { return true }
-	if play, ok := board.(*Play); ok {
-		isValidCell = play.IsValidCell
-	}
+func WriteValues(b Base, bw *bufio.Writer) {
 	bw.WriteString("╔═══════╦═══════╦═══════╗\n")
 	bw.Flush()
 	for row := range SequenceSize {
@@ -74,13 +63,13 @@ func WriteValues(board Base, bw *bufio.Writer) {
 			bw.WriteRune(c)
 
 			if b.IsReadOnly(i) {
-				if isValidCell(i) {
+				if b.IsValidCell(i) {
 					c = ' '
 				} else {
 					c = 'X'
 				}
 			} else {
-				if isValidCell(i) {
+				if b.IsValidCell(i) {
 					c = '.'
 				} else {
 					c = '!'
@@ -94,31 +83,6 @@ func WriteValues(board Base, bw *bufio.Writer) {
 	}
 
 	bw.WriteString("╚═══════╩═══════╩═══════╝\n")
-	bw.Flush()
-}
-
-func WriteRowSets(b *Play, bw *bufio.Writer) {
-	bw.WriteString("Rows:")
-	writeSets(func(row int) values.Set { return b.RowSet(row) }, bw)
-}
-
-func WriteColumnSets(b *Play, bw *bufio.Writer) {
-	bw.WriteString("Columns:")
-	writeSets(func(col int) values.Set { return b.ColumnSet(col) }, bw)
-}
-
-func WriteSquareSets(b *Play, bw *bufio.Writer) {
-	bw.WriteString("Squares:")
-	writeSets(func(square int) values.Set { return b.SquareSet(square) }, bw)
-}
-
-func writeSets(fs func(si int) values.Set, bw *bufio.Writer) {
-	for si := range SequenceSize {
-		bw.WriteString(" [")
-		bw.WriteString(fs(si).String())
-		bw.WriteRune(']')
-	}
-	bw.WriteRune('\n')
 	bw.Flush()
 }
 
@@ -170,7 +134,7 @@ func Serialize(b Base) string {
 
 // Deserialize accepts more than one consecutive zero
 // (while Serialize replaces them with letters, starting from 2)
-func Deserialize(s string) (*Play, error) {
+func Deserialize(s string) (*Game, error) {
 	b := New()
 	if err := deserializeBase(s, &b.base); err != nil {
 		return nil, err
@@ -228,6 +192,7 @@ func deserializeBase(s string, b *base) error {
 func DeserializeSolution(s string) (*Solution, error) {
 	sol := &Solution{}
 	// start in edit mode
+	sol.base.init(Edit)
 	if err := deserializeBase(s, &sol.base); err != nil {
 		return nil, err
 	}

@@ -15,7 +15,7 @@ type trialAndErrorIndex struct {
 
 type trialAndError struct {
 	indexesCache cache[[]trialAndErrorIndex]
-	testBoard    cache[*boards.Play]
+	testBoard    cache[*boards.Game]
 }
 
 func newTrialAndError() *trialAndError {
@@ -29,8 +29,8 @@ func newTrialAndError() *trialAndError {
 				return v[:0]
 			},
 		},
-		testBoard: cache[*boards.Play]{
-			factory: func() *boards.Play {
+		testBoard: cache[*boards.Game]{
+			factory: func() *boards.Game {
 				return boards.New()
 			},
 		},
@@ -85,7 +85,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	for _, tei := range indexes {
 		index := tei.index
 		testValues := tei.allowed
-		var foundBoards []*boards.Play
+		var foundBoards []*boards.Game
 		foundUnknown := false
 		for testValue := range testValues.Values {
 			if ctx.Err() != nil {
@@ -93,7 +93,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 				return StatusError
 			}
 
-			b.CloneInto(boards.PlayMode, testBoard)
+			b.CloneInto(boards.Play, testBoard)
 			testBoard.Set(index, testValue)
 			result := state.recursiveRun(ctx, testBoard)
 
@@ -171,7 +171,7 @@ func (a *trialAndError) reportStep(state AlgorithmState) {
 	state.AddStep(Step(a.String()), complexity, 1)
 }
 
-func copyFromTestBoard(testBoard, b *boards.Play) {
+func copyFromTestBoard(testBoard, b *boards.Game) {
 	for i := range boards.Size {
 		bv := b.Get(i)
 		tv := testBoard.Get(i)

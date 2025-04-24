@@ -13,7 +13,7 @@ import (
 func TestEmptyBoard(t *testing.T) {
 	b := boards.New()
 
-	assert.Equal(t, boards.EditMode, b.Mode())
+	assert.Equal(t, boards.Edit, b.Mode())
 	assert.Assert(t, b.IsValid())
 	assert.Assert(t, b.IsValidCell(2))
 	assert.Assert(t, b.IsValidCell(80))
@@ -58,7 +58,7 @@ func TestEmptyBoard(t *testing.T) {
 	assert.Assert(t, cmp.Panics(func() { b.SetReadOnly(0, 10) }))
 }
 
-func newSampleBoard() *boards.Play {
+func newSampleBoard() *boards.Game {
 	b := boards.New()
 
 	col0 := 0
@@ -76,7 +76,7 @@ func newSampleBoard() *boards.Play {
 	return b
 }
 
-func assertSampleBoard(t *testing.T, b *boards.Play) {
+func assertSampleBoard(t *testing.T, b *boards.Game) {
 	assert.Assert(t, b.IsValid())
 	assert.Assert(t, b.IsValidCell(4))
 	assert.Assert(t, b.IsValidCell(40))
@@ -86,7 +86,7 @@ func assertSampleBoard(t *testing.T, b *boards.Play) {
 func TestValidBoard(t *testing.T) {
 	b := newSampleBoard()
 	// cspell:disable-next-line
-	boards.Write(b, boards.NewWriter(func(s string) { t.Log(strings.ReplaceAll(s, "\n", "")) }), "vrcst")
+	boards.Write(b, boards.NewWriter(func(s string) { t.Log(strings.ReplaceAll(s, "\n", "")) }), "vt")
 	assertSampleBoard(t, b)
 
 	b.Set(40, values.Value(5))
@@ -102,20 +102,20 @@ func TestValidBoard(t *testing.T) {
 func TestClone(t *testing.T) {
 	b := newSampleBoard()
 
-	play := b.Clone(boards.PlayMode)
+	play := b.Clone(boards.Play)
 	assertSampleBoard(t, play)
-	assert.Equal(t, boards.PlayMode, play.Mode())
+	assert.Equal(t, boards.Play, play.Mode())
 
-	edit := b.Clone(boards.EditMode)
+	edit := b.Clone(boards.Edit)
 	assertSampleBoard(t, edit)
-	assert.Equal(t, boards.EditMode, edit.Mode())
+	assert.Equal(t, boards.Edit, edit.Mode())
 }
 
 func TestPlay(t *testing.T) {
 	b := newSampleBoard()
-	play := b.Clone(boards.PlayMode)
+	play := b.Clone(boards.Play)
 	assertSampleBoard(t, play)
-	assert.Equal(t, boards.PlayMode, play.Mode())
+	assert.Equal(t, boards.Play, play.Mode())
 
 	assert.Assert(t, cmp.Panics(func() { play.SetReadOnly(55, values.Value(6)) }))
 	assert.Equal(t, values.Value(0), play.Get(55))

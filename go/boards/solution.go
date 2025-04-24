@@ -10,8 +10,9 @@ import (
 )
 
 // NewSolution creates a new solution from a valid and solved board.
-func NewSolution(b *Play) *Solution {
+func NewSolution(b *Game) *Solution {
 	var sol Solution
+	sol.init(Edit)
 	sol.copyValues(&b.base)
 	err := sol.validateAndLock()
 	if err != nil {
@@ -44,6 +45,7 @@ func (sol *Solution) validateAndLock() error {
 			return err
 		}
 	}
+	sol.base.mode = Immutable
 	return nil
 }
 func (b *Solution) IsValidCell(index int) bool {
@@ -60,8 +62,8 @@ func (b *Solution) String() string {
 	return sb.String()
 }
 
-func (sol *Solution) Clone(mode Mode) *Play {
-	newBoard := &Play{}
+func (sol *Solution) Clone(mode Mode) *Game {
+	newBoard := &Game{}
 	newBoard.init(mode)
 	newBoard.copyValues(&sol.base)
 	newBoard.recalculateAllStats()

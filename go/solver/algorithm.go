@@ -7,7 +7,7 @@ import (
 )
 
 type AlgorithmState interface {
-	Board() *boards.Play
+	Board() *boards.Game
 
 	Action() Action
 	CurrentRecursionDepth() int
@@ -16,7 +16,7 @@ type AlgorithmState interface {
 	MergeSteps(steps *StepStats)
 
 	// recursiveRun is used to run the algorithm recursively
-	recursiveRun(ctx context.Context, b *boards.Play) *Result
+	recursiveRun(ctx context.Context, b *boards.Game) *Result
 }
 
 type Algorithm interface {

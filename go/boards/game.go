@@ -9,60 +9,65 @@ import (
 	"github.com/nissimnatanov/des/go/boards/values"
 )
 
-type Play struct {
-	base
-
-	freeCellCount        int
-	validFlags           indexes.BitSet81
-	userDisallowedValues [Size]values.Set
-
-	// AllowedValuesCache must be always up-2-date, it does not include used disallowed values
-	// (user disallowed values are excluded from the public AllowedSet API).
-	// If cell is empty, it contains the allowed values for the cell.
-	// If cell is not empty, it is empty.
-	allowedValuesCache [Size]values.Set
+type disallowedValues struct {
+	byRelated values.Set
+	byUser    values.Set
 }
 
-func (b *Play) Mode() Mode {
+func (d disallowedValues) Complement() values.Set {
+	return values.Union(d.byRelated, d.byUser).Complement()
+}
+
+type Game struct {
+	base
+
+	freeCellCount int
+	validFlags    indexes.BitSet81
+
+	// disallowedValues must be always up-2-date
+	// If cell is empty, disallowedValues contains the values not allowed for the cell.
+	// If cell is not empty, it is full.
+	disallowedValues [Size]disallowedValues
+}
+
+func (b *Game) Mode() Mode {
 	return b.mode
 }
 
-func (b *Play) IsEmpty(index int) bool {
+func (b *Game) IsEmpty(index int) bool {
 	return b.Get(index) == 0
 }
 
-func (b *Play) AllowedSets(yield func(int, values.Set) bool) {
-	//for i := range b.readOnlyFlags.Complement().Indexes {
-	//	if b.values[i] == 0 && !yield(i, b.AllowedSet(i)) {
-	for i, v := range b.values {
-		if v == 0 && !yield(i, b.AllowedSet(i)) {
+func (b *Game) AllowedSets(yield func(int, values.Set) bool) {
+	for i, a := range b.disallowedValues[:] {
+		if b.IsEmpty(i) && !yield(i, a.Complement()) {
 			return
 		}
 	}
 }
 
 // TODO: we may remove RowSet, ColumnSet, SquareSet if not needed or leave for non-fast solver
-func (b *Play) RowSet(row int) values.Set {
+func (b *Game) RowSet(row int) values.Set {
 	return b.sequenceValues(indexes.RowSequence(row))
 }
 
-func (b *Play) ColumnSet(col int) values.Set {
+func (b *Game) ColumnSet(col int) values.Set {
 	return b.sequenceValues(indexes.ColumnSequence(col))
 }
 
-func (b *Play) SquareSet(square int) values.Set {
+func (b *Game) SquareSet(square int) values.Set {
 	return b.sequenceValues(indexes.SquareSequence(square))
 }
 
-func (b *Play) AllowedSet(index int) values.Set {
-	return b.allowedValuesCache[index].Without(b.userDisallowedValues[index])
+func (b *Game) AllowedSet(index int) values.Set {
+	return b.disallowedValues[index].Complement()
 }
 
-func (b *Play) relatedValues(index int) values.Set {
+func (b *Game) relatedValues(index int) values.Set {
 	return b.sequenceValues(indexes.RelatedSequence(index))
 }
 
-func (b *Play) sequenceValues(s indexes.Sequence) values.Set {
+func (b *Game) sequenceValues(s indexes.Sequence) values.Set {
 	values := values.EmptySet()
 	for i := range s.Indexes {
 		v := b.Get(i)
@@ -73,64 +78,64 @@ func (b *Play) sequenceValues(s indexes.Sequence) values.Set {
 	return values
 }
 
-func (b *Play) FreeCellCount() int {
+func (b *Game) FreeCellCount() int {
 	return b.freeCellCount
 }
 
-func (b *Play) IsValidCell(index int) bool {
+func (b *Game) IsValidCell(index int) bool {
 	return b.validFlags.Get(index)
 }
 
-func (b *Play) IsValid() bool {
+func (b *Game) IsValid() bool {
 	return b.validFlags.AllSet()
 }
 
-func (b *Play) IsSolved() bool {
+func (b *Game) IsSolved() bool {
 	return b.IsValid() && b.FreeCellCount() == 0
 }
 
 // Empty board in Edit mode
-func New() *Play {
-	var b Play
-	b.initZeroStats(EditMode)
+func New() *Game {
+	var b Game
+	b.initZeroStats(Edit)
 	return &b
 }
 
-func (b *Play) Clone(mode Mode) *Play {
-	if mode == ImmutableMode && b.mode == ImmutableMode {
+func (b *Game) Clone(mode Mode) *Game {
+	if mode == Immutable && b.mode == Immutable {
 		return b
 	}
 
-	newBoard := &Play{}
+	newBoard := &Game{}
 	b.cloneInto(mode, newBoard)
 	return newBoard
 }
 
-func (b *Play) cloneInto(mode Mode, dst *Play) {
+func (b *Game) cloneInto(mode Mode, dst *Game) {
 	dst.init(mode)
 	dst.copyValues(&b.base)
 	dst.copyStats(b)
 	dst.checkIntegrity()
 }
 
-func (b *Play) CloneInto(mode Mode, dst *Play) {
+func (b *Game) CloneInto(mode Mode, dst *Game) {
 	b.cloneInto(mode, dst)
 }
 
-func (b *Play) Set(index int, v values.Value) {
+func (b *Game) Set(index int, v values.Value) {
 	b.setInternal(index, v, false)
 }
 
-func (b *Play) SetReadOnly(index int, v values.Value) {
+func (b *Game) SetReadOnly(index int, v values.Value) {
 	b.setInternal(index, v, true)
 }
 
-func (b *Play) Disallow(index int, v values.Value) {
+func (b *Game) Disallow(index int, v values.Value) {
 	b.DisallowSet(index, v.AsSet())
 }
 
-func (b *Play) DisallowSet(index int, vs values.Set) {
-	if b.mode == ImmutableMode {
+func (b *Game) DisallowSet(index int, vs values.Set) {
+	if b.mode == Immutable {
 		panic("Cannot set disallowed values on immutable board")
 	}
 	if vs.IsEmpty() {
@@ -138,21 +143,21 @@ func (b *Play) DisallowSet(index int, vs values.Set) {
 		panic("Nothing to disallow")
 	}
 
-	b.userDisallowedValues[index] = values.Union(b.userDisallowedValues[index], vs)
+	b.disallowedValues[index].byUser = values.Union(b.disallowedValues[index].byUser, vs)
 }
 
-func (b *Play) DisallowReset(index int) {
-	b.userDisallowedValues[index] = values.EmptySet()
+func (b *Game) DisallowReset(index int) {
+	b.disallowedValues[index].byUser = values.EmptySet()
 }
 
-func (b *Play) setInternal(index int, v values.Value, readOnly bool) values.Value {
+func (b *Game) setInternal(index int, v values.Value, readOnly bool) values.Value {
 	previousValue := b.base.setInternal(index, v, readOnly)
 	b.updateStats(index, previousValue, v)
 	return previousValue
 }
 
-func (b *Play) Restart() {
-	if b.mode == ImmutableMode {
+func (b *Game) Restart() {
+	if b.mode == Immutable {
 		panic("Cannot restart an immutable board")
 	}
 
@@ -167,34 +172,31 @@ func (b *Play) Restart() {
 }
 
 // only sets non-zero values
-func (b *Play) initZeroStats(mode Mode) {
+func (b *Game) initZeroStats(mode Mode) {
 	b.init(mode)
 	b.freeCellCount = Size
-	for i := range b.allowedValuesCache {
-		b.allowedValuesCache[i] = values.FullSet()
-	}
+	clear(b.disallowedValues[:])
 	b.validFlags.SetAll(true)
 	b.checkIntegrity()
 }
 
-func (b *Play) String() string {
+func (b *Game) String() string {
 	var sb strings.Builder
 	WriteValues(b, bufio.NewWriter(&sb))
 	return sb.String()
 }
 
-func (b *Play) copyStats(source *Play) {
+func (b *Game) copyStats(source *Game) {
 	if source == nil {
 		panic("Cannot copy nil board")
 	}
 
 	b.freeCellCount = source.freeCellCount
 	b.validFlags = source.validFlags
-	copy(b.userDisallowedValues[:], source.userDisallowedValues[:])
-	copy(b.allowedValuesCache[:], source.allowedValuesCache[:])
+	copy(b.disallowedValues[:], source.disallowedValues[:])
 }
 
-func (b *Play) updateStats(index int, oldValue, newValue values.Value) {
+func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 	if oldValue == newValue {
 		return
 	}
@@ -210,7 +212,7 @@ func (b *Play) updateStats(index int, oldValue, newValue values.Value) {
 			allowedValues = b.relatedValues(index).Complement()
 		} else {
 			// if cell was empty before, its allowed values cache was valid
-			allowedValues = b.allowedValuesCache[index]
+			allowedValues = b.disallowedValues[index].byRelated.Complement()
 		}
 		isValid = isValid && allowedValues.Contains(newValue)
 	}
@@ -227,9 +229,10 @@ func (b *Play) updateStats(index int, oldValue, newValue values.Value) {
 	if newValue == 0 {
 		b.freeCellCount++
 		// if we set non-empty to empty, recalculate the allowed values
-		b.allowedValuesCache[index] = b.relatedValues(index).Complement()
+		b.disallowedValues[index].byRelated = b.relatedValues(index)
 	} else {
-		b.allowedValuesCache[index] = values.EmptySet()
+		b.disallowedValues[index].byRelated = values.FullSet()
+		b.disallowedValues[index].byUser = values.EmptySet()
 	}
 
 	relatedSeq := indexes.RelatedSequence(index)
@@ -241,19 +244,19 @@ func (b *Play) updateStats(index int, oldValue, newValue values.Value) {
 		if oldValue != 0 {
 			// If old value was present, we cannot just add it to the allowed set of
 			// related indexes since the same value may appear in other related cells.
-			b.allowedValuesCache[relatedIndex] = b.relatedValues(relatedIndex).Complement()
+			b.disallowedValues[relatedIndex].byRelated = b.relatedValues(relatedIndex)
 		}
 		if newValue != 0 {
-			// if we added new value than it is totally safe to exclude this
-			// value from the allowed values of related cells.
-			b.allowedValuesCache[relatedIndex] =
-				b.allowedValuesCache[relatedIndex].Without(newValue.AsSet())
+			// if we added new value than it is totally safe to include this
+			// value to the disallowed values based on the related cells.
+			b.disallowedValues[relatedIndex].byRelated =
+				b.disallowedValues[relatedIndex].byRelated.With(newValue.AsSet())
 		}
 	}
 	b.checkIntegrity()
 }
 
-func (b *Play) recalculateAllStats() {
+func (b *Game) recalculateAllStats() {
 	// assume valid unless proven otherwise inside calcSequenceSet
 	b.validFlags.SetAll(true)
 
@@ -262,9 +265,9 @@ func (b *Play) recalculateAllStats() {
 	for i := range Size {
 		if b.values[i] == 0 {
 			b.freeCellCount++
-			b.allowedValuesCache[i] = b.relatedValues(i).Complement()
+			b.disallowedValues[i].byRelated = b.relatedValues(i)
 		} else {
-			b.allowedValuesCache[i] = values.EmptySet()
+			b.disallowedValues[i].byRelated = values.FullSet()
 		}
 	}
 
@@ -279,14 +282,14 @@ func (b *Play) recalculateAllStats() {
 	b.checkIntegrity()
 }
 
-func (b *Play) validateSequence(s indexes.Sequence) {
+func (b *Game) validateSequence(s indexes.Sequence) {
 	_, dupes := b.calcSequence(s)
 	for v := range dupes.Values {
 		b.markSequenceInvalid(v, s)
 	}
 }
 
-func (b *Play) markSequenceInvalid(v values.Value, s indexes.Sequence) {
+func (b *Game) markSequenceInvalid(v values.Value, s indexes.Sequence) {
 	readOnly := []int{}
 	foundReadWrite := false
 
@@ -309,7 +312,7 @@ func (b *Play) markSequenceInvalid(v values.Value, s indexes.Sequence) {
 	}
 }
 
-func (b *Play) checkIntegrity() {
+func (b *Game) checkIntegrity() {
 	if !GetIntegrityChecks() {
 		return
 	}
@@ -360,7 +363,7 @@ func (b *Play) checkIntegrity() {
 			// check that disallowed values are a union of row/column/square
 			disallowedValuesExpected := values.Union(
 				b.relatedValues(i),
-				b.userDisallowedValues[i])
+				b.disallowedValues[i].byUser)
 
 			if b.AllowedSet(i) != disallowedValuesExpected.Complement() {
 				panic(fmt.Sprintf(

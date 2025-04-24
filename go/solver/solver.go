@@ -28,7 +28,7 @@ func New(opts *Options) *Solver {
 	}
 }
 
-func (s *Solver) Run(ctx context.Context, b *boards.Play) *Result {
+func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
 	result := &Result{
 		Status:    StatusUnknown,
 		Solutions: &Solutions{},
@@ -82,7 +82,7 @@ func (s *Solver) Run(ctx context.Context, b *boards.Play) *Result {
 	if boards.GetIntegrityChecks() {
 		// capture the original board for integrity checks to make sure algos do not corrupt
 		// the board and their solutions solve the input
-		r.inputBoard = b.Clone(boards.ImmutableMode)
+		r.inputBoard = b.Clone(boards.Immutable)
 	}
 
 	switch {
@@ -130,13 +130,13 @@ func (s *Solver) Run(ctx context.Context, b *boards.Play) *Result {
 
 type runner struct {
 	action                Action
-	board                 *boards.Play
+	board                 *boards.Game
 	currentRecursionDepth int8
 	maxRecursionDepth     int8
 	result                Result
 
 	// inputBoard for integrity checks of the solutions
-	inputBoard *boards.Play
+	inputBoard *boards.Game
 
 	// to reduce calls into alloc, cache nested runner to speed up its access
 	nestedCache *runner
@@ -191,9 +191,9 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 			r.result.completeErr(ctx.Err())
 			return StatusError
 		}
-		var startBoard *boards.Play
+		var startBoard *boards.Game
 		if boards.GetIntegrityChecks() {
-			startBoard = r.board.Clone(boards.ImmutableMode)
+			startBoard = r.board.Clone(boards.Immutable)
 		}
 
 		status := algo.Run(ctx, r)
@@ -202,6 +202,11 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 			if !boards.ContainsAll(r.board, startBoard) {
 				panic(fmt.Errorf(
 					"algo %s removed values from the board: before %v, after %v",
+					algo, startBoard, r.board))
+			}
+			if !r.board.IsValid() {
+				panic(fmt.Errorf(
+					"algo %s generated failed board:\nbefore:\n%v\nafter:\n%v",
 					algo, startBoard, r.board))
 			}
 		}
@@ -231,7 +236,7 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 func (r *runner) Action() Action {
 	return r.action
 }
-func (r *runner) Board() *boards.Play {
+func (r *runner) Board() *boards.Game {
 	return r.board
 }
 func (r *runner) CurrentRecursionDepth() int {
@@ -248,7 +253,7 @@ func (r *runner) MergeSteps(steps *StepStats) {
 	r.result.Steps.Merge(steps)
 }
 
-func (r *runner) recursiveRun(ctx context.Context, b *boards.Play) *Result {
+func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) *Result {
 	nested := r.nestedCache
 	if nested == nil {
 		nested = &runner{
@@ -286,7 +291,7 @@ func (r *runner) recursiveRun(ctx context.Context, b *boards.Play) *Result {
 	if boards.GetIntegrityChecks() {
 		// capture the original board for integrity checks to make sure algos do not corrupt
 		// the board and their solutions solve the input
-		nested.inputBoard = b.Clone(boards.ImmutableMode)
+		nested.inputBoard = b.Clone(boards.Immutable)
 	}
 
 	return nested.run(ctx)
