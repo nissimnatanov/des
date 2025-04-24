@@ -17,6 +17,14 @@ type base struct {
 	mode          Mode
 }
 
+func (b *base) AllValues(yield func(i int, v values.Value) bool) {
+	for i, v := range b.values {
+		if !yield(i, v) {
+			return
+		}
+	}
+}
+
 func (b *base) Get(index int) values.Value {
 	return b.values[index]
 }
@@ -42,7 +50,7 @@ func (b *base) setInternal(index int, v values.Value, readOnly bool) values.Valu
 	}
 
 	v.Validate()
-	prev := b.Get(index)
+	prev := b.values[index]
 	b.values[index] = v
 	b.readOnlyFlags.Set(index, readOnly)
 	return prev
@@ -55,7 +63,7 @@ func (b *base) copyValues(other *base) {
 
 func (b *base) calcSequence(s indexes.Sequence) (vs values.Set, dupes values.Set) {
 	for index := range s.Indexes {
-		v := b.Get(index)
+		v := b.values[index]
 		if v == 0 {
 			continue
 		}

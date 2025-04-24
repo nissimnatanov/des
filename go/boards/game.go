@@ -35,12 +35,12 @@ func (b *Game) Mode() Mode {
 }
 
 func (b *Game) IsEmpty(index int) bool {
-	return b.Get(index) == 0
+	return b.values[index] == 0
 }
 
 func (b *Game) AllowedSets(yield func(int, values.Set) bool) {
 	for i, a := range b.disallowedValues[:] {
-		if b.IsEmpty(i) && !yield(i, a.Complement()) {
+		if b.values[i] == 0 && !yield(i, a.Complement()) {
 			return
 		}
 	}
@@ -70,7 +70,7 @@ func (b *Game) relatedValues(index int) values.Set {
 func (b *Game) sequenceValues(s indexes.Sequence) values.Set {
 	values := values.EmptySet()
 	for i := range s.Indexes {
-		v := b.Get(i)
+		v := b.values[i]
 		if v != 0 {
 			values = values.With(v.AsSet())
 		}
@@ -237,7 +237,7 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 
 	relatedSeq := indexes.RelatedSequence(index)
 	for relatedIndex := range relatedSeq.Indexes {
-		if relatedIndex == index || !b.IsEmpty(relatedIndex) {
+		if relatedIndex == index || b.values[relatedIndex] != 0 {
 			continue
 		}
 
@@ -294,7 +294,7 @@ func (b *Game) markSequenceInvalid(v values.Value, s indexes.Sequence) {
 	foundReadWrite := false
 
 	for index := range s.Indexes {
-		if b.Get(index) != v {
+		if b.values[index] != v {
 			continue
 		}
 		if b.IsReadOnly(index) {
@@ -329,7 +329,7 @@ func (b *Game) checkIntegrity() {
 			// check this value is disallowed in other places
 			rs := indexes.RelatedSequence(i)
 			for related := range rs.Indexes {
-				rv := b.Get(related)
+				rv := b.values[related]
 				if rv == 0 {
 					if b.AllowedSet(related).Contains(v) {
 						panic("value should not be allowed")

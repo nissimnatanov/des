@@ -15,6 +15,7 @@ const (
 	StepComplexityEasy       StepComplexity = 1     // single in square
 	StepComplexityMedium     StepComplexity = 5     // single in row/column
 	StepComplexityHard       StepComplexity = 20    // identify pairs
+	StepComplexityHarder     StepComplexity = 50    // identify triplets
 	StepComplexityRecursion1 StepComplexity = 100   // single recursion
 	StepComplexityRecursion2 StepComplexity = 500   // second-level recursion
 	StepComplexityRecursion3 StepComplexity = 2000  // third-level recursion

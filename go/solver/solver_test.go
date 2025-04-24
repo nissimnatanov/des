@@ -79,6 +79,10 @@ func TestSolveSanity(t *testing.T) {
 // 								48	  24858786 ns/op	   19217 B/op	      58 allocs/op
 // make Board and Solution structs instead of interfaces for performance (allows inlining):
 // 								70	  16535683 ns/op	   22024 B/op	      64 allocs/op
+// identify all related pairs (not just first one):
+// 								72	  16318599 ns/op	   22953 B/op	      79 allocs/op
+// identify triplets:
+// 								72	  15989164 ns/op	   22040 B/op	      64 allocs/op
 
 func BenchmarkProve(b *testing.B) {
 	ctx := b.Context()

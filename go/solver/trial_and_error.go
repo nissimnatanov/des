@@ -42,9 +42,7 @@ func (a trialAndError) String() string {
 }
 
 func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
-	// TODO: check if we need the same layered recursion as in the C++ code
 	if state.CurrentRecursionDepth() >= state.MaxRecursionDepth() {
-		// this algorithm activates recursion
 		return StatusUnknown
 	}
 
@@ -172,8 +170,7 @@ func (a *trialAndError) reportStep(state AlgorithmState) {
 }
 
 func copyFromTestBoard(testBoard, b *boards.Game) {
-	for i := range boards.Size {
-		bv := b.Get(i)
+	for i, bv := range b.AllValues {
 		tv := testBoard.Get(i)
 		if bv == 0 {
 			if tv == 0 {

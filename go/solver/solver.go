@@ -45,8 +45,7 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
 	}
 
 	var valueCounts [boards.SequenceSize]int
-	for i := range boards.Size {
-		v := b.Get(i)
+	for _, v := range b.AllValues {
 		if v != 0 {
 			valueCounts[v-1]++
 		}

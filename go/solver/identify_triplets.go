@@ -8,33 +8,27 @@ import (
 	"github.com/nissimnatanov/des/go/boards/values"
 )
 
-type identifyPairs struct {
+type identifyTriplets struct {
 }
 
-func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
+func (a identifyTriplets) Run(ctx context.Context, state AlgorithmState) Status {
 	b := state.Board()
 	// force local alloc for cleaner profile
-	var peersCache [5]int
+	var peersCache [6]int
 	peers := peersCache[:0]
 	var eliminationCount int
 
 	for index, allowed := range b.AllowedSets {
-		if allowed.Size() != 2 {
+		if allowed.Size() != 3 {
 			// this includes non-empty cells too (allowed set is empty)
 			continue
 		}
 		peers = a.findPeers(b, allowed, indexes.RelatedSequence(index), peers[:0])
-		switch {
-		case len(peers) < 1:
-			// no peer found
+		if len(peers) < 2 {
 			continue
-		case len(peers) > 4:
-			// if cell has more than 3 peers with same pair of allowed values, than at least two of them
-			// share the same row/col/square with the current cell meaning within the same
-			// scope there are more than two cells with same pair of values
-			return StatusNoSolution
 		}
 
+		// found enough peers
 		status, stop := a.tryEliminate(b, index, peers, allowed, indexes.RowFromIndex, indexes.RowSequence)
 		stopOnSuccess := false
 		if status == StatusSucceeded {
@@ -68,51 +62,54 @@ func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 		}
 	}
 	if eliminationCount > 0 {
-		// if we found at least one index that lead to elimination, let's stop
-		// and go back to cheaper algorithm such as theOnlyChoice
 		state.AddStep(Step(a.String()), StepComplexityHarder, eliminationCount)
 		return StatusSucceeded
 	}
+
 	return StatusUnknown
 }
 
-func (a identifyPairs) tryEliminate(
+func (a identifyTriplets) tryEliminate(
 	board *boards.Game, index int, peers []int,
 	allowed values.Set,
 	seqNumFromIndex func(int) int,
 	indexesFromSeq func(int) indexes.Sequence,
 ) (status Status, stop bool) {
 	seqNum := seqNumFromIndex(index)
-	var seqPeer = -1
+	var seqPeer1 = -1
+	var seqPeer2 = -1
 
 	for _, peer := range peers {
 		if seqNum != seqNumFromIndex(peer) {
 			continue
 		}
-		if seqPeer == -1 {
-			seqPeer = peer
+		if seqPeer1 == -1 {
+			seqPeer1 = peer
 			continue
 		}
-		// we already found one peer in the same sequence, this is second which means there are
-		// 3 cells with same pair of values
+		if seqPeer2 == -1 {
+			seqPeer2 = peer
+			continue
+		}
+		// we already found two peers in the same sequence, this is third which means there are
+		// 4 cells with same triplet of values
 		return StatusNoSolution, true
 	}
-	if seqPeer == -1 {
-		// we didn't find at least one peer in the same sequence
+	if seqPeer1 == -1 || seqPeer2 == -1 {
+		// we didn't find two peers in the same sequence
 		return StatusUnknown, false
 	}
-
-	return a.tryEliminateSeq(board, [2]int{index, seqPeer}, allowed, indexesFromSeq(seqNum))
+	return a.tryEliminateSeq(board, [3]int{index, seqPeer1, seqPeer2}, allowed, indexesFromSeq(seqNum))
 }
 
-func (a identifyPairs) tryEliminateSeq(
-	board *boards.Game, peers [2]int,
+func (a identifyTriplets) tryEliminateSeq(
+	board *boards.Game, peers [3]int,
 	toEliminate values.Set, seq indexes.Sequence,
 ) (status Status, stop bool) {
 	status = StatusUnknown
 	stop = false
 	for index := range seq.Indexes {
-		if index == peers[0] || index == peers[1] || !board.IsEmpty(index) {
+		if index == peers[0] || index == peers[1] || index == peers[2] || !board.IsEmpty(index) {
 			continue
 		}
 
@@ -138,8 +135,6 @@ func (a identifyPairs) tryEliminateSeq(
 				// we can safely assume that this is the only value left
 				board.Set(index, v)
 			}
-			// once we set a value, no need to continue this algorithm since we might
-			// get a lot cheaper ones now
 			stop = true
 		}
 	}
@@ -147,24 +142,25 @@ func (a identifyPairs) tryEliminateSeq(
 	return status, stop
 }
 
-func (a identifyPairs) findPeers(board *boards.Game, allowed values.Set, seq indexes.Sequence, peers []int) []int {
-	for i := range seq.Indexes {
-		if !board.IsEmpty(i) {
+func (a identifyTriplets) findPeers(
+	board *boards.Game, allowed values.Set, seq indexes.Sequence, peers []int,
+) []int {
+	for peerIndex := range seq.Indexes {
+		if !board.IsEmpty(peerIndex) {
 			continue
 		}
-		peerAllowed := board.AllowedSet(i)
+		peerAllowed := board.AllowedSet(peerIndex)
 		if peerAllowed == allowed {
-			peers = append(peers, i)
+			peers = append(peers, peerIndex)
 		}
-		// keep going to find more peers, this helps us to invalidate boards if > one peer is found
 	}
 	return peers
 }
 
-func (a identifyPairs) Complexity() StepComplexity {
+func (a identifyTriplets) Complexity() StepComplexity {
 	return StepComplexityHard
 }
 
-func (a identifyPairs) String() string {
-	return "Identify Pairs"
+func (a identifyTriplets) String() string {
+	return "Identify Triplets"
 }

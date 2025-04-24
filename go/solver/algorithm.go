@@ -30,6 +30,7 @@ func GetAlgorithms(action Action) []Algorithm {
 	return []Algorithm{
 		theOnlyChoice{},
 		identifyPairs{},
+		identifyTriplets{},
 		newTrialAndError(),
 	}
 
