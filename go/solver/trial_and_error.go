@@ -3,28 +3,29 @@ package solver
 import (
 	"context"
 	"slices"
+	"sync/atomic"
 
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/boards/values"
 )
 
-type trialAndErrorIndex struct {
+type indexWithAllowed struct {
 	index   int
 	allowed values.Set
 }
 
 type trialAndError struct {
-	indexesCache cache[[]trialAndErrorIndex]
+	indexesCache cache[[]indexWithAllowed]
 	testBoard    cache[*boards.Game]
 }
 
 func newTrialAndError() *trialAndError {
 	return &trialAndError{
-		indexesCache: cache[[]trialAndErrorIndex]{
-			factory: func() []trialAndErrorIndex {
-				return make([]trialAndErrorIndex, 0, boards.Size-17)
+		indexesCache: cache[[]indexWithAllowed]{
+			factory: func() []indexWithAllowed {
+				return make([]indexWithAllowed, 0, boards.Size-17)
 			},
-			reset: func(v []trialAndErrorIndex) []trialAndErrorIndex {
+			reset: func(v []indexWithAllowed) []indexWithAllowed {
 				// reset the slice to be empty but keep the capacity
 				return v[:0]
 			},
@@ -41,6 +42,8 @@ func (a trialAndError) String() string {
 	return "Trial and Error"
 }
 
+var id atomic.Int32
+
 func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	if state.CurrentRecursionDepth() >= state.MaxRecursionDepth() {
 		return StatusUnknown
@@ -49,6 +52,9 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	b := state.Board()
 	indexes := a.indexesCache.get()
 	defer a.indexesCache.put(indexes) // slice is reset on next get
+
+	runID := id.Add(1)
+	_ = runID // for debugging purposes
 
 	for i, allowed := range b.AllowedSets {
 		if allowed.Size() == 1 {
@@ -61,14 +67,14 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			return StatusSucceeded
 		}
 
-		indexes = append(indexes, trialAndErrorIndex{
+		indexes = append(indexes, indexWithAllowed{
 			index:   i,
 			allowed: allowed,
 		})
 	}
 
 	// sort for faster performance (it runs ~30% faster)
-	slices.SortFunc(indexes, func(tae1, tae2 trialAndErrorIndex) int {
+	slices.SortFunc(indexes, func(tae1, tae2 indexWithAllowed) int {
 		// Important: only use the allowed size, not the 'combined' value of it,
 		// adding combined value to the picture slows down the sort X 3 because
 		// it needs to unnecessarily calculate the combined value and shuffle elements
@@ -85,6 +91,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 		testValues := tei.allowed
 		var foundBoards []*boards.Game
 		foundUnknown := false
+		foundDisallowed := 0
 		for testValue := range testValues.Values {
 			if ctx.Err() != nil {
 				// if the context is done, we should stop
@@ -110,7 +117,29 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			if result.Status == StatusNoSolution {
 				// when settings this value, the board cannot be solved, disallow it for future use
 				b.Disallow(index, testValue)
-				return StatusSucceeded
+				// two options available here:
+				// * we already found a solution on a different test value value and needed a proof
+				//   that it is the only one (e.g. others must be disallowed)
+				// * we did not find a solution yet, and we keep going
+				if len(foundBoards) > 0 {
+					// this is the first bullet:  continue on this index to disallow rest of its test
+					// values and report the found solution as unique (or detect other solutions)
+					continue
+				}
+
+				// this is the second bullet - we found a value that cannot be used, but no solution yet
+				// let's see how many other values left on the same cell
+				allowed := b.AllowedSet(index)
+				if allowed.Size() == 0 {
+					// that was the last value on the cell, we can no longer solve this
+					// variations of the board
+					return StatusNoSolution
+				}
+				// we just disallowed one value, let's finish this cell since we already here
+				// and restarting the recursive loop can be a waste of cycles
+				// if only one value left, next loop will just set it and try to solve again
+				foundDisallowed++
+				continue
 			}
 
 			// only options available are two solutions or success
@@ -132,7 +161,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 
 			// proof requested, we must keep going with other options on the same cell to prove
 			// that the found solution is the only one on that cell
-			foundBoards = append(foundBoards, testBoard)
+			foundBoards = append(foundBoards, testBoard.Clone(boards.Immutable))
 			if len(foundBoards) > 1 {
 				// if we found more than one board, we can stop
 				// and report that we have two solutions
@@ -145,6 +174,10 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			// If, however, foundUnknown is true, we cannot use the found value since we do not
 			// have a hard proof that it is the only option available on the cell.
 			copyFromTestBoard(foundBoards[0], b)
+			return StatusSucceeded
+		}
+		if foundDisallowed > 0 {
+			// we disallowed one or more values on the cell, let's bail out and try cheaper algorithms
 			return StatusSucceeded
 		}
 	}

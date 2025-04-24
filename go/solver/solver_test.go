@@ -83,8 +83,22 @@ func TestSolveSanity(t *testing.T) {
 // 								72	  16318599 ns/op	   22953 B/op	      79 allocs/op
 // identify triplets:
 // 								72	  15989164 ns/op	   22040 B/op	      64 allocs/op
+// single in sequence:
+// 								94	  12936996 ns/op	   24096 B/op	      70 allocs/op
 
 func BenchmarkProve(b *testing.B) {
+	benchRun(b, &solver.Options{
+		Action: solver.ActionProve,
+	})
+}
+
+func BenchmarkSolve(b *testing.B) {
+	benchRun(b, &solver.Options{
+		Action: solver.ActionSolve,
+	})
+}
+
+func benchRun(b *testing.B, opts *solver.Options) {
 	ctx := b.Context()
 
 	// Create a new board
@@ -92,9 +106,7 @@ func BenchmarkProve(b *testing.B) {
 	assert.NilError(b, err)
 
 	// Create a new solver
-	s := solver.New(&solver.Options{
-		Action: solver.ActionProve,
-	})
+	s := solver.New(opts)
 
 	for b.Loop() {
 		res := s.Run(ctx, bd.Clone(boards.Play))

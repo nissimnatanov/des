@@ -27,17 +27,26 @@ type Algorithm interface {
 // for now hardcoded algorithms, we can allow dynamic register for the algorithms later
 func GetAlgorithms(action Action) []Algorithm {
 	// for now - same algos for all actions
-	return []Algorithm{
-		theOnlyChoice{},
-		identifyPairs{},
-		identifyTriplets{},
-		newTrialAndError(),
+	switch action {
+	case ActionSolve:
+		return []Algorithm{
+			// singleInSequence is first since it is considered the easiest by human to see
+			singleInSequence{},
+			theOnlyChoice{},
+			identifyPairs{},
+			identifyTriplets{},
+			newTrialAndError(),
+		}
+	case ActionSolveFast, ActionProve:
+		return []Algorithm{
+			theOnlyChoice{},
+			identifyPairs{},
+			// singleInSequence is slower that the first two, but faster than the triplet and recursion
+			singleInSequence{},
+			identifyTriplets{},
+			newTrialAndError(),
+		}
+	default:
+		panic("unknown action: " + action.String())
 	}
-
-	/*
-		missing for Solve that requires accurate leveling (but not solve fast nor prove):
-			make_shared<SingleInSquare>(),
-		    make_shared<SingleInRow>(),
-		    make_shared<SingleInColumn>(),
-	*/
 }
