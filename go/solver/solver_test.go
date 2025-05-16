@@ -10,6 +10,14 @@ import (
 )
 
 func TestSolveSanity(t *testing.T) {
+	testSanity(t, solver.ActionSolve)
+}
+
+func TestProveSanity(t *testing.T) {
+	testSanity(t, solver.ActionProve)
+}
+
+func testSanity(t *testing.T, action solver.Action) {
 	boards.SetIntegrityChecks(true)
 
 	ctx := t.Context()
@@ -20,7 +28,7 @@ func TestSolveSanity(t *testing.T) {
 			assert.NilError(t, err)
 
 			s := solver.New(&solver.Options{
-				Action: solver.ActionSolve,
+				Action: action,
 			})
 
 			// Solve the board
@@ -28,7 +36,9 @@ func TestSolveSanity(t *testing.T) {
 			assert.NilError(t, res.Error)
 
 			assert.Equal(t, res.Status, solver.StatusSucceeded)
-			assert.Assert(t, res.Steps.Level >= solver.LevelNightmare)
+			if action == solver.ActionSolve {
+				assert.Assert(t, res.Steps.Level >= solver.LevelNightmare)
+			}
 			assert.Equal(t, res.Solutions.Size(), 1)
 			sol := res.Solutions.At(0)
 
@@ -85,6 +95,8 @@ func TestSolveSanity(t *testing.T) {
 // 								72	  15989164 ns/op	   22040 B/op	      64 allocs/op
 // single in sequence:
 // 								94	  12936996 ns/op	   24096 B/op	      70 allocs/op
+// single in sequence, recursion fixes, disable identify pairs and triplets in Prove:
+// 					  			208	   5643597 ns/op	   37840 B/op	      99
 
 func BenchmarkProve(b *testing.B) {
 	benchRun(b, &solver.Options{

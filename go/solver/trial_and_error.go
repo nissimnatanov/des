@@ -3,7 +3,6 @@ package solver
 import (
 	"context"
 	"slices"
-	"sync/atomic"
 
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/boards/values"
@@ -23,7 +22,7 @@ func newTrialAndError() *trialAndError {
 	return &trialAndError{
 		indexesCache: cache[[]indexWithAllowed]{
 			factory: func() []indexWithAllowed {
-				return make([]indexWithAllowed, 0, boards.Size-17)
+				return make([]indexWithAllowed, 0, MaxFreeCellsForValidBoard)
 			},
 			reset: func(v []indexWithAllowed) []indexWithAllowed {
 				// reset the slice to be empty but keep the capacity
@@ -42,8 +41,6 @@ func (a trialAndError) String() string {
 	return "Trial and Error"
 }
 
-var id atomic.Int32
-
 func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	if state.CurrentRecursionDepth() >= state.MaxRecursionDepth() {
 		return StatusUnknown
@@ -53,14 +50,14 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	indexes := a.indexesCache.get()
 	defer a.indexesCache.put(indexes) // slice is reset on next get
 
-	runID := id.Add(1)
-	_ = runID // for debugging purposes
-
 	for i, allowed := range b.AllowedSets {
-		if allowed.Size() == 1 {
-			// if the trial algorithm is used only by itself (without other algorithms),
-			// we can skip the recursion and just set the value if this is the only option
-			// if we do not do this, recursion depth won't be enough to solve the board
+		// if the trial algorithm is used only by itself (without other algorithms),
+		// we can skip the recursion and just set the value if this is the only option
+		// if we do not do this, recursion depth won't be enough to solve the board
+		switch allowed.Size() {
+		case 0:
+			return StatusNoSolution
+		case 1:
 			b.Set(i, allowed.At(0))
 			theOnlyChoiceAlgo := theOnlyChoice{}
 			state.AddStep(Step(theOnlyChoiceAlgo.String()), theOnlyChoiceAlgo.Complexity(), 1)
@@ -75,11 +72,18 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 
 	// sort for faster performance (it runs ~30% faster)
 	slices.SortFunc(indexes, func(tae1, tae2 indexWithAllowed) int {
+		a1 := tae1.allowed.Size()
+		a2 := tae2.allowed.Size()
+		if a1 > 3 && a2 > 3 {
+			// do not bother reordering cells with more than 3 allowed, it is highly unlikely
+			// this algorithm will ever need to use them
+			return 0
+		}
 		// Important: only use the allowed size, not the 'combined' value of it,
 		// adding combined value to the picture slows down the sort X 3 because
 		// it needs to unnecessarily calculate the combined value and shuffle elements
 		// by it even though technically speaking it is not needed at all
-		return tae1.allowed.Size() - tae2.allowed.Size()
+		return a1 - a2
 	})
 
 	// create testBoard once and reuse it
@@ -90,8 +94,8 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 		index := tei.index
 		testValues := tei.allowed
 		var foundBoards []*boards.Game
-		foundUnknown := false
-		foundDisallowed := 0
+		var foundUnknown bool
+		var foundDisallowed bool
 		for testValue := range testValues.Values {
 			if ctx.Err() != nil {
 				// if the context is done, we should stop
@@ -117,28 +121,10 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			if result.Status == StatusNoSolution {
 				// when settings this value, the board cannot be solved, disallow it for future use
 				b.Disallow(index, testValue)
-				// two options available here:
-				// * we already found a solution on a different test value value and needed a proof
-				//   that it is the only one (e.g. others must be disallowed)
-				// * we did not find a solution yet, and we keep going
-				if len(foundBoards) > 0 {
-					// this is the first bullet:  continue on this index to disallow rest of its test
-					// values and report the found solution as unique (or detect other solutions)
-					continue
-				}
-
-				// this is the second bullet - we found a value that cannot be used, but no solution yet
-				// let's see how many other values left on the same cell
-				allowed := b.AllowedSet(index)
-				if allowed.Size() == 0 {
-					// that was the last value on the cell, we can no longer solve this
-					// variations of the board
-					return StatusNoSolution
-				}
 				// we just disallowed one value, let's finish this cell since we already here
 				// and restarting the recursive loop can be a waste of cycles
 				// if only one value left, next loop will just set it and try to solve again
-				foundDisallowed++
+				foundDisallowed = true
 				continue
 			}
 
@@ -168,15 +154,29 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 				return StatusMoreThanOneSolution
 			}
 		}
-		if !foundUnknown && len(foundBoards) == 1 {
-			// If proof is requested, and for each value we either found a solution or proved
-			// no solution is possible, we can use the found value
-			// If, however, foundUnknown is true, we cannot use the found value since we do not
-			// have a hard proof that it is the only option available on the cell.
-			copyFromTestBoard(foundBoards[0], b)
-			return StatusSucceeded
+		if len(foundBoards) == 1 {
+			if !foundUnknown {
+				// If proof is requested, and for each value we either found a solution or proved
+				// no solution is possible, we can use the found value
+				// If, however, foundUnknown is true, we cannot use the found value since we do not
+				// have a hard proof that it is the only option available on the cell.
+				copyFromTestBoard(foundBoards[0], b)
+				return StatusSucceeded
+			}
+			return StatusUnknown
 		}
-		if foundDisallowed > 0 {
+		// no solution found, did we disallow any values?
+		if foundDisallowed {
+			allowed := b.AllowedSet(index)
+			switch allowed.Size() {
+			case 0:
+				// we disallowed all the values, bail out
+				return StatusNoSolution
+			case 1:
+				// the unknown value that is left is the only option available
+				// we can set it and return
+				b.Set(index, allowed.At(0))
+			}
 			// we disallowed one or more values on the cell, let's bail out and try cheaper algorithms
 			return StatusSucceeded
 		}

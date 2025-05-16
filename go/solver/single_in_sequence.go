@@ -20,24 +20,15 @@ func (a singleInSequence) Run(ctx context.Context, state AlgorithmState) Status 
 	status := StatusUnknown
 	seqStatus := a.runSeqKind(ctx, state, indexes.RowSequence, freeCellsCache[:])
 	if seqStatus != StatusUnknown {
-		if seqStatus != StatusSucceeded {
-			return seqStatus
-		}
-		status = StatusSucceeded
+		return seqStatus
 	}
 	seqStatus = a.runSeqKind(ctx, state, indexes.ColumnSequence, freeCellsCache[:])
 	if seqStatus != StatusUnknown {
-		if seqStatus != StatusSucceeded {
-			return seqStatus
-		}
-		status = StatusSucceeded
+		return seqStatus
 	}
 	seqStatus = a.runSeqKind(ctx, state, indexes.SquareSequence, freeCellsCache[:])
 	if seqStatus != StatusUnknown {
-		if seqStatus != StatusSucceeded {
-			return seqStatus
-		}
-		status = StatusSucceeded
+		return seqStatus
 	}
 	return status
 }
@@ -52,7 +43,6 @@ func (a singleInSequence) runSeqKind(
 		}
 		status := a.runSeq(state, seq(i), freeCellsCache)
 		if status != StatusUnknown {
-			// TODO: is this expensive or can we continue?
 			return status
 		}
 	}
@@ -95,8 +85,9 @@ func (a singleInSequence) runSeq(
 				// first free cell
 				freeIndex = freeCell.index
 			} else if freeIndex2 == -1 {
-				// second one
+				// second one, we can stop now
 				freeIndex2 = freeCell.index
+				break
 			}
 		}
 		switch {

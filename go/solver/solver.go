@@ -11,7 +11,15 @@ import (
 
 // MaxFreeCellsForValidBoard is checked to ensure the board has enough values to start with,
 // boards with less than 17 values set are mathematically proven to be illegal sudoku boards.
-const MaxFreeCellsForValidBoard = 64
+const MaxFreeCellsForValidBoard = boards.Size - boards.MinValidBoardSize
+
+// maxRecursionDepthLimit is the maximum recursion depth that the solver
+// can ever reach even if all other algorithms are not included and only
+// the recursion is used to solve the board. For safety, set it to
+// MaxFreeCellsForValidBoard, but technically speaking it would never come
+// close to that number since the recursion algorithm uses 'the only choice'
+// algorithm first and that would detect values.
+const maxRecursionDepthLimit = 127
 
 type Solver struct {
 	opts Options
@@ -84,17 +92,13 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
 		r.inputBoard = b.Clone(boards.Immutable)
 	}
 
-	switch {
-	case s.opts.MaxRecursionDepth > 32:
-		// 32 is way too deep, best perf achieved around 10-15 and from there usually
-		// the-only-choice algo completes the board, anything above that is useless
-		r.maxRecursionDepth = 32
-	case s.opts.MaxRecursionDepth <= 0:
+	if s.opts.MaxRecursionDepth > maxRecursionDepthLimit ||
+		s.opts.MaxRecursionDepth <= 0 {
 		// without recursion it is virtually impossible to solve many boards,
 		// zero is not a valid value
 		// note: recursion with this package is almost 'allocation-free', and it is fast
-		r.maxRecursionDepth = 12
-	default:
+		r.maxRecursionDepth = maxRecursionDepthLimit
+	} else {
 		r.maxRecursionDepth = int8(s.opts.MaxRecursionDepth)
 	}
 

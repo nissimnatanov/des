@@ -40,10 +40,11 @@ func GetAlgorithms(action Action) []Algorithm {
 	case ActionSolveFast, ActionProve:
 		return []Algorithm{
 			theOnlyChoice{},
-			identifyPairs{},
-			// singleInSequence is slower that the first two, but faster than the triplet and recursion
 			singleInSequence{},
-			identifyTriplets{},
+			// recursion is faster than identify pairs & triplets algos
+			// identifyPairs{},
+			// triplet algorithm is very slow, recursion is faster
+			//identifyTriplets{},
 			newTrialAndError(),
 		}
 	default:
