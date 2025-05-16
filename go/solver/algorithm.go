@@ -44,7 +44,7 @@ func GetAlgorithms(action Action) []Algorithm {
 			// recursion is faster than identify pairs & triplets algos
 			// identifyPairs{},
 			// triplet algorithm is very slow, recursion is faster
-			//identifyTriplets{},
+			// identifyTriplets{},
 			newTrialAndError(),
 		}
 	default:

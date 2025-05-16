@@ -17,48 +17,46 @@ func (a identifyTriplets) Run(ctx context.Context, state AlgorithmState) Status 
 	var peersCache [6]int
 	peers := peersCache[:0]
 	var eliminationCount int
+	freeCellOnStart := b.FreeCellCount()
 
 	for index, allowed := range b.AllowedSets {
 		if allowed.Size() != 3 {
 			// this includes non-empty cells too (allowed set is empty)
 			continue
 		}
-		peers = a.findPeers(b, allowed, indexes.RelatedSequence(index), peers[:0])
+		peers = a.findPeers(b, index, allowed, indexes.RelatedSequence(index), peers[:0])
 		if len(peers) < 2 {
 			continue
 		}
 
 		// found enough peers
-		status, stop := a.tryEliminate(b, index, peers, allowed, indexes.RowFromIndex, indexes.RowSequence)
-		stopOnSuccess := false
+		status := a.tryEliminate(b, index, peers, allowed, indexes.RowFromIndex, indexes.RowSequence)
 		if status == StatusSucceeded {
 			eliminationCount++
 			// do not stop yet if we found a solution, let's check other peers
-			stopOnSuccess = stopOnSuccess || stop
-		} else if stop {
+		} else if status != StatusUnknown {
 			return status
 		}
 
-		status, stop = a.tryEliminate(b, index, peers, allowed, indexes.ColumnFromIndex, indexes.ColumnSequence)
+		status = a.tryEliminate(b, index, peers, allowed, indexes.ColumnFromIndex, indexes.ColumnSequence)
 		if status == StatusSucceeded {
 			eliminationCount++
 			// do not stop yet if we found a solution, let's check other peers
-			stopOnSuccess = stopOnSuccess || stop
-		} else if stop {
+		} else if status != StatusUnknown {
 			return status
 		}
 
-		status, stop = a.tryEliminate(b, index, peers, allowed, indexes.SquareFromIndex, indexes.SquareSequence)
+		status = a.tryEliminate(b, index, peers, allowed, indexes.SquareFromIndex, indexes.SquareSequence)
 		if status == StatusSucceeded {
 			eliminationCount++
 			// do not stop yet if we found a solution, let's check other peers
-			stopOnSuccess = stopOnSuccess || stop
-		} else if stop {
+		} else if status != StatusUnknown {
 			return status
 		}
 
-		if stopOnSuccess {
-			break
+		if b.FreeCellCount() < freeCellOnStart {
+			// if we set at least one value, we can stop now and try faster algos
+			return StatusSucceeded
 		}
 	}
 	if eliminationCount > 0 {
@@ -74,7 +72,7 @@ func (a identifyTriplets) tryEliminate(
 	allowed values.Set,
 	seqNumFromIndex func(int) int,
 	indexesFromSeq func(int) indexes.Sequence,
-) (status Status, stop bool) {
+) Status {
 	seqNum := seqNumFromIndex(index)
 	var seqPeer1 = -1
 	var seqPeer2 = -1
@@ -93,11 +91,11 @@ func (a identifyTriplets) tryEliminate(
 		}
 		// we already found two peers in the same sequence, this is third which means there are
 		// 4 cells with same triplet of values
-		return StatusNoSolution, true
+		return StatusNoSolution
 	}
 	if seqPeer1 == -1 || seqPeer2 == -1 {
 		// we didn't find two peers in the same sequence
-		return StatusUnknown, false
+		return StatusUnknown
 	}
 	return a.tryEliminateSeq(board, [3]int{index, seqPeer1, seqPeer2}, allowed, indexesFromSeq(seqNum))
 }
@@ -105,9 +103,8 @@ func (a identifyTriplets) tryEliminate(
 func (a identifyTriplets) tryEliminateSeq(
 	board *boards.Game, peers [3]int,
 	toEliminate values.Set, seq indexes.Sequence,
-) (status Status, stop bool) {
-	status = StatusUnknown
-	stop = false
+) Status {
+	status := StatusUnknown
 	for index := range seq.Indexes {
 		if index == peers[0] || index == peers[1] || index == peers[2] || !board.IsEmpty(index) {
 			continue
@@ -121,31 +118,35 @@ func (a identifyTriplets) tryEliminateSeq(
 
 		// found a cell that we can remove values - turn them off
 		board.DisallowSet(index, toEliminate)
-		status = StatusSucceeded
 
 		// since we are here, we can now easily check if we have only one allowed value left
 		tempAllowed = tempAllowed.Without(toEliminate)
 		switch tempAllowed.Size() {
 		case 0:
 			// no allowed values left, this is a dead end
-			return StatusNoSolution, true
+			return StatusNoSolution
 		case 1:
 			// only one allowed value left, let's set it
 			for v := range tempAllowed.Values {
 				// we can safely assume that this is the only value left
 				board.Set(index, v)
 			}
-			stop = true
 		}
+		status = StatusSucceeded
 	}
 
-	return status, stop
+	return status
 }
 
 func (a identifyTriplets) findPeers(
-	board *boards.Game, allowed values.Set, seq indexes.Sequence, peers []int,
+	board *boards.Game, index int, allowed values.Set, seq indexes.Sequence, peers []int,
 ) []int {
 	for peerIndex := range seq.Indexes {
+		if peerIndex < index {
+			// we only need to search forward since we already searched for peers
+			// of the previous indexes
+			continue
+		}
 		if !board.IsEmpty(peerIndex) {
 			continue
 		}

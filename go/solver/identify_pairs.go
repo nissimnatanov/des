@@ -15,56 +15,46 @@ func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 	b := state.Board()
 	// force local alloc for cleaner profile
 	var peersCache [5]int
-	peers := peersCache[:0]
 	var eliminationCount int
+	freeCellOnStart := b.FreeCellCount()
 
 	for index, allowed := range b.AllowedSets {
 		if allowed.Size() != 2 {
 			// this includes non-empty cells too (allowed set is empty)
 			continue
 		}
-		peers = a.findPeers(b, allowed, indexes.RelatedSequence(index), peers[:0])
-		switch {
-		case len(peers) < 1:
+		peers := a.findPeers(b, index, allowed, indexes.RelatedSequence(index), peersCache[:])
+		if len(peers) == 0 {
 			// no peer found
 			continue
-		case len(peers) > 4:
-			// if cell has more than 3 peers with same pair of allowed values, than at least two of them
-			// share the same row/col/square with the current cell meaning within the same
-			// scope there are more than two cells with same pair of values
-			return StatusNoSolution
 		}
 
-		status, stop := a.tryEliminate(b, index, peers, allowed, indexes.RowFromIndex, indexes.RowSequence)
-		stopOnSuccess := false
+		status := a.tryEliminate(b, index, peers, allowed, indexes.RowFromIndex, indexes.RowSequence)
 		if status == StatusSucceeded {
 			eliminationCount++
 			// do not stop yet if we found a solution, let's check other peers
-			stopOnSuccess = stopOnSuccess || stop
-		} else if stop {
+		} else if status != StatusUnknown {
 			return status
 		}
 
-		status, stop = a.tryEliminate(b, index, peers, allowed, indexes.ColumnFromIndex, indexes.ColumnSequence)
+		status = a.tryEliminate(b, index, peers, allowed, indexes.ColumnFromIndex, indexes.ColumnSequence)
 		if status == StatusSucceeded {
 			eliminationCount++
 			// do not stop yet if we found a solution, let's check other peers
-			stopOnSuccess = stopOnSuccess || stop
-		} else if stop {
+		} else if status != StatusUnknown {
 			return status
 		}
 
-		status, stop = a.tryEliminate(b, index, peers, allowed, indexes.SquareFromIndex, indexes.SquareSequence)
+		status = a.tryEliminate(b, index, peers, allowed, indexes.SquareFromIndex, indexes.SquareSequence)
 		if status == StatusSucceeded {
 			eliminationCount++
 			// do not stop yet if we found a solution, let's check other peers
-			stopOnSuccess = stopOnSuccess || stop
-		} else if stop {
+		} else if status != StatusUnknown {
 			return status
 		}
-
-		if stopOnSuccess {
-			break
+		if b.FreeCellCount() < freeCellOnStart {
+			// if we set at least one value, we can stop now and try faster algos
+			return StatusSucceeded
 		}
 	}
 	if eliminationCount > 0 {
@@ -81,7 +71,7 @@ func (a identifyPairs) tryEliminate(
 	allowed values.Set,
 	seqNumFromIndex func(int) int,
 	indexesFromSeq func(int) indexes.Sequence,
-) (status Status, stop bool) {
+) Status {
 	seqNum := seqNumFromIndex(index)
 	var seqPeer = -1
 
@@ -89,30 +79,29 @@ func (a identifyPairs) tryEliminate(
 		if seqNum != seqNumFromIndex(peer) {
 			continue
 		}
-		if seqPeer == -1 {
-			seqPeer = peer
-			continue
+		if seqPeer != -1 {
+			// we already found one peer in the same sequence, this is second
+			// in the same sequence which means there are
+			// 3 cells with same pair of values
+			return StatusNoSolution
 		}
-		// we already found one peer in the same sequence, this is second which means there are
-		// 3 cells with same pair of values
-		return StatusNoSolution, true
+		seqPeer = peer
 	}
 	if seqPeer == -1 {
 		// we didn't find at least one peer in the same sequence
-		return StatusUnknown, false
+		return StatusUnknown
 	}
 
-	return a.tryEliminateSeq(board, [2]int{index, seqPeer}, allowed, indexesFromSeq(seqNum))
+	return a.tryEliminateSeq(board, index, seqPeer, allowed, indexesFromSeq(seqNum))
 }
 
 func (a identifyPairs) tryEliminateSeq(
-	board *boards.Game, peers [2]int,
+	board *boards.Game, p1, p2 int,
 	toEliminate values.Set, seq indexes.Sequence,
-) (status Status, stop bool) {
-	status = StatusUnknown
-	stop = false
+) Status {
+	status := StatusUnknown
 	for index := range seq.Indexes {
-		if index == peers[0] || index == peers[1] || !board.IsEmpty(index) {
+		if index == p1 || index == p2 || !board.IsEmpty(index) {
 			continue
 		}
 
@@ -124,14 +113,13 @@ func (a identifyPairs) tryEliminateSeq(
 
 		// found a cell that we can remove values - turn them off
 		board.DisallowSet(index, toEliminate)
-		status = StatusSucceeded
 
 		// since we are here, we can now easily check if we have only one allowed value left
 		tempAllowed = tempAllowed.Without(toEliminate)
 		switch tempAllowed.Size() {
 		case 0:
 			// no allowed values left, this is a dead end
-			return StatusNoSolution, true
+			return StatusNoSolution
 		case 1:
 			// only one allowed value left, let's set it
 			for v := range tempAllowed.Values {
@@ -140,21 +128,33 @@ func (a identifyPairs) tryEliminateSeq(
 			}
 			// once we set a value, no need to continue this algorithm since we might
 			// get a lot cheaper ones now
-			stop = true
 		}
+		status = StatusSucceeded
 	}
 
-	return status, stop
+	return status
 }
 
-func (a identifyPairs) findPeers(board *boards.Game, allowed values.Set, seq indexes.Sequence, peers []int) []int {
-	for i := range seq.Indexes {
-		if !board.IsEmpty(i) {
+func (a identifyPairs) findPeers(
+	board *boards.Game,
+	index int,
+	allowed values.Set,
+	related indexes.Sequence,
+	peersCache []int,
+) []int {
+	peers := peersCache[:0]
+	for peerIndex := range related.Indexes {
+		if peerIndex < index {
+			// we only need to search forward since we already searched for peers
+			// of the previous indexes
 			continue
 		}
-		peerAllowed := board.AllowedSet(i)
+		if !board.IsEmpty(peerIndex) {
+			continue
+		}
+		peerAllowed := board.AllowedSet(peerIndex)
 		if peerAllowed == allowed {
-			peers = append(peers, i)
+			peers = append(peers, peerIndex)
 		}
 		// keep going to find more peers, this helps us to invalidate boards if > one peer is found
 	}
