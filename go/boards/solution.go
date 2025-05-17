@@ -75,7 +75,7 @@ func (sol *Solution) validateSequence(s indexes.Sequence) error {
 	if !dupes.IsEmpty() {
 		return fmt.Errorf("duplicate values")
 	}
-	if vs != values.FullSet() {
+	if vs != values.FullSet {
 		return fmt.Errorf("incomplete board")
 	}
 	return nil

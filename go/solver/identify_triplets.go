@@ -105,7 +105,7 @@ func (a identifyTriplets) tryEliminateSeq(
 	toEliminate values.Set, seq indexes.Sequence,
 ) Status {
 	status := StatusUnknown
-	for index := range seq.Indexes {
+	for _, index := range seq {
 		if index == peers[0] || index == peers[1] || index == peers[2] || !board.IsEmpty(index) {
 			continue
 		}
@@ -141,7 +141,7 @@ func (a identifyTriplets) tryEliminateSeq(
 func (a identifyTriplets) findPeers(
 	board *boards.Game, index int, allowed values.Set, seq indexes.Sequence, peers []int,
 ) []int {
-	for peerIndex := range seq.Indexes {
+	for _, peerIndex := range seq {
 		if peerIndex < index {
 			// we only need to search forward since we already searched for peers
 			// of the previous indexes

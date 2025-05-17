@@ -35,15 +35,15 @@ func IndexFromSquare(square, cell int) int {
 }
 
 func RowSequence(row int) Sequence {
-	return Sequence{indexFromCoordinatesCache[row][:]}
+	return Sequence(indexFromCoordinatesCache[row][:])
 }
 
 func ColumnSequence(col int) Sequence {
-	return Sequence{columnIndexes[col][:]}
+	return Sequence(columnIndexes[col][:])
 }
 
 func SquareSequence(square int) Sequence {
-	return Sequence{indexFromSquareCache[square][:]}
+	return Sequence(indexFromSquareCache[square][:])
 }
 
 func initRowFromIndex() [BoardSize]int {

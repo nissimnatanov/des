@@ -23,8 +23,8 @@ func TestEmptyBoard(t *testing.T) {
 	assert.Equal(t, values.Value(0), b.Get(80))
 	assert.Equal(t, 81, b.FreeCellCount())
 
-	assert.Equal(t, values.FullSet(), b.AllowedValues(0))
-	assert.Equal(t, values.FullSet(), b.AllowedValues(80))
+	assert.Equal(t, values.FullSet, b.AllowedValues(0))
+	assert.Equal(t, values.FullSet, b.AllowedValues(80))
 
 	assert.Assert(t, boards.ContainsAll(b, b))
 	assert.Assert(t, boards.ContainsReadOnly(b, b))

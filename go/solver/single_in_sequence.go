@@ -55,7 +55,7 @@ func (a singleInSequence) runSeq(
 	b := state.Board()
 	vs := values.Set(0)
 	freeCells := freeCellsCache[:0]
-	for index := range seq.Indexes {
+	for _, index := range seq {
 		v := b.Get(index)
 		if v == 0 {
 			freeCells = append(freeCells, indexWithAllowed{

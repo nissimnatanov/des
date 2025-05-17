@@ -5,54 +5,36 @@ import (
 	"strings"
 )
 
-type BitSet81 struct {
-	bits [11]uint8
-}
+type BitSet81 [11]uint8
 
-var maxBitSet81 = BitSet81{
-	bits: [11]uint8{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01},
-}
+var MaxBitSet81 BitSet81 = [11]uint8{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01}
 
-func (bs *BitSet81) Get(index int) bool {
+var MinBitSet81 = BitSet81{}
+
+func (bs BitSet81) Get(index int) bool {
 	CheckBoardIndex(index)
-	b := bs.bits[index/8]
+	b := bs[index/8]
 	return (b & (1 << (index % 8))) != 0
 }
 
 func (bs *BitSet81) Set(index int, value bool) {
 	CheckBoardIndex(index)
 	if value {
-		bs.bits[index/8] |= 1 << (index % 8)
+		bs[index/8] |= 1 << (index % 8)
 	} else {
-		bs.bits[index/8] &^= 1 << (index % 8)
+		bs[index/8] &^= 1 << (index % 8)
 	}
-}
-
-func (bs *BitSet81) AllSet() bool {
-	return bs.bits == maxBitSet81.bits
-}
-
-func (bs *BitSet81) Reset() {
-	clear(bs.bits[:])
 }
 
 func (bs *BitSet81) ResetMask(mask BitSet81) {
 	for i := range 11 {
-		bs.bits[i] &= ^mask.bits[i]
+		bs[i] &= ^mask[i]
 	}
-}
-
-func (bs *BitSet81) SetAll(val bool) {
-	if !val {
-		clear(bs.bits[:])
-		return
-	}
-	bs.bits = maxBitSet81.bits
 }
 
 func (bs BitSet81) First() (int, bool) {
 	for bi := range 11 {
-		b := bs.bits[bi]
+		b := bs[bi]
 		if b != 0 {
 			return bi*8 + bitSetIndexCache[b][0], true
 		}
@@ -63,7 +45,7 @@ func (bs BitSet81) First() (int, bool) {
 func (bs BitSet81) Indexes(yield func(int) bool) {
 	for bi := range 11 {
 		start := bi * 8
-		indexes := bitSetIndexCache[bs.bits[bi]]
+		indexes := bitSetIndexCache[bs[bi]]
 		for _, index := range indexes {
 			if !yield(start + index) {
 				return
@@ -73,12 +55,12 @@ func (bs BitSet81) Indexes(yield func(int) bool) {
 }
 
 func (bs BitSet81) Complement() BitSet81 {
-	bs = BitSet81{}
+	cbs := BitSet81{}
 	for i := range 10 {
-		bs.bits[i] = ^bs.bits[i]
+		cbs[i] = ^bs[i]
 	}
-	bs.bits[10] = ^bs.bits[10] & 0x01
-	return bs
+	cbs[10] = ^bs[10] & 0x01
+	return cbs
 }
 
 // String returns a string representation of the BitSet81,
@@ -99,7 +81,7 @@ func (bs BitSet81) String() string {
 	return sb.String()
 }
 
-var bitSetIndexCache [256][]int = initBitSetIndexCache()
+var bitSetIndexCache = initBitSetIndexCache()
 
 func initBitSetIndexCache() [256][]int {
 	var cache [256][]int

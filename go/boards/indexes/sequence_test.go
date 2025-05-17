@@ -8,10 +8,10 @@ import (
 )
 
 func assertSequence(t *testing.T, s indexes.Sequence, expected [9]int) {
-	for i := range s.Size() {
-		assert.Equal(t, expected[i], s.At(i), "Mismatch at %v", i)
+	for i := range len(s) {
+		assert.Equal(t, expected[i], s[i], "Mismatch at %v", i)
 	}
-	assert.Equal(t, indexes.BoardSequenceSize, s.Size(), "Incomplete Sequence %s", s)
+	assert.Equal(t, indexes.BoardSequenceSize, len(s), "Incomplete Sequence %s", s)
 }
 
 func TestRowSequence(t *testing.T) {
@@ -19,7 +19,7 @@ func TestRowSequence(t *testing.T) {
 	assertSequence(t, indexes.RowSequence(4), [9]int{36, 37, 38, 39, 40, 41, 42, 43, 44})
 	assertSequence(t, indexes.RowSequence(8), [9]int{72, 73, 74, 75, 76, 77, 78, 79, 80})
 
-	assert.Equal(t, indexes.RowSequence(7).Size(), indexes.BoardSequenceSize)
+	assert.Equal(t, len(indexes.RowSequence(7)), indexes.BoardSequenceSize)
 }
 
 func TestColSequence(t *testing.T) {
@@ -27,7 +27,7 @@ func TestColSequence(t *testing.T) {
 	assertSequence(t, indexes.ColumnSequence(3), [9]int{3, 12, 21, 30, 39, 48, 57, 66, 75})
 	assertSequence(t, indexes.ColumnSequence(8), [9]int{8, 17, 26, 35, 44, 53, 62, 71, 80})
 
-	assert.Equal(t, indexes.ColumnSequence(2).Size(), indexes.BoardSequenceSize)
+	assert.Equal(t, len(indexes.ColumnSequence(2)), indexes.BoardSequenceSize)
 }
 
 func TestSquareSequence(t *testing.T) {
@@ -35,7 +35,7 @@ func TestSquareSequence(t *testing.T) {
 	assertSequence(t, indexes.SquareSequence(5), [9]int{33, 34, 35, 42, 43, 44, 51, 52, 53})
 	assertSequence(t, indexes.SquareSequence(8), [9]int{60, 61, 62, 69, 70, 71, 78, 79, 80})
 
-	assert.Equal(t, indexes.SquareSequence(7).Size(), indexes.BoardSequenceSize)
+	assert.Equal(t, len(indexes.SquareSequence(7)), indexes.BoardSequenceSize)
 }
 
 func BenchmarkIndexFromSquare(b *testing.B) {

@@ -9,8 +9,8 @@ import (
 
 func assertRelated(t *testing.T, index, related, expected int) {
 	rs := indexes.RelatedSequence(index)
-	assert.Equal(t, rs.At(related), expected, "Got wrong related of %v at %v", index, related)
-	assert.Equal(t, rs.Size(), indexes.RelatedSize, "Got wrong size for related sequence %v", index)
+	assert.Equal(t, rs[related], expected, "Got wrong related of %v at %v", index, related)
+	assert.Equal(t, len(rs), indexes.RelatedSize, "Got wrong size for related sequence %v", index)
 }
 
 func TestRelatedIterator(t *testing.T) {

@@ -33,8 +33,8 @@ func TestValueSetProperties(t *testing.T) {
 		size       int
 		complement values.Set
 	}{
-		{values.FullSet(), 123456789, 9, values.EmptySet()},
-		{values.EmptySet(), 0, 0, values.FullSet()},
+		{values.FullSet, 123456789, 9, values.EmptySet},
+		{values.EmptySet, 0, 0, values.FullSet},
 		{values.Value(5).AsSet(), 5, 1, values.NewSet(1, 2, 3, 4, 6, 7, 8, 9)},
 		{values.NewSet(1, 9, 5), 159, 3, values.NewSet(2, 3, 4, 6, 7, 8)},
 	}
@@ -77,8 +77,8 @@ func TestValueSetValueIterator(t *testing.T) {
 		vs   values.Set
 		want string
 	}{
-		{values.FullSet(), "123456789"},
-		{values.EmptySet(), ""},
+		{values.FullSet, "123456789"},
+		{values.EmptySet, ""},
 		{values.Value(5).AsSet(), "5"},
 		{values.NewSet(1, 9, 5), "159"},
 	}
@@ -100,9 +100,9 @@ func TestValueSetContainsValueSet(t *testing.T) {
 		containsAll bool
 		containsAny bool
 	}{
-		{values.FullSet(), values.Value(5).AsSet(), true, true},
-		{values.FullSet(), values.EmptySet(), true, false},
-		{values.EmptySet(), values.Value(5).AsSet(), false, false},
+		{values.FullSet, values.Value(5).AsSet(), true, true},
+		{values.FullSet, values.EmptySet, true, false},
+		{values.EmptySet, values.Value(5).AsSet(), false, false},
 		{values.Value(6).AsSet(), values.Value(5).AsSet(), false, false},
 		{values.NewSet(1, 5), values.Value(3).AsSet(), false, false},
 		{values.NewSet(9, 5, 7), values.NewSet(9, 4), false, true},
@@ -127,9 +127,9 @@ func TestValueSetContainsValue(t *testing.T) {
 		other    values.Value
 		contains bool
 	}{
-		{values.FullSet(), 5, true},
-		{values.FullSet(), 0, false},
-		{values.EmptySet(), 5, false},
+		{values.FullSet, 5, true},
+		{values.FullSet, 0, false},
+		{values.EmptySet, 5, false},
 		{values.Value(6).AsSet(), 5, false},
 		{values.NewSet(1, 5), 3, false},
 	}
@@ -151,8 +151,8 @@ func TestValueSetSetOperations(t *testing.T) {
 		union     values.Set
 		intersect values.Set
 	}{
-		{values.FullSet(), values.NewSet(5, 6), values.NewSet(1, 5), values.FullSet(), values.Value(5).AsSet()},
-		{values.EmptySet(), values.NewSet(5, 6), values.NewSet(1, 5), values.NewSet(1, 5, 6), values.EmptySet()},
+		{values.FullSet, values.NewSet(5, 6), values.NewSet(1, 5), values.FullSet, values.Value(5).AsSet()},
+		{values.EmptySet, values.NewSet(5, 6), values.NewSet(1, 5), values.NewSet(1, 5, 6), values.EmptySet},
 	}
 
 	for _, c := range cases {

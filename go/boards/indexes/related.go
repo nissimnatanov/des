@@ -5,7 +5,7 @@ const (
 )
 
 func RelatedSequence(index int) Sequence {
-	return Sequence{relatedCache[index].indexes[:]}
+	return Sequence(relatedCache[index].indexes[:])
 }
 
 func RelatedSet(index int) BitSet81 {
@@ -26,7 +26,7 @@ func initRelatedIndexes() [BoardSize]relatedInfo {
 		square := SquareFromIndex(i)
 
 		rs := RowSequence(row)
-		for rowIndex := range rs.Indexes {
+		for _, rowIndex := range rs {
 			if rowIndex == i {
 				continue
 			}
@@ -36,7 +36,7 @@ func initRelatedIndexes() [BoardSize]relatedInfo {
 		}
 
 		cs := ColumnSequence(col)
-		for colIndex := range cs.Indexes {
+		for _, colIndex := range cs {
 			if colIndex == i {
 				continue
 			}
@@ -45,7 +45,7 @@ func initRelatedIndexes() [BoardSize]relatedInfo {
 			cache[i].mask.Set(colIndex, true)
 		}
 		ss := SquareSequence(square)
-		for squareIndex := range ss.Indexes {
+		for _, squareIndex := range ss {
 			if row == RowFromIndex(squareIndex) ||
 				col == ColumnFromIndex(squareIndex) {
 				continue

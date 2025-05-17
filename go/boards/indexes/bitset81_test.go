@@ -13,26 +13,20 @@ func TestBitSet81(t *testing.T) {
 	assert.Assert(t, !bs.Get(0))
 	assert.Assert(t, !bs.Get(55))
 	assert.Assert(t, !bs.Get(80))
-	assert.Assert(t, !bs.AllSet())
 
-	bs.SetAll(true)
+	bs = indexes.MaxBitSet81
 	assert.Assert(t, bs.Get(0))
 	assert.Assert(t, bs.Get(44))
 	assert.Assert(t, bs.Get(80))
-	assert.Assert(t, bs.AllSet())
 
 	bs.Set(80, false)
-	assert.Assert(t, !bs.AllSet())
 	assert.Assert(t, !bs.Get(80))
 	assert.Assert(t, bs.Get(79))
 
 	bs.Set(80, true)
-	assert.Assert(t, bs.AllSet())
+	assert.Assert(t, bs == indexes.MaxBitSet81)
 
-	bs.Set(33, false)
-	assert.Assert(t, !bs.AllSet())
-
-	bs.Reset()
+	bs = indexes.MinBitSet81
 	assert.Assert(t, !bs.Get(0))
 	assert.Assert(t, !bs.Get(55))
 	assert.Assert(t, !bs.Get(80))

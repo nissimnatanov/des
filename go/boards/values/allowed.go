@@ -21,8 +21,8 @@ func (a *Allowed) GetByRelated(index int) Set {
 
 // ReportPresent is used when board cell has a value set
 func (a *Allowed) ReportPresent(index int) {
-	a.byRelated[index] = FullSet()
-	a.byUser[index] = EmptySet()
+	a.byRelated[index] = FullSet
+	a.byUser[index] = EmptySet
 	a.emptyCells.Set(index, false)
 	a.hints01.Set(index, false)
 }
@@ -48,8 +48,8 @@ func (a *Allowed) Hint01() (int, bool) {
 func (a *Allowed) AllowAll() {
 	clear(a.byRelated[:])
 	clear(a.byUser[:])
-	a.emptyCells.SetAll(true)
-	a.hints01.SetAll(false)
+	a.emptyCells = indexes.MaxBitSet81
+	a.hints01 = indexes.MinBitSet81
 }
 
 func (a *Allowed) Clone() Allowed {
@@ -67,7 +67,7 @@ func (a *Allowed) DisallowByUser(index int, vs Set) {
 }
 
 func (a *Allowed) ResetDisallowedByUser(index int) {
-	a.byUser[index] = EmptySet()
+	a.byUser[index] = EmptySet
 	a.updateHint(index)
 }
 

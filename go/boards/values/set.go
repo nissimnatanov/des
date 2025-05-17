@@ -8,13 +8,9 @@ import (
 // Only the first 9 bits are used
 type Set uint16
 
-func EmptySet() Set {
-	return Set(0)
-}
+var EmptySet = Set(0)
 
-func FullSet() Set {
-	return Set(0x1FF)
-}
+var FullSet = Set(0x1FF)
 
 func Intersect(vs1 Set, vs2 Set, more ...Set) Set {
 	mask := vs1 & vs2
@@ -65,7 +61,7 @@ func (vs Set) Without(other Set) Set {
 }
 
 func (vs Set) Complement() Set {
-	return FullSet() &^ vs
+	return FullSet &^ vs
 }
 
 func (vs Set) ContainsAll(other Set) bool {

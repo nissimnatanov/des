@@ -100,7 +100,7 @@ func (a identifyPairs) tryEliminateSeq(
 	toEliminate values.Set, seq indexes.Sequence,
 ) Status {
 	status := StatusUnknown
-	for index := range seq.Indexes {
+	for _, index := range seq {
 		if index == p1 || index == p2 || !board.IsEmpty(index) {
 			continue
 		}
@@ -143,7 +143,7 @@ func (a identifyPairs) findPeers(
 	peersCache []int,
 ) []int {
 	peers := peersCache[:0]
-	for peerIndex := range related.Indexes {
+	for _, peerIndex := range related {
 		if peerIndex < index {
 			// we only need to search forward since we already searched for peers
 			// of the previous indexes

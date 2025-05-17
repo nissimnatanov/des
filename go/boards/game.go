@@ -50,8 +50,8 @@ func (b *Game) relatedValues(index int) values.Set {
 }
 
 func (b *Game) sequenceValues(s indexes.Sequence) values.Set {
-	values := values.EmptySet()
-	for i := range s.Indexes {
+	values := values.EmptySet
+	for _, i := range s {
 		v := b.values[i]
 		if v != 0 {
 			values = values.With(v.AsSet())
@@ -69,7 +69,7 @@ func (b *Game) IsValidCell(index int) bool {
 }
 
 func (b *Game) IsValid() bool {
-	return b.validFlags.AllSet()
+	return b.validFlags == indexes.MaxBitSet81
 }
 
 func (b *Game) IsSolved() bool {
@@ -160,7 +160,7 @@ func (b *Game) initZeroStats(mode Mode) {
 	b.init(mode)
 	b.freeCellCount = Size
 	b.allowedValues.AllowAll()
-	b.validFlags.SetAll(true)
+	b.validFlags = indexes.MaxBitSet81
 	b.checkIntegrity()
 }
 
@@ -219,7 +219,7 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 	}
 
 	relatedSeq := indexes.RelatedSequence(index)
-	for relatedIndex := range relatedSeq.Indexes {
+	for _, relatedIndex := range relatedSeq {
 		if relatedIndex == index || b.values[relatedIndex] != 0 {
 			continue
 		}
@@ -240,7 +240,7 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 
 func (b *Game) recalculateAllStats() {
 	// assume valid unless proven otherwise inside calcSequenceSet
-	b.validFlags.SetAll(true)
+	b.validFlags = indexes.MaxBitSet81
 
 	// value counts
 	b.freeCellCount = 0
@@ -275,7 +275,7 @@ func (b *Game) markSequenceInvalid(v values.Value, s indexes.Sequence) {
 	readOnly := []int{}
 	foundReadWrite := false
 
-	for index := range s.Indexes {
+	for _, index := range s {
 		if b.values[index] != v {
 			continue
 		}
@@ -288,8 +288,8 @@ func (b *Game) markSequenceInvalid(v values.Value, s indexes.Sequence) {
 	}
 
 	if !foundReadWrite && len(readOnly) > 1 {
-		for i := range readOnly {
-			b.validFlags.Set(i, false)
+		for _, roi := range readOnly {
+			b.validFlags.Set(roi, false)
 		}
 	}
 }
@@ -310,7 +310,7 @@ func (b *Game) checkIntegrity() {
 		if v != 0 {
 			// check this value is disallowed in other places
 			rs := indexes.RelatedSequence(i)
-			for related := range rs.Indexes {
+			for _, related := range rs {
 				rv := b.values[related]
 				if rv == 0 {
 					if b.AllowedValues(related).Contains(v) {
@@ -336,7 +336,7 @@ func (b *Game) checkIntegrity() {
 					}
 				}
 			}
-			if b.AllowedValues(i) != values.EmptySet() {
+			if b.AllowedValues(i) != values.EmptySet {
 				panic(fmt.Sprintf(
 					"allowed values for non-empty cell %v must be empty: actual %v\n%v",
 					i, b.AllowedValues(i), b.String()))

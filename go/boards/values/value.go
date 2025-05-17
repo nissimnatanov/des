@@ -13,7 +13,7 @@ func (v Value) Validate() {
 func (v Value) AsSet() Set {
 	v.Validate()
 	if v == 0 {
-		return EmptySet()
+		return EmptySet
 	}
 	return Set(1 << (v - 1))
 }

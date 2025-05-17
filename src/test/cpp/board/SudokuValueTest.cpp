@@ -4,7 +4,7 @@
 
 using namespace std;
 
-void emptySet()
+void EmptySet
 {
     SudokuValueSet set;
 
@@ -87,7 +87,7 @@ void contains()
 void runSudokuValueTests()
 {
     cerr << "Running SudokuValue tests..." << endl;
-    emptySet();
+    EmptySet;
     setWithOneValue();
     set_add();
     set_complement();
