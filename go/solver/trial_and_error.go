@@ -50,7 +50,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	indexes := a.indexesCache.get()
 	defer a.indexesCache.put(indexes) // slice is reset on next get
 
-	for i, allowed := range b.AllowedSets {
+	for i, allowed := range b.AllAllowedValues {
 		// if the trial algorithm is used only by itself (without other algorithms),
 		// we can skip the recursion and just set the value if this is the only option
 		// if we do not do this, recursion depth won't be enough to solve the board
@@ -120,7 +120,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 
 			if result.Status == StatusNoSolution {
 				// when settings this value, the board cannot be solved, disallow it for future use
-				b.Disallow(index, testValue)
+				b.DisallowValue(index, testValue)
 				// we just disallowed one value, let's finish this cell since we already here
 				// and restarting the recursive loop can be a waste of cycles
 				// if only one value left, next loop will just set it and try to solve again
@@ -167,7 +167,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 		}
 		// no solution found, did we disallow any values?
 		if foundDisallowed {
-			allowed := b.AllowedSet(index)
+			allowed := b.AllowedValues(index)
 			switch allowed.Size() {
 			case 0:
 				// we disallowed all the values, bail out

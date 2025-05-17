@@ -10,13 +10,16 @@ type theOnlyChoice struct {
 func (a theOnlyChoice) Run(ctx context.Context, state AlgorithmState) Status {
 	b := state.Board()
 	found := 0
-	for i, allowed := range b.AllowedSets {
+	for index, ok := b.Hint01(); ok; index, ok = b.Hint01() {
+		allowed := b.AllowedValues(index)
 		switch allowed.Size() {
 		case 0:
 			return StatusNoSolution
 		case 1:
-			b.Set(i, allowed.At(0))
+			b.Set(index, allowed.At(0))
 			found++
+		case 2:
+			panic("Hint returned more than one allowed value")
 		}
 	}
 	if found == 0 {

@@ -60,7 +60,7 @@ func (a singleInSequence) runSeq(
 		if v == 0 {
 			freeCells = append(freeCells, indexWithAllowed{
 				index:   index,
-				allowed: b.AllowedSet(index),
+				allowed: b.AllowedValues(index),
 			})
 		} else {
 			vs = vs.With(v.AsSet())

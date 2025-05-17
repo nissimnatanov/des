@@ -21,13 +21,10 @@ func TestEmptyBoard(t *testing.T) {
 	assert.Assert(t, b.IsEmpty(33))
 	assert.Equal(t, values.Value(0), b.Get(0))
 	assert.Equal(t, values.Value(0), b.Get(80))
-	assert.Equal(t, values.EmptySet(), b.RowSet(0))
-	assert.Equal(t, values.EmptySet(), b.ColumnSet(8))
-	assert.Equal(t, values.EmptySet(), b.SquareSet(2))
 	assert.Equal(t, 81, b.FreeCellCount())
 
-	assert.Equal(t, values.FullSet(), b.AllowedSet(0))
-	assert.Equal(t, values.FullSet(), b.AllowedSet(80))
+	assert.Equal(t, values.FullSet(), b.AllowedValues(0))
+	assert.Equal(t, values.FullSet(), b.AllowedValues(80))
 
 	assert.Assert(t, boards.ContainsAll(b, b))
 	assert.Assert(t, boards.ContainsReadOnly(b, b))
@@ -41,20 +38,17 @@ func TestEmptyBoard(t *testing.T) {
 	assert.Assert(t, cmp.Panics(func() { b.IsValidCell(81) }))
 	assert.Assert(t, cmp.Panics(func() { b.Get(81) }))
 	assert.Assert(t, cmp.Panics(func() { b.Get(-2) }))
-	assert.Assert(t, cmp.Panics(func() { b.RowSet(-3) }))
-	assert.Assert(t, cmp.Panics(func() { b.ColumnSet(9) }))
-	assert.Assert(t, cmp.Panics(func() { b.SquareSet(111) }))
-	assert.Assert(t, cmp.Panics(func() { b.AllowedSet(-1) }))
-	assert.Assert(t, cmp.Panics(func() { b.AllowedSet(81) }))
-	assert.Assert(t, cmp.Panics(func() { b.Disallow(81, 7) }))
-	assert.Assert(t, cmp.Panics(func() { b.DisallowSet(-1, values.Value(8).AsSet()) }))
+	assert.Assert(t, cmp.Panics(func() { b.AllowedValues(-1) }))
+	assert.Assert(t, cmp.Panics(func() { b.AllowedValues(81) }))
+	assert.Assert(t, cmp.Panics(func() { b.DisallowValue(81, 7) }))
+	assert.Assert(t, cmp.Panics(func() { b.DisallowValues(-1, values.Value(8).AsSet()) }))
 	assert.Assert(t, cmp.Panics(func() { b.SetReadOnly(-1, values.Value(8)) }))
 	assert.Assert(t, cmp.Panics(func() { b.SetReadOnly(81, values.Value(5)) }))
 	assert.Assert(t, cmp.Panics(func() { b.Set(81, values.Value(4)) }))
 
 	// special cases
 	assert.Assert(t, cmp.Panics(func() { b.SetReadOnly(0, 0) }))
-	assert.Assert(t, cmp.Panics(func() { b.Disallow(0, 0) }))
+	assert.Assert(t, cmp.Panics(func() { b.DisallowValue(0, 0) }))
 	assert.Assert(t, cmp.Panics(func() { b.SetReadOnly(0, 10) }))
 }
 
@@ -142,9 +136,5 @@ func TestPlay(t *testing.T) {
 	assert.Equal(t, values.Value(0), play.Get(55))
 	assert.Equal(t, values.Value(0), play.Get(40))
 	// only the first row is read-only
-	assert.Equal(t, values.FullSet(), play.RowSet(0))
-	for row := 1; row < 9; row++ {
-		assert.Equal(t, values.EmptySet(), play.RowSet(row))
-	}
 	assert.Assert(t, boards.ContainsReadOnly(b, play))
 }

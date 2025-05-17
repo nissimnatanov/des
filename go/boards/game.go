@@ -9,25 +9,14 @@ import (
 	"github.com/nissimnatanov/des/go/boards/values"
 )
 
-type disallowedValues struct {
-	byRelated values.Set
-	byUser    values.Set
-}
-
-func (d disallowedValues) Complement() values.Set {
-	return values.Union(d.byRelated, d.byUser).Complement()
-}
-
 type Game struct {
 	base
 
 	freeCellCount int
 	validFlags    indexes.BitSet81
 
-	// disallowedValues must be always up-2-date
-	// If cell is empty, disallowedValues contains the values not allowed for the cell.
-	// If cell is not empty, it is full.
-	disallowedValues [Size]disallowedValues
+	// allowedValues must be always up-2-date
+	allowedValues values.Allowed
 }
 
 func (b *Game) Mode() Mode {
@@ -38,29 +27,22 @@ func (b *Game) IsEmpty(index int) bool {
 	return b.values[index] == 0
 }
 
-func (b *Game) AllowedSets(yield func(int, values.Set) bool) {
-	for i, a := range b.disallowedValues[:] {
-		if b.values[i] == 0 && !yield(i, a.Complement()) {
+// Hint01 returns the first cell that has either zero or one allowed value.
+// If no such cell exists, it returns -1 and false.
+func (b *Game) Hint01() (int, bool) {
+	return b.allowedValues.Hint01()
+}
+
+func (b *Game) AllAllowedValues(yield func(int, values.Set) bool) {
+	for i := range Size {
+		if b.values[i] == 0 && !yield(i, b.allowedValues.Get(i)) {
 			return
 		}
 	}
 }
 
-// TODO: we may remove RowSet, ColumnSet, SquareSet if not needed or leave for non-fast solver
-func (b *Game) RowSet(row int) values.Set {
-	return b.sequenceValues(indexes.RowSequence(row))
-}
-
-func (b *Game) ColumnSet(col int) values.Set {
-	return b.sequenceValues(indexes.ColumnSequence(col))
-}
-
-func (b *Game) SquareSet(square int) values.Set {
-	return b.sequenceValues(indexes.SquareSequence(square))
-}
-
-func (b *Game) AllowedSet(index int) values.Set {
-	return b.disallowedValues[index].Complement()
+func (b *Game) AllowedValues(index int) values.Set {
+	return b.allowedValues.Get(index)
 }
 
 func (b *Game) relatedValues(index int) values.Set {
@@ -96,9 +78,9 @@ func (b *Game) IsSolved() bool {
 
 // Empty board in Edit mode
 func New() *Game {
-	var b Game
+	b := &Game{}
 	b.initZeroStats(Edit)
-	return &b
+	return b
 }
 
 func (b *Game) Clone(mode Mode) *Game {
@@ -130,11 +112,11 @@ func (b *Game) SetReadOnly(index int, v values.Value) {
 	b.setInternal(index, v, true)
 }
 
-func (b *Game) Disallow(index int, v values.Value) {
-	b.DisallowSet(index, v.AsSet())
+func (b *Game) DisallowValue(index int, v values.Value) {
+	b.DisallowValues(index, v.AsSet())
 }
 
-func (b *Game) DisallowSet(index int, vs values.Set) {
+func (b *Game) DisallowValues(index int, vs values.Set) {
 	if b.mode == Immutable {
 		panic("Cannot set disallowed values on immutable board")
 	}
@@ -142,12 +124,14 @@ func (b *Game) DisallowSet(index int, vs values.Set) {
 		// does not make sense
 		panic("Nothing to disallow")
 	}
-
-	b.disallowedValues[index].byUser = values.Union(b.disallowedValues[index].byUser, vs)
+	b.allowedValues.DisallowByUser(index, vs)
 }
 
-func (b *Game) DisallowReset(index int) {
-	b.disallowedValues[index].byUser = values.EmptySet()
+func (b *Game) ResetDisallowedByUser(index int) {
+	if b.mode == Immutable {
+		panic("Cannot reset disallowed values on immutable board")
+	}
+	b.allowedValues.ResetDisallowedByUser(index)
 }
 
 func (b *Game) setInternal(index int, v values.Value, readOnly bool) values.Value {
@@ -175,7 +159,7 @@ func (b *Game) Restart() {
 func (b *Game) initZeroStats(mode Mode) {
 	b.init(mode)
 	b.freeCellCount = Size
-	clear(b.disallowedValues[:])
+	b.allowedValues.AllowAll()
 	b.validFlags.SetAll(true)
 	b.checkIntegrity()
 }
@@ -193,7 +177,7 @@ func (b *Game) copyStats(source *Game) {
 
 	b.freeCellCount = source.freeCellCount
 	b.validFlags = source.validFlags
-	copy(b.disallowedValues[:], source.disallowedValues[:])
+	b.allowedValues = source.allowedValues.Clone()
 }
 
 func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
@@ -212,7 +196,7 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 			allowedValues = b.relatedValues(index).Complement()
 		} else {
 			// if cell was empty before, its allowed values cache was valid
-			allowedValues = b.disallowedValues[index].byRelated.Complement()
+			allowedValues = b.allowedValues.GetByRelated(index)
 		}
 		isValid = isValid && allowedValues.Contains(newValue)
 	}
@@ -229,10 +213,9 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 	if newValue == 0 {
 		b.freeCellCount++
 		// if we set non-empty to empty, recalculate the allowed values
-		b.disallowedValues[index].byRelated = b.relatedValues(index)
+		b.allowedValues.ReportEmpty(index, b.relatedValues(index))
 	} else {
-		b.disallowedValues[index].byRelated = values.FullSet()
-		b.disallowedValues[index].byUser = values.EmptySet()
+		b.allowedValues.ReportPresent(index)
 	}
 
 	relatedSeq := indexes.RelatedSequence(index)
@@ -244,13 +227,12 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 		if oldValue != 0 {
 			// If old value was present, we cannot just add it to the allowed set of
 			// related indexes since the same value may appear in other related cells.
-			b.disallowedValues[relatedIndex].byRelated = b.relatedValues(relatedIndex)
+			b.allowedValues.ReportEmpty(relatedIndex, b.relatedValues(relatedIndex))
 		}
 		if newValue != 0 {
 			// if we added new value than it is totally safe to include this
 			// value to the disallowed values based on the related cells.
-			b.disallowedValues[relatedIndex].byRelated =
-				b.disallowedValues[relatedIndex].byRelated.With(newValue.AsSet())
+			b.allowedValues.DisallowRelated(relatedIndex, newValue)
 		}
 	}
 	b.checkIntegrity()
@@ -265,9 +247,9 @@ func (b *Game) recalculateAllStats() {
 	for i := range Size {
 		if b.values[i] == 0 {
 			b.freeCellCount++
-			b.disallowedValues[i].byRelated = b.relatedValues(i)
+			b.allowedValues.ReportEmpty(i, b.relatedValues(i))
 		} else {
-			b.disallowedValues[i].byRelated = values.FullSet()
+			b.allowedValues.ReportPresent(i)
 		}
 	}
 
@@ -331,7 +313,7 @@ func (b *Game) checkIntegrity() {
 			for related := range rs.Indexes {
 				rv := b.values[related]
 				if rv == 0 {
-					if b.AllowedSet(related).Contains(v) {
+					if b.AllowedValues(related).Contains(v) {
 						panic("value should not be allowed")
 					}
 				} else if rv == v {
@@ -354,21 +336,45 @@ func (b *Game) checkIntegrity() {
 					}
 				}
 			}
-			if b.AllowedSet(i) != values.EmptySet() {
+			if b.AllowedValues(i) != values.EmptySet() {
 				panic(fmt.Sprintf(
 					"allowed values for non-empty cell %v must be empty: actual %v\n%v",
-					i, b.AllowedSet(i), b.String()))
+					i, b.AllowedValues(i), b.String()))
 			}
 		} else {
 			// check that disallowed values are a union of row/column/square
 			disallowedValuesExpected := values.Union(
 				b.relatedValues(i),
-				b.disallowedValues[i].byUser)
-
-			if b.AllowedSet(i) != disallowedValuesExpected.Complement() {
+				b.allowedValues.GetDisallowedByUser(i))
+			allowedSet := b.AllowedValues(i)
+			if allowedSet != disallowedValuesExpected.Complement() {
 				panic(fmt.Sprintf(
 					"wrong allowed values for cell %v: expected %v, actual %v\n%v",
-					i, disallowedValuesExpected.Complement(), b.AllowedSet(i), b.String()))
+					i, disallowedValuesExpected.Complement(), b.AllowedValues(i), b.String()))
+			}
+			indexesByAllowedSize := b.allowedValues.IndexesByAllowedSize(allowedSet.Size())
+			if !indexesByAllowedSize.Get(i) {
+				panic(fmt.Sprintf(
+					"wrong indexes by allowed size for cell %d with allowed=(%s): %v\n%v",
+					i, allowedSet, indexesByAllowedSize, b.String()))
+			}
+		}
+	}
+
+	for allowedSize := 0; allowedSize <= indexes.BoardSequenceSize; allowedSize++ {
+		// cells with values should not be reported as zero allowed values
+		indexes := b.allowedValues.IndexesByAllowedSize(allowedSize)
+		for i := range indexes.Indexes {
+			if b.values[i] != 0 {
+				panic(fmt.Sprintf(
+					"cell %d is not empty but it is reported with zero allowed values: %v\n%v",
+					i, indexes, b.String()))
+			}
+			reported := b.allowedValues.Get(i)
+			if reported.Size() != allowedSize {
+				panic(fmt.Sprintf(
+					"wrong allowed values size bucket for cell %d: expected %d, reported %d\n%v",
+					i, allowedSize, reported.Size(), b.String()))
 			}
 		}
 	}

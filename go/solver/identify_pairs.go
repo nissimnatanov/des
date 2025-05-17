@@ -18,7 +18,7 @@ func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 	var eliminationCount int
 	freeCellOnStart := b.FreeCellCount()
 
-	for index, allowed := range b.AllowedSets {
+	for index, allowed := range b.AllAllowedValues {
 		if allowed.Size() != 2 {
 			// this includes non-empty cells too (allowed set is empty)
 			continue
@@ -105,14 +105,14 @@ func (a identifyPairs) tryEliminateSeq(
 			continue
 		}
 
-		tempAllowed := board.AllowedSet(index)
+		tempAllowed := board.AllowedValues(index)
 		if values.Intersect(tempAllowed, toEliminate).Size() == 0 {
 			// no intersection, continue
 			continue
 		}
 
 		// found a cell that we can remove values - turn them off
-		board.DisallowSet(index, toEliminate)
+		board.DisallowValues(index, toEliminate)
 
 		// since we are here, we can now easily check if we have only one allowed value left
 		tempAllowed = tempAllowed.Without(toEliminate)
@@ -152,7 +152,7 @@ func (a identifyPairs) findPeers(
 		if !board.IsEmpty(peerIndex) {
 			continue
 		}
-		peerAllowed := board.AllowedSet(peerIndex)
+		peerAllowed := board.AllowedValues(peerIndex)
 		if peerAllowed == allowed {
 			peers = append(peers, peerIndex)
 		}
