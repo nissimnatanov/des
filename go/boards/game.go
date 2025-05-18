@@ -29,7 +29,7 @@ func (b *Game) IsEmpty(index int) bool {
 
 // Hint01 returns the first cell that has either zero or one allowed value.
 // If no such cell exists, it returns -1 and false.
-func (b *Game) Hint01() (int, bool) {
+func (b *Game) Hint01() int {
 	return b.allowedValues.Hint01()
 }
 
@@ -301,8 +301,7 @@ func (b *Game) checkIntegrity() {
 
 	var freeCellCount int
 
-	for i := range Size {
-		v := b.Get(i)
+	for i, v := range b.AllValues {
 		if v == 0 {
 			freeCellCount++
 		}
@@ -351,30 +350,6 @@ func (b *Game) checkIntegrity() {
 				panic(fmt.Sprintf(
 					"wrong allowed values for cell %v: expected %v, actual %v\n%v",
 					i, disallowedValuesExpected.Complement(), b.AllowedValues(i), b.String()))
-			}
-			indexesByAllowedSize := b.allowedValues.IndexesByAllowedSize(allowedSet.Size())
-			if !indexesByAllowedSize.Get(i) {
-				panic(fmt.Sprintf(
-					"wrong indexes by allowed size for cell %d with allowed=(%s): %v\n%v",
-					i, allowedSet, indexesByAllowedSize, b.String()))
-			}
-		}
-	}
-
-	for allowedSize := 0; allowedSize <= indexes.BoardSequenceSize; allowedSize++ {
-		// cells with values should not be reported as zero allowed values
-		indexes := b.allowedValues.IndexesByAllowedSize(allowedSize)
-		for i := range indexes.Indexes {
-			if b.values[i] != 0 {
-				panic(fmt.Sprintf(
-					"cell %d is not empty but it is reported with zero allowed values: %v\n%v",
-					i, indexes, b.String()))
-			}
-			reported := b.allowedValues.Get(i)
-			if reported.Size() != allowedSize {
-				panic(fmt.Sprintf(
-					"wrong allowed values size bucket for cell %d: expected %d, reported %d\n%v",
-					i, allowedSize, reported.Size(), b.String()))
 			}
 		}
 	}

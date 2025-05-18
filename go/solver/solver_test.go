@@ -102,6 +102,10 @@ func testSanity(t *testing.T, action solver.Action) {
 // 					208	   5643597 ns/op	   37840 B/op	      99 allocs/op
 // with hint01 and bitset improvements:
 // 					222	   5334709 ns/op	   37840 B/op	      99 allocs/op
+// continue recursion on disallowed values only:
+//					222	   5277052 ns/op	   37840 B/op	      99 allocs/op
+// minor optimizations:
+// 					225	   5180352 ns/op	   37840 B/op	      99 allocs/op
 
 func BenchmarkProve(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -111,6 +115,8 @@ func BenchmarkProve(b *testing.B) {
 
 // start: with hint01 and bitset improvements:
 // 					246	   4723883 ns/op	   33089 B/op	      82 allocs/op
+// minor optimizations:
+// 					252	   4628111 ns/op	   33109 B/op	      82 allocs/op
 
 func BenchmarkSolve(b *testing.B) {
 	benchRun(b, &solver.Options{

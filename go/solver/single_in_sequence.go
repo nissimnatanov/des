@@ -8,6 +8,11 @@ import (
 	"github.com/nissimnatanov/des/go/boards/values"
 )
 
+type indexWithAllowed struct {
+	index   int
+	allowed values.Set
+}
+
 type singleInSequence struct {
 }
 

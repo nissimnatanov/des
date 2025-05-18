@@ -261,22 +261,21 @@ func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) *Result {
 	if nested == nil {
 		nested = &runner{
 			action:                r.action,
-			board:                 b,
 			currentRecursionDepth: r.currentRecursionDepth + 1,
 			maxRecursionDepth:     r.maxRecursionDepth,
+			algorithms:            r.algorithms,
 
+			board: b,
 			// result includes ref to the shared solutions
 			result: Result{
 				Status:    StatusUnknown,
 				Solutions: r.result.Solutions,
 			},
-			algorithms: r.algorithms,
 		}
 		r.nestedCache = nested
 	} else {
 		// we just need to set the board and reset the result's status
 		nested.board = b
-		nested.currentRecursionDepth = r.currentRecursionDepth + 1
 		nested.result.Status = StatusUnknown
 		nested.result.Error = nil
 		nested.result.Steps.reset()

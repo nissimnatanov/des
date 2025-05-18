@@ -41,7 +41,7 @@ func (a *Allowed) DisallowRelated(index int, v Value) {
 	a.updateHint(index)
 }
 
-func (a *Allowed) Hint01() (int, bool) {
+func (a *Allowed) Hint01() int {
 	return a.hints01.First()
 }
 
@@ -74,18 +74,4 @@ func (a *Allowed) ResetDisallowedByUser(index int) {
 func (a *Allowed) updateHint(index int) {
 	isHint01 := a.Get(index).Size() <= 1
 	a.hints01.Set(index, isHint01)
-}
-
-// IndexesByAllowedSize returns a BitSet81 of indexes that have the same size as the given size,
-// use for troubleshooting only
-func (a *Allowed) IndexesByAllowedSize(size int) indexes.BitSet81 {
-	// calculate manually
-	emptyCells := a.emptyCells
-	var allowedBySize indexes.BitSet81
-	for i := range emptyCells.Indexes {
-		if a.Get(i).Size() == size {
-			allowedBySize.Set(i, true)
-		}
-	}
-	return allowedBySize
 }

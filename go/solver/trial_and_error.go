@@ -5,26 +5,27 @@ import (
 	"slices"
 
 	"github.com/nissimnatanov/des/go/boards"
-	"github.com/nissimnatanov/des/go/boards/values"
 )
 
-type indexWithAllowed struct {
-	index   int
-	allowed values.Set
+type indexWithAllowedSize struct {
+	index       int
+	allowedSize int
 }
 
+// trialAndError is a recursive algorithm, please always run it after the
+// theOnlyChoice algo (never as standalone)
 type trialAndError struct {
-	indexesCache cache[[]indexWithAllowed]
+	indexesCache cache[[]indexWithAllowedSize]
 	testBoard    cache[*boards.Game]
 }
 
 func newTrialAndError() *trialAndError {
 	return &trialAndError{
-		indexesCache: cache[[]indexWithAllowed]{
-			factory: func() []indexWithAllowed {
-				return make([]indexWithAllowed, 0, MaxFreeCellsForValidBoard)
+		indexesCache: cache[[]indexWithAllowedSize]{
+			factory: func() []indexWithAllowedSize {
+				return make([]indexWithAllowedSize, 0, MaxFreeCellsForValidBoard)
 			},
-			reset: func(v []indexWithAllowed) []indexWithAllowed {
+			reset: func(v []indexWithAllowedSize) []indexWithAllowedSize {
 				// reset the slice to be empty but keep the capacity
 				return v[:0]
 			},
@@ -51,32 +52,22 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	defer a.indexesCache.put(indexes) // slice is reset on next get
 
 	for i, allowed := range b.AllAllowedValues {
-		// if the trial algorithm is used only by itself (without other algorithms),
-		// we can skip the recursion and just set the value if this is the only option
-		// if we do not do this, recursion depth won't be enough to solve the board
-		switch allowed.Size() {
-		case 0:
-			return StatusNoSolution
-		case 1:
-			b.Set(i, allowed.At(0))
-			theOnlyChoiceAlgo := theOnlyChoice{}
-			state.AddStep(Step(theOnlyChoiceAlgo.String()), theOnlyChoiceAlgo.Complexity(), 1)
-			return StatusSucceeded
-		}
-
-		indexes = append(indexes, indexWithAllowed{
-			index:   i,
-			allowed: allowed,
+		// trial and error requires at least theOnlyChoice to run first
+		// hence we can safely assume allowed has at least 2 values
+		indexes = append(indexes, indexWithAllowedSize{
+			index:       i,
+			allowedSize: allowed.Size(),
 		})
 	}
 
 	// sort for faster performance (it runs ~30% faster)
-	slices.SortFunc(indexes, func(tae1, tae2 indexWithAllowed) int {
-		a1 := tae1.allowed.Size()
-		a2 := tae2.allowed.Size()
+	slices.SortFunc(indexes, func(tae1, tae2 indexWithAllowedSize) int {
+		a1 := tae1.allowedSize
+		a2 := tae2.allowedSize
 		if a1 > 3 && a2 > 3 {
 			// do not bother reordering cells with more than 3 allowed, it is highly unlikely
-			// this algorithm will ever need to use them
+			// this algorithm will ever need to use them and reordering them wastes ~5% of total
+			// solution time
 			return 0
 		}
 		// Important: only use the allowed size, not the 'combined' value of it,
@@ -90,9 +81,10 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	testBoard := a.testBoard.get()
 	defer a.testBoard.put(testBoard)
 
+	var disallowedAtLeastOne bool
 	for _, tei := range indexes {
 		index := tei.index
-		testValues := tei.allowed
+		testValues := b.AllowedValues(index)
 		var foundBoards []*boards.Game
 		var foundUnknown bool
 		var foundDisallowed bool
@@ -163,7 +155,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 				copyFromTestBoard(foundBoards[0], b)
 				return StatusSucceeded
 			}
-			return StatusUnknown
+			// keep going, we have more cells to check
 		}
 		// no solution found, did we disallow any values?
 		if foundDisallowed {
@@ -177,9 +169,19 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 				// we can set it and return
 				b.Set(index, allowed.At(0))
 			}
-			// we disallowed one or more values on the cell, let's bail out and try cheaper algorithms
-			return StatusSucceeded
+
+			// We disallowed one or more values on the cell, it is a bit faster (~2%) to keep going
+			// with the recursive algorithm than leaving to start over. If level is not needed,
+			// just continue with the next cell until we exhaust them all or set a value.
+			if state.Action().LevelRequested() {
+				return StatusSucceeded
+			}
+			disallowedAtLeastOne = true
 		}
+	}
+	if disallowedAtLeastOne {
+		// we disallowed one or more values, let's bail out and try cheaper algorithms
+		return StatusSucceeded
 	}
 
 	return StatusUnknown

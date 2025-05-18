@@ -10,7 +10,7 @@ type theOnlyChoice struct {
 func (a theOnlyChoice) Run(ctx context.Context, state AlgorithmState) Status {
 	b := state.Board()
 	found := 0
-	for index, ok := b.Hint01(); ok; index, ok = b.Hint01() {
+	for index := b.Hint01(); index >= 0; index = b.Hint01() {
 		allowed := b.AllowedValues(index)
 		switch allowed.Size() {
 		case 0:
@@ -18,7 +18,7 @@ func (a theOnlyChoice) Run(ctx context.Context, state AlgorithmState) Status {
 		case 1:
 			b.Set(index, allowed.At(0))
 			found++
-		case 2:
+		default:
 			panic("Hint returned more than one allowed value")
 		}
 	}

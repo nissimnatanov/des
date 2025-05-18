@@ -32,14 +32,16 @@ func (bs *BitSet81) ResetMask(mask BitSet81) {
 	}
 }
 
-func (bs BitSet81) First() (int, bool) {
+// First returns the first index that is set to true in the BitSet81 or -1
+// if all are unset.
+func (bs BitSet81) First() int {
 	for bi := range 11 {
 		b := bs[bi]
 		if b != 0 {
-			return bi*8 + bitSetIndexCache[b][0], true
+			return bi*8 + bitSetIndexCache[b][0]
 		}
 	}
-	return -1, false
+	return -1
 }
 
 func (bs BitSet81) Indexes(yield func(int) bool) {
