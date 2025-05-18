@@ -108,6 +108,8 @@ func testSanity(t *testing.T, action solver.Action) {
 // 					225	   5180352 ns/op	   37840 B/op	      99 allocs/op
 // bug fix in the only choice in sequence:
 // 					229	   5140213 ns/op	   38007 B/op	     100 allocs/op
+// minor improvements in allowed:
+// 					231	   5075807 ns/op	   37984 B/op	     100 allocs/op
 
 func BenchmarkProve(b *testing.B) {
 	benchRun(b, &solver.Options{

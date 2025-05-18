@@ -225,22 +225,27 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 	} else {
 		b.allowedValues.ReportPresent(index)
 	}
+	if oldValue == 0 && newValue != 0 {
+		// optimization - disallowing related indexes for a new value runs 2% faster
+		// if run directly against values.Allowed.
+		b.allowedValues.DisallowRelatedOf(index, newValue)
+	} else {
+		relatedSeq := indexes.RelatedSequence(index)
+		for _, relatedIndex := range relatedSeq {
+			if relatedIndex == index || b.values[relatedIndex] != 0 {
+				continue
+			}
 
-	relatedSeq := indexes.RelatedSequence(index)
-	for _, relatedIndex := range relatedSeq {
-		if relatedIndex == index || b.values[relatedIndex] != 0 {
-			continue
-		}
-
-		if oldValue != 0 {
-			// If old value was present, we cannot just add it to the allowed set of
-			// related indexes since the same value may appear in other related cells.
-			b.allowedValues.ReportEmpty(relatedIndex, b.relatedValues(relatedIndex))
-		}
-		if newValue != 0 {
-			// if we added new value than it is totally safe to include this
-			// value to the disallowed values based on the related cells.
-			b.allowedValues.DisallowRelated(relatedIndex, newValue)
+			if oldValue != 0 {
+				// If old value was present, we cannot just add it to the allowed set of
+				// related indexes since the same value may appear in other related cells.
+				b.allowedValues.ReportEmpty(relatedIndex, b.relatedValues(relatedIndex))
+			}
+			if newValue != 0 {
+				// if we added new value than it is totally safe to include this
+				// value to the disallowed values based on the related cells.
+				b.allowedValues.DisallowRelated(relatedIndex, newValue)
+			}
 		}
 	}
 	b.checkIntegrity()

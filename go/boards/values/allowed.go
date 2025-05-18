@@ -41,6 +41,15 @@ func (a *Allowed) DisallowRelated(index int, v Value) {
 	a.updateHint(index)
 }
 
+func (a *Allowed) DisallowRelatedOf(index int, newValue Value) {
+	newValueSet := newValue.AsSet()
+	relatedEmpty := a.emptyCells.Intersect(indexes.RelatedSet(index))
+	for related := range relatedEmpty.Indexes {
+		a.disallowedByRelated[related] = a.disallowedByRelated[related].With(newValueSet)
+		a.updateHint(related)
+	}
+}
+
 func (a *Allowed) Hint01() int {
 	return a.hints01.First()
 }

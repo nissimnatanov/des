@@ -1,53 +1,85 @@
 package indexes
 
 import (
+	"fmt"
+	"runtime"
+	"runtime/debug"
 	"strconv"
 	"strings"
 )
 
-type BitSet81 [11]uint8
+type bitSet81Unit = byte
 
-var MaxBitSet81 BitSet81 = [11]uint8{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01}
+const (
+	bitSet81BitsPerUnit = 8
+	bitSet81UnitCount   = 1 + (BoardSize-1)/bitSet81BitsPerUnit
+	bitSet81CacheSize   = 1 << bitSet81BitsPerUnit
+
+	bitSet81FullUnitMask  = bitSet81Unit((1 << bitSet81BitsPerUnit) - 1)
+	bitSet81FullUnitCount = BoardSize / bitSet81BitsPerUnit
+	// bitSet81PartialUnitMask can be either zero (if the last unit has full mask)
+	// in which case the bitSet81FullMaskUnitCount is same as bitSet81UnitCount
+	bitSet81PartialUnitMask = (1 << (BoardSize % bitSet81BitsPerUnit)) - 1
+)
+
+type BitSet81 [bitSet81UnitCount]bitSet81Unit
 
 var MinBitSet81 = BitSet81{}
+var MaxBitSet81 BitSet81 = bitSet81InitMax()
+
+func bitSet81InitMax() BitSet81 {
+	max := BitSet81{}
+
+	for ui := range bitSet81FullUnitCount {
+		max[ui] = bitSet81FullUnitMask
+	}
+	if bitSet81PartialUnitMask != 0 {
+		max[bitSet81UnitCount-1] = bitSet81PartialUnitMask
+	}
+	return max
+}
 
 func (bs BitSet81) Get(index int) bool {
 	CheckBoardIndex(index)
-	b := bs[index/8]
-	return (b & (1 << (index % 8))) != 0
+	bi := bs[index/bitSet81BitsPerUnit]
+	return (bi & (1 << (index % bitSet81BitsPerUnit))) != 0
 }
 
 func (bs *BitSet81) Set(index int, value bool) {
 	CheckBoardIndex(index)
 	if value {
-		bs[index/8] |= 1 << (index % 8)
+		bs[index/bitSet81BitsPerUnit] |= 1 << (index % bitSet81BitsPerUnit)
 	} else {
-		bs[index/8] &^= 1 << (index % 8)
+		bs[index/bitSet81BitsPerUnit] &^= 1 << (index % bitSet81BitsPerUnit)
 	}
 }
 
 func (bs *BitSet81) ResetMask(mask BitSet81) {
-	for i := range 11 {
-		bs[i] &= ^mask[i]
+	for ui := range bitSet81UnitCount {
+		bs[ui] &= ^mask[ui]
 	}
 }
 
 // First returns the first index that is set to true in the BitSet81 or -1
 // if all are unset.
 func (bs BitSet81) First() int {
-	for bi := range 11 {
-		b := bs[bi]
-		if b != 0 {
-			return bi*8 + bitSetIndexCache[b][0]
+	for ui := range bitSet81UnitCount {
+		u := bs[ui]
+		if u != 0 {
+			return ui*bitSet81BitsPerUnit + bitSet81IndexCache[u][0]
 		}
 	}
 	return -1
 }
 
 func (bs BitSet81) Indexes(yield func(int) bool) {
-	for bi := range 11 {
-		start := bi * 8
-		indexes := bitSetIndexCache[bs[bi]]
+	for ui := range bitSet81UnitCount {
+		u := bs[ui]
+		if u == 0 {
+			continue
+		}
+		start := ui * bitSet81BitsPerUnit
+		indexes := bitSet81IndexCache[u]
 		for _, index := range indexes {
 			if !yield(start + index) {
 				return
@@ -58,10 +90,20 @@ func (bs BitSet81) Indexes(yield func(int) bool) {
 
 func (bs BitSet81) Complement() BitSet81 {
 	cbs := BitSet81{}
-	for i := range 10 {
-		cbs[i] = ^bs[i]
+	for i := range bitSet81FullUnitCount {
+		cbs[i] = (^bs[i] & bitSet81FullUnitMask)
 	}
-	cbs[10] = ^bs[10] & 0x01
+	if bitSet81PartialUnitMask != 0 {
+		cbs[bitSet81UnitCount-1] = (^bs[bitSet81UnitCount-1] & bitSet81PartialUnitMask)
+	}
+	return cbs
+}
+
+func (bs BitSet81) Intersect(other BitSet81) BitSet81 {
+	cbs := BitSet81{}
+	for i := range bitSet81UnitCount {
+		cbs[i] = bs[i] & other[i]
+	}
 	return cbs
 }
 
@@ -83,17 +125,23 @@ func (bs BitSet81) String() string {
 	return sb.String()
 }
 
-var bitSetIndexCache = initBitSetIndexCache()
+var bitSet81IndexCache = initBitSetIndexCache()
 
-func initBitSetIndexCache() [256][]int {
-	var cache [256][]int
-	for i := range 256 {
-		cache[i] = make([]int, 0, 8)
-		for j := range 8 {
+func initBitSetIndexCache() [bitSet81CacheSize][]int {
+	debug.FreeOSMemory()
+	ms := &runtime.MemStats{}
+	runtime.ReadMemStats(ms)
+	start := ms.Alloc
+	var cache [bitSet81CacheSize][]int
+	for i := range cache {
+		for j := range bitSet81BitsPerUnit {
 			if (i & (1 << j)) != 0 {
 				cache[i] = append(cache[i], j)
 			}
 		}
 	}
+	runtime.ReadMemStats(ms)
+	_ = start
+	fmt.Println("bitSet81IndexCache", ms.Alloc-start, "bytes")
 	return cache
 }
