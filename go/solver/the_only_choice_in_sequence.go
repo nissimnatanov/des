@@ -101,6 +101,11 @@ func (a *theOnlyChoiceInSequence) runSeq(state AlgorithmState, seq indexes.Seque
 			continue
 		}
 		// we have exactly one cell that allows the value
+		if !b.IsEmpty(freeIndex) {
+			// same cell is forced to have two missing values
+			return StatusNoSolution
+		}
+
 		b.Set(freeIndex, missingValue)
 		found++
 	}

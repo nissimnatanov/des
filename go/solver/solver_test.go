@@ -106,6 +106,8 @@ func testSanity(t *testing.T, action solver.Action) {
 //					222	   5277052 ns/op	   37840 B/op	      99 allocs/op
 // minor optimizations:
 // 					225	   5180352 ns/op	   37840 B/op	      99 allocs/op
+// bug fix in the only choice in sequence:
+// 					229	   5140213 ns/op	   38007 B/op	     100 allocs/op
 
 func BenchmarkProve(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -119,6 +121,8 @@ func BenchmarkProve(b *testing.B) {
 // 					252	   4628111 ns/op	   33109 B/op	      82 allocs/op
 // separate the only choice in sequence out from single in sequence:
 // 					244	   4754792 ns/op	   33248 B/op	      83 allocs/op
+// bug fix in the only choice in sequence:
+// 					250	   4694886 ns/op	   33290 B/op	      83 allocs/op
 
 func BenchmarkSolve(b *testing.B) {
 	benchRun(b, &solver.Options{

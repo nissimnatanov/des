@@ -188,12 +188,16 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 	// if board was valid before and the new value does not appear in related cells,
 	// there is no need to re-validate the board.
 	isValid := b.IsValid()
+	var currentRelatedValues values.Set
+	var hasCurrentRelatedValues bool
 	if isValid && newValue != 0 {
 		var allowedValues values.Set
 		if oldValue != 0 {
 			// If cell had a value before, its allowed values cache was 0, hence we cannot use it
 			// to validate the new value. Instead, recalculate it based on the related cells.
-			allowedValues = b.relatedValues(index).Complement()
+			currentRelatedValues = b.relatedValues(index)
+			hasCurrentRelatedValues = true
+			allowedValues = currentRelatedValues.Complement()
 		} else {
 			// if cell was empty before, its allowed values cache was valid
 			allowedValues = b.allowedValues.GetByRelated(index)
@@ -213,7 +217,11 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 	if newValue == 0 {
 		b.freeCellCount++
 		// if we set non-empty to empty, recalculate the allowed values
-		b.allowedValues.ReportEmpty(index, b.relatedValues(index))
+		if !hasCurrentRelatedValues {
+			currentRelatedValues = b.relatedValues(index)
+			hasCurrentRelatedValues = true
+		}
+		b.allowedValues.ReportEmpty(index, currentRelatedValues)
 	} else {
 		b.allowedValues.ReportPresent(index)
 	}
