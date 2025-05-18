@@ -117,6 +117,8 @@ func BenchmarkProve(b *testing.B) {
 // 					246	   4723883 ns/op	   33089 B/op	      82 allocs/op
 // minor optimizations:
 // 					252	   4628111 ns/op	   33109 B/op	      82 allocs/op
+// separate the only choice in sequence out from single in sequence:
+// 					244	   4754792 ns/op	   33248 B/op	      83 allocs/op
 
 func BenchmarkSolve(b *testing.B) {
 	benchRun(b, &solver.Options{

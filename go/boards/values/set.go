@@ -44,6 +44,15 @@ func (vs Set) Values(yield func(Value) bool) {
 	}
 }
 
+// First value is useful when set has exactly one value and
+// we want to use it as a Value.
+func (vs Set) First() Value {
+	if vs == 0 {
+		return 0
+	}
+	return setInfoCache[vs].values[0]
+}
+
 func (vs Set) IsEmpty() bool {
 	return vs == 0
 }

@@ -4,10 +4,10 @@ import (
 	"context"
 )
 
-type theOnlyChoice struct {
+type theOnlyAllowedValueInCell struct {
 }
 
-func (a theOnlyChoice) Run(ctx context.Context, state AlgorithmState) Status {
+func (a theOnlyAllowedValueInCell) Run(ctx context.Context, state AlgorithmState) Status {
 	b := state.Board()
 	found := 0
 	for index := b.Hint01(); index >= 0; index = b.Hint01() {
@@ -30,10 +30,10 @@ func (a theOnlyChoice) Run(ctx context.Context, state AlgorithmState) Status {
 	return StatusSucceeded
 }
 
-func (a theOnlyChoice) Complexity() StepComplexity {
+func (a theOnlyAllowedValueInCell) Complexity() StepComplexity {
 	return StepComplexityMedium
 }
 
-func (a theOnlyChoice) String() string {
-	return "The Only Choice"
+func (a theOnlyAllowedValueInCell) String() string {
+	return "The Only Allowed Value in Cell"
 }

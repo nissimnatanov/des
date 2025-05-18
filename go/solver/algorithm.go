@@ -30,17 +30,19 @@ func GetAlgorithms(action Action) []Algorithm {
 	switch action {
 	case ActionSolve:
 		return []Algorithm{
-			// singleInSequence is first since it is considered the easiest by human to see
+			// singleInSequence is the first since it is considered the easiest by
+			// human to see the only missing value in a sequence (row/column/box)
 			singleInSequence{},
-			theOnlyChoice{},
+			theOnlyAllowedValueInCell{},
+			&theOnlyChoiceInSequence{},
 			identifyPairs{},
 			identifyTriplets{},
 			newTrialAndError(),
 		}
 	case ActionSolveFast, ActionProve:
 		return []Algorithm{
-			theOnlyChoice{},
-			singleInSequence{},
+			theOnlyAllowedValueInCell{},
+			&theOnlyChoiceInSequence{},
 			// recursion is faster than identify pairs & triplets algos
 			// identifyPairs{},
 			// triplet algorithm is very slow, recursion is faster
