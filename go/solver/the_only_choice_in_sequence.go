@@ -73,7 +73,7 @@ func (a *theOnlyChoiceInSequence) runSeq(
 
 	// check if the missing values have a free cell in the sequence that allow them
 	var found int
-	for missingValue := range missingValues.Values {
+	for _, missingValue := range missingValues.Values() {
 		freeIndex := -1
 		freeIndex2 := -1
 		for _, freeCell := range freeCells {

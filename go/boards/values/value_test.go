@@ -84,7 +84,7 @@ func TestValueSetValueIterator(t *testing.T) {
 	}
 	for _, c := range cases {
 		var got string
-		for v := range c.vs.Values {
+		for _, v := range c.vs.Values() {
 			got += v.String()
 		}
 		if got != c.want {

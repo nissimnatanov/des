@@ -70,7 +70,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 		weight := allowedSize * allowedSizeMultiplier
 		if allowedSize < maxAllowedSizeToSort {
 			var allValueCount int
-			for v := range allowed.Values {
+			for _, v := range allowed.Values() {
 				// adding value counts to the weight improves the trial-and-error
 				// effectiveness and the overall solve speed by > ~25% and prove by ~15%
 				allValueCount += b.ValueCount(v)
@@ -113,7 +113,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 		var foundBoards []*boards.Game
 		var foundUnknown bool
 		var foundDisallowed bool
-		for testValue := range testValues.Values {
+		for _, testValue := range testValues.Values() {
 			if ctx.Err() != nil {
 				// if the context is done, we should stop the deep recursion
 				return StatusError

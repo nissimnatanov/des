@@ -127,7 +127,7 @@ func (a identifyTriplets) tryEliminateSeq(
 			return StatusNoSolution
 		case 1:
 			// only one allowed value left, let's set it
-			for v := range tempAllowed.Values {
+			for _, v := range tempAllowed.Values() {
 				// we can safely assume that this is the only value left
 				board.Set(index, v)
 			}

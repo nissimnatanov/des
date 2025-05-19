@@ -122,8 +122,11 @@ func testSanity(t *testing.T, action solver.Action) {
 // - first only		236	   4941663 ns/op	   40480 B/op	     100 allocs/op
 // - all			172	   7026087 ns/op	  113745 B/op	     326 allocs/op
 // Use value counts when calculating sort weight in trial-and-error:
-// - first only		367	   3217746 ns/op	   38574 B/op	      94 allocs/op
-// - all			238	   4958336 ns/op	  103463 B/op	     285 allocs/op
+// - first only		367	   3138206 ns/op	   38560 B/op	      94 allocs/op
+// - all			244	   4784453 ns/op	  103441 B/op	     285 allocs/op
+// Remove golang enumerators and use plain slices in values.Set.Values:
+// - first only		384	   3094777 ns/op	   38574 B/op	      94 allocs/op
+// - all			246	   4761354 ns/op	  103441 B/op	     285 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -159,6 +162,9 @@ func BenchmarkProveAll(b *testing.B) {
 // Use value counts when calculating sort weight in trial-and-error:
 // - first only		559	   2140627 ns/op	   27968 B/op	      69 allocs/op
 // - all			381	   3107389 ns/op	   75457 B/op	     216 allocs/op
+// Remove golang enumerators and use plain slices in values.Set.Values:
+// - first only		548	   2082335 ns/op	   27977 B/op	      69 allocs/op
+// - all			382	   2994671 ns/op	   75471 B/op	     216 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{

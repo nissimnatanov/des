@@ -21,3 +21,6 @@ func (v Value) AsSet() Set {
 func (v Value) String() string {
 	return fmt.Sprint(int8(v))
 }
+
+// Values is an slice of Values, do not modify content of this slice.
+type Values []Value

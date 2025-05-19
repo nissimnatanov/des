@@ -36,12 +36,9 @@ func NewSet(vs ...Value) Set {
 	return Set(mask)
 }
 
-func (vs Set) Values(yield func(Value) bool) {
-	for _, v := range setInfoCache[vs].values {
-		if !yield(v) {
-			return
-		}
-	}
+// Values of this set, do not modify the return slice.
+func (vs Set) Values() Values {
+	return setInfoCache[vs].values
 }
 
 // First value is useful when set has exactly one value and

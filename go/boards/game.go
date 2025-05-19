@@ -328,7 +328,7 @@ func (b *Game) recalculateAllStats() {
 
 func (b *Game) processSequence(s indexes.Sequence) values.Set {
 	vs, dupes := b.calcSequence(s)
-	for v := range dupes.Values {
+	for _, v := range dupes.Values() {
 		b.markSequenceInvalid(v, s)
 	}
 	return vs
