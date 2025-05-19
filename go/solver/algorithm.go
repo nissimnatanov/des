@@ -41,6 +41,10 @@ func GetAlgorithms(action Action) []Algorithm {
 		}
 	case ActionSolveFast, ActionProve:
 		return []Algorithm{
+			// The only allowed value in cell is the most efficient algo, faster than
+			// all the others. It is using the Hint01 method to identify cells
+			// with 0 or 1 allowed value in O(1). It also covers what singleInSequence
+			// would find, so no need to include this algo here.
 			theOnlyAllowedValueInCell{},
 			&theOnlyChoiceInSequence{},
 			// recursion is faster than identify pairs & triplets algos

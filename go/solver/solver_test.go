@@ -110,11 +110,23 @@ func testSanity(t *testing.T, action solver.Action) {
 // 					229	   5140213 ns/op	   38007 B/op	     100 allocs/op
 // minor improvements in allowed:
 // 					231	   5075807 ns/op	   37984 B/op	     100 allocs/op
+// reintroduce row/col/square value caches:
+// 					236	   5013428 ns/op	   40480 B/op	     100 allocs/op
 
-func BenchmarkProve(b *testing.B) {
+// update bench to solve all sample boards, not just the first one:
+// - first only		232	   5047332 ns/op	   40481 B/op	     100 allocs/op
+// - all			170	   6956962 ns/op	  113776 B/op	     326 allocs/op
+
+func BenchmarkProveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
 		Action: solver.ActionProve,
-	})
+	}, 1)
+}
+
+func BenchmarkProveAll(b *testing.B) {
+	benchRun(b, &solver.Options{
+		Action: solver.ActionProve,
+	}, len(sampleBoards))
 }
 
 // start: with hint01 and bitset improvements:
@@ -125,28 +137,48 @@ func BenchmarkProve(b *testing.B) {
 // 					244	   4754792 ns/op	   33248 B/op	      83 allocs/op
 // bug fix in the only choice in sequence:
 // 					250	   4694886 ns/op	   33290 B/op	      83 allocs/op
+// reintroduce row/col/square value caches:
+//					259	   4546273 ns/op	   35072 B/op	      83 allocs/op
+// update bench to solve all sample boards, not just the first one:
+// - first only		260	   4546737 ns/op	   35092 B/op	      83 allocs/op
+// - all			207	   5725250 ns/op	   82961 B/op	     238 allocs/op
 
-func BenchmarkSolve(b *testing.B) {
+func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
 		Action: solver.ActionSolve,
-	})
+	}, 1)
 }
 
-func benchRun(b *testing.B, opts *solver.Options) {
+func BenchmarkSolveAll(b *testing.B) {
+	benchRun(b, &solver.Options{
+		Action: solver.ActionSolve,
+	}, len(sampleBoards))
+}
+
+func benchRun(b *testing.B, opts *solver.Options, numBoards int) {
 	ctx := b.Context()
 
-	// Create a new board
-	bd, err := boards.Deserialize(sampleBoards[0].board)
-	assert.NilError(b, err)
+	var parsed []*boards.Game
+	for _, sample := range sampleBoards {
+		bd, err := boards.Deserialize(sample.board)
+		assert.NilError(b, err)
+		parsed = append(parsed, bd)
+		numBoards--
+		if numBoards <= 0 {
+			break
+		}
+	}
 
 	// Create a new solver
 	s := solver.New(opts)
 
 	for b.Loop() {
-		res := s.Run(ctx, bd.Clone(boards.Play))
-		assert.NilError(b, res.Error)
-		assert.Equal(b, res.Status, solver.StatusSucceeded)
-		assert.Assert(b, res.Steps.Level >= solver.LevelNightmare)
-		assert.Equal(b, res.Solutions.Size(), 1)
+		for _, bd := range parsed {
+			res := s.Run(ctx, bd.Clone(boards.Play))
+			assert.NilError(b, res.Error)
+			assert.Equal(b, res.Status, solver.StatusSucceeded)
+			assert.Assert(b, res.Steps.Level >= solver.LevelNightmare)
+			assert.Equal(b, res.Solutions.Size(), 1)
+		}
 	}
 }

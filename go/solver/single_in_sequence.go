@@ -17,15 +17,15 @@ func (a singleInSequence) String() string {
 
 func (a singleInSequence) Run(ctx context.Context, state AlgorithmState) Status {
 	status := StatusUnknown
-	seqStatus := a.runSeqKind(ctx, state, indexes.RowSequence)
+	seqStatus := a.runSeqKind(ctx, state, indexes.RowSequence, (*boards.Game).RowValues)
 	if seqStatus != StatusUnknown {
 		return seqStatus
 	}
-	seqStatus = a.runSeqKind(ctx, state, indexes.ColumnSequence)
+	seqStatus = a.runSeqKind(ctx, state, indexes.ColumnSequence, (*boards.Game).ColumnValues)
 	if seqStatus != StatusUnknown {
 		return seqStatus
 	}
-	seqStatus = a.runSeqKind(ctx, state, indexes.SquareSequence)
+	seqStatus = a.runSeqKind(ctx, state, indexes.SquareSequence, (*boards.Game).SquareValues)
 	if seqStatus != StatusUnknown {
 		return seqStatus
 	}
@@ -36,12 +36,18 @@ func (a singleInSequence) runSeqKind(
 	ctx context.Context,
 	state AlgorithmState,
 	seq func(seq int) indexes.Sequence,
+	seqValues func(b *boards.Game, seq int) values.Set,
 ) Status {
-	for i := range boards.SequenceSize {
+	for si := range boards.SequenceSize {
 		if ctx.Err() != nil {
 			return StatusError
 		}
-		status := a.runSeq(state, seq(i))
+		seqValues := seqValues(state.Board(), si)
+		if seqValues.Size() != (boards.SequenceSize - 1) {
+			continue
+		}
+		missingValue := seqValues.Complement().First()
+		status := a.setMissingValue(state, seq(si), missingValue)
 		if status != StatusUnknown {
 			return status
 		}
@@ -49,31 +55,21 @@ func (a singleInSequence) runSeqKind(
 	return StatusUnknown
 }
 
-func (a singleInSequence) runSeq(state AlgorithmState, seq indexes.Sequence) Status {
+func (a singleInSequence) setMissingValue(
+	state AlgorithmState,
+	seq indexes.Sequence,
+	missingValue values.Value) Status {
 	b := state.Board()
-	vs := values.Set(0)
-	freeCell := -1
 	for _, index := range seq {
-		v := b.Get(index)
-		if v == 0 {
-			// free cell
-			if freeCell != -1 {
-				return StatusUnknown
-			}
-			// first free cell
-			freeCell = index
-		} else {
-			vs = vs.With(v.AsSet())
+		if !b.IsEmpty(index) {
+			continue
 		}
+		if !b.AllowedValues(index).Contains(missingValue) {
+			return StatusNoSolution
+		}
+		b.Set(index, missingValue)
+		state.AddStep(Step(a.String()), StepComplexityEasy, 1)
+		return StatusSucceeded
 	}
-	if freeCell == -1 || vs.Size() != boards.SequenceSize-1 {
-		return StatusUnknown
-	}
-	missingValue := vs.Complement().First()
-	if !b.AllowedValues(freeCell).Contains(missingValue) {
-		return StatusNoSolution
-	}
-	b.Set(freeCell, missingValue)
-	state.AddStep(Step(a.String()), StepComplexityEasy, 1)
-	return StatusSucceeded
+	return StatusError
 }

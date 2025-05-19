@@ -17,6 +17,7 @@ type base struct {
 	mode          Mode
 }
 
+// AllValues include empty and non-empty cells, for empty value is 0
 func (b *base) AllValues(yield func(i int, v values.Value) bool) {
 	for i, v := range b.values {
 		if !yield(i, v) {

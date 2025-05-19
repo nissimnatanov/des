@@ -17,6 +17,10 @@ type Game struct {
 
 	// allowedValues must be always up-2-date
 	allowedValues values.Allowed
+
+	rowSets    [SequenceSize]values.Set
+	colSets    [SequenceSize]values.Set
+	squareSets [SequenceSize]values.Set
 }
 
 func (b *Game) Mode() Mode {
@@ -25,6 +29,18 @@ func (b *Game) Mode() Mode {
 
 func (b *Game) IsEmpty(index int) bool {
 	return b.values[index] == 0
+}
+
+func (b *Game) RowValues(row int) values.Set {
+	return b.rowSets[row]
+}
+
+func (b *Game) ColumnValues(col int) values.Set {
+	return b.colSets[col]
+}
+
+func (b *Game) SquareValues(sq int) values.Set {
+	return b.squareSets[sq]
 }
 
 // Hint01 returns the first cell that has either zero or one allowed value.
@@ -49,9 +65,9 @@ func (b *Game) relatedValues(index int) values.Set {
 	return b.sequenceValues(indexes.RelatedSequence(index))
 }
 
-func (b *Game) sequenceValues(s indexes.Sequence) values.Set {
+func (b *Game) sequenceValues(seq indexes.Sequence) values.Set {
 	values := values.EmptySet
-	for _, i := range s {
+	for _, i := range seq {
 		v := b.values[i]
 		if v != 0 {
 			values = values.With(v.AsSet())
@@ -161,6 +177,9 @@ func (b *Game) initZeroStats(mode Mode) {
 	b.freeCellCount = Size
 	b.allowedValues.AllowAll()
 	b.validFlags = indexes.MaxBitSet81
+	clear(b.rowSets[:])
+	clear(b.colSets[:])
+	clear(b.squareSets[:])
 	b.checkIntegrity()
 }
 
@@ -178,6 +197,9 @@ func (b *Game) copyStats(source *Game) {
 	b.freeCellCount = source.freeCellCount
 	b.validFlags = source.validFlags
 	b.allowedValues = source.allowedValues.Clone()
+	b.rowSets = source.rowSets
+	b.colSets = source.colSets
+	b.squareSets = source.squareSets
 }
 
 func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
@@ -211,9 +233,18 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 		return
 	}
 
+	row := indexes.RowFromIndex(index)
+	col := indexes.ColumnFromIndex(index)
+	sq := indexes.SquareFromIndex(index)
+
 	if oldValue == 0 {
 		b.freeCellCount--
+	} else {
+		b.rowSets[row] = b.rowSets[row].Without(oldValue.AsSet())
+		b.colSets[col] = b.colSets[col].Without(oldValue.AsSet())
+		b.squareSets[sq] = b.squareSets[sq].Without(oldValue.AsSet())
 	}
+
 	if newValue == 0 {
 		b.freeCellCount++
 		// if we set non-empty to empty, recalculate the allowed values
@@ -224,6 +255,9 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 		b.allowedValues.ReportEmpty(index, currentRelatedValues)
 	} else {
 		b.allowedValues.ReportPresent(index)
+		b.rowSets[row] = b.rowSets[row].With(newValue.AsSet())
+		b.colSets[col] = b.colSets[col].With(newValue.AsSet())
+		b.squareSets[sq] = b.squareSets[sq].With(newValue.AsSet())
 	}
 	if oldValue == 0 && newValue != 0 {
 		// optimization - disallowing related indexes for a new value runs 2% faster
@@ -268,20 +302,21 @@ func (b *Game) recalculateAllStats() {
 
 	// init rowSets, colSets; and squareSets
 	// validFlags are unset if dupe detected
-	for seq := range SequenceSize {
-		b.validateSequence(indexes.RowSequence(seq))
-		b.validateSequence(indexes.ColumnSequence(seq))
-		b.validateSequence(indexes.SquareSequence(seq))
+	for si := range SequenceSize {
+		b.rowSets[si] = b.processSequence(indexes.RowSequence(si))
+		b.colSets[si] = b.processSequence(indexes.ColumnSequence(si))
+		b.squareSets[si] = b.processSequence(indexes.SquareSequence(si))
 	}
 
 	b.checkIntegrity()
 }
 
-func (b *Game) validateSequence(s indexes.Sequence) {
-	_, dupes := b.calcSequence(s)
+func (b *Game) processSequence(s indexes.Sequence) values.Set {
+	vs, dupes := b.calcSequence(s)
 	for v := range dupes.Values {
 		b.markSequenceInvalid(v, s)
 	}
+	return vs
 }
 
 func (b *Game) markSequenceInvalid(v values.Value, s indexes.Sequence) {
@@ -371,5 +406,25 @@ func (b *Game) checkIntegrity() {
 		panic(fmt.Sprintf(
 			"wrong free cell counts: expected %v, actual %v\n%v",
 			freeCellCount, b.freeCellCount, b.String()))
+	}
+	for si := range SequenceSize {
+		rowSeqValues := b.sequenceValues(indexes.RowSequence(si))
+		if b.RowValues(si) != rowSeqValues {
+			panic(fmt.Sprintf(
+				"wrong row values for row %d: expected %v, actual %v\n%v",
+				si, rowSeqValues, b.RowValues(si), b))
+		}
+		colSeqValues := b.sequenceValues(indexes.ColumnSequence(si))
+		if b.ColumnValues(si) != colSeqValues {
+			panic(fmt.Sprintf(
+				"wrong column values for column %d: expected %v, actual %v\n%v",
+				si, colSeqValues, b.ColumnValues(si), b))
+		}
+		sqSeqValues := b.sequenceValues(indexes.SquareSequence(si))
+		if b.SquareValues(si) != sqSeqValues {
+			panic(fmt.Sprintf(
+				"wrong square values for square %d: expected %v, actual %v\n%v",
+				si, sqSeqValues, b.SquareValues(si), b))
+		}
 	}
 }

@@ -23,15 +23,16 @@ func (a *theOnlyChoiceInSequence) String() string {
 
 func (a *theOnlyChoiceInSequence) Run(ctx context.Context, state AlgorithmState) Status {
 	status := StatusUnknown
-	seqStatus := a.runSeqKind(ctx, state, indexes.RowSequence)
+	b := state.Board()
+	seqStatus := a.runSeqKind(ctx, state, b.RowValues, indexes.RowSequence)
 	if seqStatus != StatusUnknown {
 		return seqStatus
 	}
-	seqStatus = a.runSeqKind(ctx, state, indexes.ColumnSequence)
+	seqStatus = a.runSeqKind(ctx, state, b.ColumnValues, indexes.ColumnSequence)
 	if seqStatus != StatusUnknown {
 		return seqStatus
 	}
-	seqStatus = a.runSeqKind(ctx, state, indexes.SquareSequence)
+	seqStatus = a.runSeqKind(ctx, state, b.SquareValues, indexes.SquareSequence)
 	if seqStatus != StatusUnknown {
 		return seqStatus
 	}
@@ -39,13 +40,20 @@ func (a *theOnlyChoiceInSequence) Run(ctx context.Context, state AlgorithmState)
 }
 
 func (a *theOnlyChoiceInSequence) runSeqKind(
-	ctx context.Context, state AlgorithmState, seq func(seq int) indexes.Sequence,
+	ctx context.Context,
+	state AlgorithmState,
+	seqValues func(seq int) values.Set,
+	seq func(seq int) indexes.Sequence,
 ) Status {
-	for i := range boards.SequenceSize {
+	for si := range boards.SequenceSize {
 		if ctx.Err() != nil {
 			return StatusError
 		}
-		status := a.runSeq(state, seq(i))
+		vs := seqValues(si)
+		if vs == values.FullSet {
+			continue
+		}
+		status := a.runSeq(state, vs, seq(si))
 		if status != StatusUnknown {
 			return status
 		}
@@ -53,9 +61,12 @@ func (a *theOnlyChoiceInSequence) runSeqKind(
 	return StatusUnknown
 }
 
-func (a *theOnlyChoiceInSequence) runSeq(state AlgorithmState, seq indexes.Sequence) Status {
+func (a *theOnlyChoiceInSequence) runSeq(
+	state AlgorithmState,
+	vs values.Set,
+	seq indexes.Sequence,
+) Status {
 	b := state.Board()
-	vs := values.Set(0)
 	freeCells := a.indexWithAllowedCache[:0]
 	for _, index := range seq {
 		v := b.Get(index)
@@ -64,8 +75,6 @@ func (a *theOnlyChoiceInSequence) runSeq(state AlgorithmState, seq indexes.Seque
 				index:   index,
 				allowed: b.AllowedValues(index),
 			})
-		} else {
-			vs = vs.With(v.AsSet())
 		}
 	}
 	if vs.Size() == boards.SequenceSize {
