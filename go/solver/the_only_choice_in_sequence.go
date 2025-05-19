@@ -73,44 +73,35 @@ func (a *theOnlyChoiceInSequence) runSeq(
 
 	// check if the missing values have a free cell in the sequence that allow them
 	var found int
+missingValueLoop:
 	for _, missingValue := range missingValues.Values() {
-		freeIndex := -1
-		freeIndex2 := -1
-		for _, freeCell := range freeCells {
-			if !freeCell.allowed.Contains(missingValue) {
+		foundIndex := -1
+		for fi := range freeCells {
+			if !freeCells[fi].allowed.Contains(missingValue) {
 				continue
 			}
 
-			if freeIndex == -1 {
-				// first free cell
-				freeIndex = freeCell.index
-			} else if freeIndex2 == -1 {
-				// second one, we can stop now
-				freeIndex2 = freeCell.index
-				break
+			if foundIndex == -1 {
+				// first host
+				foundIndex = freeCells[fi].index
+			} else {
+				// second one, move to the next missing value
+				continue missingValueLoop
 			}
 		}
-		switch {
-		case freeIndex == -1:
-			// no host cell in sequence - fail the solution
-			return StatusNoSolution
-		case freeIndex2 != -1:
-			// two cells to allow the value, try next one
-			continue
-		}
-		// we have exactly one cell that allows the value
-		if !b.IsEmpty(freeIndex) {
-			// same cell is forced to have two missing values
+		if foundIndex == -1 || !b.IsEmpty(foundIndex) {
+			// either no host cell in sequence or same cell is forced to have two missing values,
+			// fail the solution in both cases
 			return StatusNoSolution
 		}
 
-		b.Set(freeIndex, missingValue)
+		b.Set(foundIndex, missingValue)
 		found++
 	}
 
 	if found > 0 {
 		// we found at least one value to settle
-		state.AddStep(Step(a.String()), StepComplexityEasy, found)
+		state.AddStep(Step(a.String()), StepComplexityMedium, found)
 		return StatusSucceeded
 	}
 

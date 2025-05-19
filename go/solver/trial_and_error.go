@@ -184,15 +184,15 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 		}
 		// no solution found, did we disallow any values?
 		if foundDisallowed {
-			allowed := b.AllowedValues(index)
-			switch allowed.Size() {
+			allowed := b.AllowedValues(index).Values()
+			switch len(allowed) {
 			case 0:
 				// we disallowed all the values, bail out
 				return StatusNoSolution
 			case 1:
 				// the unknown value that is left is the only option available
 				// we can set it and return
-				b.Set(index, allowed.At(0))
+				b.Set(index, allowed[0])
 			}
 
 			// We disallowed one or more values on the cell, it is a bit faster (~2%) to keep going

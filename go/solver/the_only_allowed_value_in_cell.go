@@ -11,12 +11,12 @@ func (a theOnlyAllowedValueInCell) Run(ctx context.Context, state AlgorithmState
 	b := state.Board()
 	found := 0
 	for index := b.Hint01(); index >= 0; index = b.Hint01() {
-		allowed := b.AllowedValues(index)
-		switch allowed.Size() {
+		allowed := b.AllowedValues(index).Values()
+		switch len(allowed) {
 		case 0:
 			return StatusNoSolution
 		case 1:
-			b.Set(index, allowed.At(0))
+			b.Set(index, allowed[0])
 			found++
 		default:
 			panic("Hint returned more than one allowed value")

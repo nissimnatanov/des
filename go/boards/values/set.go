@@ -54,10 +54,6 @@ func (vs Set) IsEmpty() bool {
 	return vs == 0
 }
 
-func (vs Set) At(i int) Value {
-	return setInfoCache[vs].values[i]
-}
-
 func (vs Set) With(other Set) Set {
 	return Union(vs, other)
 }
