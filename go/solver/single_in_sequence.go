@@ -60,11 +60,8 @@ func (a singleInSequence) setMissingValue(
 	seq indexes.Sequence,
 	missingValue values.Value) Status {
 	b := state.Board()
-	for _, index := range seq {
-		if !b.IsEmpty(index) {
-			continue
-		}
-		if !b.AllowedValues(index).Contains(missingValue) {
+	for index, allowed := range b.AllowedValuesIn(seq) {
+		if !allowed.Contains(missingValue) {
 			return StatusNoSolution
 		}
 		b.Set(index, missingValue)

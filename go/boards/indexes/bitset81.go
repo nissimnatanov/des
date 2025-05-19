@@ -1,9 +1,6 @@
 package indexes
 
 import (
-	"fmt"
-	"runtime"
-	"runtime/debug"
 	"strconv"
 	"strings"
 )
@@ -128,10 +125,6 @@ func (bs BitSet81) String() string {
 var bitSet81IndexCache = initBitSetIndexCache()
 
 func initBitSetIndexCache() [bitSet81CacheSize][]int {
-	debug.FreeOSMemory()
-	ms := &runtime.MemStats{}
-	runtime.ReadMemStats(ms)
-	start := ms.Alloc
 	var cache [bitSet81CacheSize][]int
 	for i := range cache {
 		for j := range bitSet81BitsPerUnit {
@@ -140,8 +133,5 @@ func initBitSetIndexCache() [bitSet81CacheSize][]int {
 			}
 		}
 	}
-	runtime.ReadMemStats(ms)
-	_ = start
-	fmt.Println("bitSet81IndexCache", ms.Alloc-start, "bytes")
 	return cache
 }

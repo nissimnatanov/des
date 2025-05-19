@@ -53,7 +53,7 @@ func (a *theOnlyChoiceInSequence) runSeqKind(
 		if vs == values.FullSet {
 			continue
 		}
-		status := a.runSeq(state, vs, seq(si))
+		status := a.runSeq(state, vs.Complement(), seq(si))
 		if status != StatusUnknown {
 			return status
 		}
@@ -63,28 +63,21 @@ func (a *theOnlyChoiceInSequence) runSeqKind(
 
 func (a *theOnlyChoiceInSequence) runSeq(
 	state AlgorithmState,
-	vs values.Set,
+	missingValues values.Set,
 	seq indexes.Sequence,
 ) Status {
 	b := state.Board()
 	freeCells := a.indexWithAllowedCache[:0]
-	for _, index := range seq {
-		v := b.Get(index)
-		if v == 0 {
-			freeCells = append(freeCells, indexWithAllowed{
-				index:   index,
-				allowed: b.AllowedValues(index),
-			})
-		}
-	}
-	if vs.Size() == boards.SequenceSize {
-		// all the values are set
-		return StatusUnknown
+	for index, allowed := range b.AllowedValuesIn(seq) {
+		freeCells = append(freeCells, indexWithAllowed{
+			index:   index,
+			allowed: allowed,
+		})
 	}
 
 	// check if the missing values have a free cell in the sequence that allow them
 	var found int
-	for missingValue := range vs.Complement().Values {
+	for missingValue := range missingValues.Values {
 		freeIndex := -1
 		freeIndex2 := -1
 		for _, freeCell := range freeCells {

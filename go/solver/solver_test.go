@@ -112,10 +112,12 @@ func testSanity(t *testing.T, action solver.Action) {
 // 					231	   5075807 ns/op	   37984 B/op	     100 allocs/op
 // reintroduce row/col/square value caches:
 // 					236	   5013428 ns/op	   40480 B/op	     100 allocs/op
-
 // update bench to solve all sample boards, not just the first one:
 // - first only		232	   5047332 ns/op	   40481 B/op	     100 allocs/op
 // - all			170	   6956962 ns/op	  113776 B/op	     326 allocs/op
+// AllowedValuesIn, other minor improvements:
+// - first only		238	   4949319 ns/op	   40481 B/op	     100 allocs/op
+// - all			172	   6878837 ns/op	  113777 B/op	     326 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -142,6 +144,9 @@ func BenchmarkProveAll(b *testing.B) {
 // update bench to solve all sample boards, not just the first one:
 // - first only		260	   4546737 ns/op	   35092 B/op	      83 allocs/op
 // - all			207	   5725250 ns/op	   82961 B/op	     238 allocs/op
+// AllowedValuesIn, other minor improvements:
+// - first only		260	   4566580 ns/op	   35072 B/op	      83 allocs/op
+// - all			206	   5689960 ns/op	   82987 B/op	     238 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
