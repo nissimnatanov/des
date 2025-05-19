@@ -11,8 +11,8 @@ import (
 type Game struct {
 	base
 
-	freeCellCount int
-	validFlags    indexes.BitSet81
+	valueCounts [10]int // zero for empty cells
+	validFlags  indexes.BitSet81
 
 	// allowedValues must be always up-2-date
 	allowedValues values.Allowed
@@ -86,7 +86,12 @@ func (b *Game) sequenceValues(seq indexes.Sequence) values.Set {
 }
 
 func (b *Game) FreeCellCount() int {
-	return b.freeCellCount
+	return b.valueCounts[0]
+}
+
+// if v is empty, returns the number of empty cells
+func (b *Game) ValueCount(v values.Value) int {
+	return b.valueCounts[v]
 }
 
 func (b *Game) IsValidCell(index int) bool {
@@ -183,7 +188,8 @@ func (b *Game) Restart() {
 // only sets non-zero values
 func (b *Game) initZeroStats(mode Mode) {
 	b.init(mode)
-	b.freeCellCount = Size
+	clear(b.valueCounts[:])
+	b.valueCounts[0] = Size
 	b.allowedValues.AllowAll()
 	b.validFlags = indexes.MaxBitSet81
 	clear(b.rowSets[:])
@@ -203,7 +209,7 @@ func (b *Game) copyStats(source *Game) {
 		panic("Cannot copy nil board")
 	}
 
-	b.freeCellCount = source.freeCellCount
+	b.valueCounts = source.valueCounts
 	b.validFlags = source.validFlags
 	b.allowedValues = source.allowedValues.Clone()
 	b.rowSets = source.rowSets
@@ -242,20 +248,20 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 		return
 	}
 
+	b.valueCounts[oldValue]--
+	b.valueCounts[newValue]++
+
 	row := indexes.RowFromIndex(index)
 	col := indexes.ColumnFromIndex(index)
 	sq := indexes.SquareFromIndex(index)
 
-	if oldValue == 0 {
-		b.freeCellCount--
-	} else {
+	if oldValue != 0 {
 		b.rowSets[row] = b.rowSets[row].Without(oldValue.AsSet())
 		b.colSets[col] = b.colSets[col].Without(oldValue.AsSet())
 		b.squareSets[sq] = b.squareSets[sq].Without(oldValue.AsSet())
 	}
 
 	if newValue == 0 {
-		b.freeCellCount++
 		// if we set non-empty to empty, recalculate the allowed values
 		if !hasCurrentRelatedValues {
 			currentRelatedValues = b.relatedValues(index)
@@ -299,10 +305,10 @@ func (b *Game) recalculateAllStats() {
 	b.validFlags = indexes.MaxBitSet81
 
 	// value counts
-	b.freeCellCount = 0
+	clear(b.valueCounts[:])
 	for i := range Size {
+		b.valueCounts[b.values[i]]++
 		if b.values[i] == 0 {
-			b.freeCellCount++
 			b.allowedValues.ReportEmpty(i, b.relatedValues(i))
 		} else {
 			b.allowedValues.ReportPresent(i)

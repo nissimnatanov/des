@@ -8,8 +8,8 @@ import (
 )
 
 type indexWithAllowedSize struct {
-	index       int
-	allowedSize int
+	index  int
+	weight int
 }
 
 // trialAndError is a recursive algorithm, please always run it after the
@@ -48,23 +48,48 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	}
 
 	b := state.Board()
+	// these slice is reset on each get
 	indexes := a.indexesCache.get()
-	defer a.indexesCache.put(indexes) // slice is reset on next get
+	defer a.indexesCache.put(indexes)
+	// Number of allowed values is more important than the value count but only up to
+	// 3 allowed values, after which the trial-and-error becomes much less effective.
+	// The allowedSizeMultiplier below was chosen by testing various values and measuring
+	// the performance of both prove and solve, it turns out the numbers below are the best.
+	var allowedSizeMultiplier = 10
+	if state.Action().ProofRequested() {
+		// this multiplier works better if we have to process all the allowed values
+		// and not just the first one that solves the board, thus giving more weight
+		// to the allowed size performs slightly better.
+		allowedSizeMultiplier = 14
+	}
+	const maxAllowedSizeToSort = 3
+	var maxWeighToSort = maxAllowedSizeToSort * allowedSizeMultiplier
 
 	for i, allowed := range b.AllAllowedValues {
+		allowedSize := allowed.Size()
+		weight := allowedSize * allowedSizeMultiplier
+		if allowedSize < maxAllowedSizeToSort {
+			var allValueCount int
+			for v := range allowed.Values {
+				// adding value counts to the weight improves the trial-and-error
+				// effectiveness and the overall solve speed by > ~25% and prove by ~15%
+				allValueCount += b.ValueCount(v)
+			}
+			weight += allValueCount
+		}
 		// trial and error requires at least theOnlyChoice to run first
 		// hence we can safely assume allowed has at least 2 values
 		indexes = append(indexes, indexWithAllowedSize{
-			index:       i,
-			allowedSize: allowed.Size(),
+			index:  i,
+			weight: weight,
 		})
 	}
 
-	// sort for faster performance (it runs ~30% faster)
+	// sort based on the chosen weights, the lower the better
 	slices.SortFunc(indexes, func(tae1, tae2 indexWithAllowedSize) int {
-		a1 := tae1.allowedSize
-		a2 := tae2.allowedSize
-		if a1 > 3 && a2 > 3 {
+		a1 := tae1.weight
+		a2 := tae2.weight
+		if a1 > maxWeighToSort && a2 > maxWeighToSort {
 			// do not bother reordering cells with more than 3 allowed, it is highly unlikely
 			// this algorithm will ever need to use them and reordering them wastes ~5% of total
 			// solution time

@@ -24,13 +24,10 @@ func (b *Game) checkIntegrity() {
 		return
 	}
 
-	var freeCellCount int
+	var valueCounts [10]int
 
 	for i, v := range b.AllValues {
-		if v == 0 {
-			freeCellCount++
-		}
-
+		valueCounts[v]++
 		if v != 0 {
 			// check this value is disallowed in other places
 			rs := indexes.RelatedSequence(i)
@@ -79,10 +76,10 @@ func (b *Game) checkIntegrity() {
 		}
 	}
 
-	if freeCellCount != b.freeCellCount {
+	if valueCounts != b.valueCounts {
 		panic(fmt.Sprintf(
-			"wrong free cell counts: expected %v, actual %v\n%v",
-			freeCellCount, b.freeCellCount, b.String()))
+			"wrong value counts: expected %v, actual %v\n%v",
+			valueCounts, b.valueCounts, b.String()))
 	}
 	for si := range SequenceSize {
 		rowSeqValues := b.sequenceValues(indexes.RowSequence(si))

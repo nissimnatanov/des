@@ -121,6 +121,9 @@ func testSanity(t *testing.T, action solver.Action) {
 // Remove ctx checks in basic algos:
 // - first only		236	   4941663 ns/op	   40480 B/op	     100 allocs/op
 // - all			172	   7026087 ns/op	  113745 B/op	     326 allocs/op
+// Use value counts when calculating sort weight in trial-and-error:
+// - first only		367	   3217746 ns/op	   38574 B/op	      94 allocs/op
+// - all			238	   4958336 ns/op	  103463 B/op	     285 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -153,6 +156,9 @@ func BenchmarkProveAll(b *testing.B) {
 // Remove ctx checks in basic algos:
 // - first only		321	   3621153 ns/op	   35089 B/op	      83 allocs/op
 // - all			247	   4727244 ns/op	   82982 B/op	     238 allocs/op
+// Use value counts when calculating sort weight in trial-and-error:
+// - first only		559	   2140627 ns/op	   27968 B/op	      69 allocs/op
+// - all			381	   3107389 ns/op	   75457 B/op	     216 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
