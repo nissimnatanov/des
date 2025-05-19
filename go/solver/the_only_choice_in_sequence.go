@@ -24,15 +24,15 @@ func (a *theOnlyChoiceInSequence) String() string {
 func (a *theOnlyChoiceInSequence) Run(ctx context.Context, state AlgorithmState) Status {
 	status := StatusUnknown
 	b := state.Board()
-	seqStatus := a.runSeqKind(ctx, state, b.RowValues, indexes.RowSequence)
+	seqStatus := a.runSeqKind(state, b.RowValues, indexes.RowSequence)
 	if seqStatus != StatusUnknown {
 		return seqStatus
 	}
-	seqStatus = a.runSeqKind(ctx, state, b.ColumnValues, indexes.ColumnSequence)
+	seqStatus = a.runSeqKind(state, b.ColumnValues, indexes.ColumnSequence)
 	if seqStatus != StatusUnknown {
 		return seqStatus
 	}
-	seqStatus = a.runSeqKind(ctx, state, b.SquareValues, indexes.SquareSequence)
+	seqStatus = a.runSeqKind(state, b.SquareValues, indexes.SquareSequence)
 	if seqStatus != StatusUnknown {
 		return seqStatus
 	}
@@ -40,15 +40,11 @@ func (a *theOnlyChoiceInSequence) Run(ctx context.Context, state AlgorithmState)
 }
 
 func (a *theOnlyChoiceInSequence) runSeqKind(
-	ctx context.Context,
 	state AlgorithmState,
 	seqValues func(seq int) values.Set,
 	seq func(seq int) indexes.Sequence,
 ) Status {
 	for si := range boards.SequenceSize {
-		if ctx.Err() != nil {
-			return StatusError
-		}
 		vs := seqValues(si)
 		if vs == values.FullSet {
 			continue

@@ -17,15 +17,15 @@ func (a singleInSequence) String() string {
 
 func (a singleInSequence) Run(ctx context.Context, state AlgorithmState) Status {
 	status := StatusUnknown
-	seqStatus := a.runSeqKind(ctx, state, indexes.RowSequence, (*boards.Game).RowValues)
+	seqStatus := a.runSeqKind(state, indexes.RowSequence, (*boards.Game).RowValues)
 	if seqStatus != StatusUnknown {
 		return seqStatus
 	}
-	seqStatus = a.runSeqKind(ctx, state, indexes.ColumnSequence, (*boards.Game).ColumnValues)
+	seqStatus = a.runSeqKind(state, indexes.ColumnSequence, (*boards.Game).ColumnValues)
 	if seqStatus != StatusUnknown {
 		return seqStatus
 	}
-	seqStatus = a.runSeqKind(ctx, state, indexes.SquareSequence, (*boards.Game).SquareValues)
+	seqStatus = a.runSeqKind(state, indexes.SquareSequence, (*boards.Game).SquareValues)
 	if seqStatus != StatusUnknown {
 		return seqStatus
 	}
@@ -33,15 +33,11 @@ func (a singleInSequence) Run(ctx context.Context, state AlgorithmState) Status 
 }
 
 func (a singleInSequence) runSeqKind(
-	ctx context.Context,
 	state AlgorithmState,
 	seq func(seq int) indexes.Sequence,
 	seqValues func(b *boards.Game, seq int) values.Set,
 ) Status {
 	for si := range boards.SequenceSize {
-		if ctx.Err() != nil {
-			return StatusError
-		}
 		seqValues := seqValues(state.Board(), si)
 		if seqValues.Size() != (boards.SequenceSize - 1) {
 			continue

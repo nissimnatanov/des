@@ -90,7 +90,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 		var foundDisallowed bool
 		for testValue := range testValues.Values {
 			if ctx.Err() != nil {
-				// if the context is done, we should stop
+				// if the context is done, we should stop the deep recursion
 				return StatusError
 			}
 

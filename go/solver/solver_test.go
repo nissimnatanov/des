@@ -118,6 +118,9 @@ func testSanity(t *testing.T, action solver.Action) {
 // AllowedValuesIn, other minor improvements:
 // - first only		238	   4949319 ns/op	   40481 B/op	     100 allocs/op
 // - all			172	   6878837 ns/op	  113777 B/op	     326 allocs/op
+// Remove ctx checks in basic algos:
+// - first only		236	   4941663 ns/op	   40480 B/op	     100 allocs/op
+// - all			172	   7026087 ns/op	  113745 B/op	     326 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -147,6 +150,9 @@ func BenchmarkProveAll(b *testing.B) {
 // AllowedValuesIn, other minor improvements:
 // - first only		260	   4566580 ns/op	   35072 B/op	      83 allocs/op
 // - all			206	   5689960 ns/op	   82987 B/op	     238 allocs/op
+// Remove ctx checks in basic algos:
+// - first only		321	   3621153 ns/op	   35089 B/op	      83 allocs/op
+// - all			247	   4727244 ns/op	   82982 B/op	     238 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
