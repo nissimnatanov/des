@@ -70,8 +70,13 @@ func (b *Game) AllowedValuesIn(seq indexes.Sequence) func(yield func(int, values
 	}
 }
 
-func (b *Game) relatedValues(index int) values.Set {
-	return b.sequenceValues(indexes.RelatedSequence(index))
+// calcRelatedValues includes the value of the cell itself, if not empty
+// and the values of all related cells (row, column, square).
+func (b *Game) calcRelatedValues(index int) values.Set {
+	return values.Union3(
+		b.rowSets[indexes.RowFromIndex(index)],
+		b.colSets[indexes.ColumnFromIndex(index)],
+		b.squareSets[indexes.SquareFromIndex(index)])
 }
 
 func (b *Game) sequenceValues(seq indexes.Sequence) values.Set {
@@ -225,16 +230,12 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 	// if board was valid before and the new value does not appear in related cells,
 	// there is no need to re-validate the board.
 	isValid := b.IsValid()
-	var currentRelatedValues values.Set
-	var hasCurrentRelatedValues bool
 	if isValid && newValue != 0 {
 		var allowedValues values.Set
 		if oldValue != 0 {
-			// If cell had a value before, its allowed values cache was 0, hence we cannot use it
-			// to validate the new value. Instead, recalculate it based on the related cells.
-			currentRelatedValues = b.relatedValues(index)
-			hasCurrentRelatedValues = true
-			allowedValues = currentRelatedValues.Complement()
+			// If cell had a value before, its allowed values cache was 0, hence we cannot use
+			// it to validate the new value. Instead, recalculate it based on the related cells.
+			allowedValues = b.calcRelatedValues(index).Complement()
 		} else {
 			// if cell was empty before, its allowed values cache was valid
 			allowedValues = b.allowedValues.GetByRelated(index)
@@ -248,32 +249,40 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 		return
 	}
 
-	b.valueCounts[oldValue]--
-	b.valueCounts[newValue]++
+	// If board was valid and remains valid with a new value, we can optimize the
+	// recalculation of the allowed values by touching only the affected cells.
+	// All calculations below are based on the fact that the board is valid.
 
 	row := indexes.RowFromIndex(index)
 	col := indexes.ColumnFromIndex(index)
 	sq := indexes.SquareFromIndex(index)
 
+	// first, update the row/col/square sets - related values calculation depends on it
 	if oldValue != 0 {
-		b.rowSets[row] = b.rowSets[row].Without(oldValue.AsSet())
-		b.colSets[col] = b.colSets[col].Without(oldValue.AsSet())
-		b.squareSets[sq] = b.squareSets[sq].Without(oldValue.AsSet())
+		// since board was valid, we can safely assume that the oldValue was present
+		// only once per row/col/square
+		oldValueSet := oldValue.AsSet()
+		b.rowSets[row] = b.rowSets[row].Without(oldValueSet)
+		b.colSets[col] = b.colSets[col].Without(oldValueSet)
+		b.squareSets[sq] = b.squareSets[sq].Without(oldValueSet)
 	}
+	if newValue != 0 {
+		newValueSet := newValue.AsSet()
+		b.rowSets[row] = b.rowSets[row].With(newValueSet)
+		b.colSets[col] = b.colSets[col].With(newValueSet)
+		b.squareSets[sq] = b.squareSets[sq].With(newValueSet)
+	}
+
+	b.valueCounts[oldValue]--
+	b.valueCounts[newValue]++
 
 	if newValue == 0 {
 		// if we set non-empty to empty, recalculate the allowed values
-		if !hasCurrentRelatedValues {
-			currentRelatedValues = b.relatedValues(index)
-			hasCurrentRelatedValues = true
-		}
-		b.allowedValues.ReportEmpty(index, currentRelatedValues)
+		b.allowedValues.ReportEmpty(index, b.calcRelatedValues(index))
 	} else {
 		b.allowedValues.ReportPresent(index)
-		b.rowSets[row] = b.rowSets[row].With(newValue.AsSet())
-		b.colSets[col] = b.colSets[col].With(newValue.AsSet())
-		b.squareSets[sq] = b.squareSets[sq].With(newValue.AsSet())
 	}
+
 	if oldValue == 0 && newValue != 0 {
 		// optimization - disallowing related indexes for a new value runs 2% faster
 		// if run directly against values.Allowed.
@@ -288,7 +297,7 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 			if oldValue != 0 {
 				// If old value was present, we cannot just add it to the allowed set of
 				// related indexes since the same value may appear in other related cells.
-				b.allowedValues.ReportEmpty(relatedIndex, b.relatedValues(relatedIndex))
+				b.allowedValues.ReportEmpty(relatedIndex, b.calcRelatedValues(relatedIndex))
 			}
 			if newValue != 0 {
 				// if we added new value than it is totally safe to include this
@@ -304,23 +313,22 @@ func (b *Game) recalculateAllStats() {
 	// assume valid unless proven otherwise inside calcSequenceSet
 	b.validFlags = indexes.MaxBitSet81
 
-	// value counts
-	clear(b.valueCounts[:])
-	for i := range Size {
-		b.valueCounts[b.values[i]]++
-		if b.values[i] == 0 {
-			b.allowedValues.ReportEmpty(i, b.relatedValues(i))
-		} else {
-			b.allowedValues.ReportPresent(i)
-		}
-	}
-
 	// init rowSets, colSets; and squareSets
 	// validFlags are unset if dupe detected
 	for si := range SequenceSize {
 		b.rowSets[si] = b.processSequence(indexes.RowSequence(si))
 		b.colSets[si] = b.processSequence(indexes.ColumnSequence(si))
 		b.squareSets[si] = b.processSequence(indexes.SquareSequence(si))
+	}
+
+	clear(b.valueCounts[:])
+	for i := range Size {
+		b.valueCounts[b.values[i]]++
+		if b.values[i] == 0 {
+			b.allowedValues.ReportEmpty(i, b.calcRelatedValues(i))
+		} else {
+			b.allowedValues.ReportPresent(i)
+		}
 	}
 
 	b.checkIntegrity()

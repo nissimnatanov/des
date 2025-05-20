@@ -65,7 +65,7 @@ func (b *Game) checkIntegrity() {
 		} else {
 			// check that disallowed values are a union of row/column/square
 			disallowedValuesExpected := values.Union(
-				b.relatedValues(i),
+				b.calcRelatedValues(i),
 				b.allowedValues.GetDisallowedByUser(i))
 			allowedSet := b.AllowedValues(i)
 			if allowedSet != disallowedValuesExpected.Complement() {

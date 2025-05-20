@@ -12,20 +12,20 @@ var EmptySet = Set(0)
 
 var FullSet = Set(0x1FF)
 
-func Intersect(vs1 Set, vs2 Set, more ...Set) Set {
-	mask := vs1 & vs2
-	for _, vs := range more {
-		mask &= vs
-	}
-	return Set(mask)
+func Intersect(vs1, vs2 Set) Set {
+	return vs1 & vs2
 }
 
-func Union(vs1 Set, vs2 Set, more ...Set) Set {
-	mask := vs1 | vs2
-	for _, vs := range more {
-		mask |= vs
-	}
-	return Set(mask)
+func Intersect3(vs1, vs2, vs3 Set) Set {
+	return vs1 & vs2 & vs3
+}
+
+func Union(vs1, vs2 Set) Set {
+	return vs1 | vs2
+}
+
+func Union3(vs1, vs2, vs3 Set) Set {
+	return vs1 | vs2 | vs3
 }
 
 func NewSet(vs ...Value) Set {

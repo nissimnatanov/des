@@ -18,12 +18,14 @@ var MaxBitSet81 = BitSet81{low: 0xFFFFFFFFFFFFFFFF, high: 0x1FFFF}
 
 func (bs BitSet81) Get(index int) bool {
 	switch {
-	case index < 0 || index > 81:
-		panic("Index out of range")
+	case index < 0:
+		panic("negative index")
 	case index < 64:
 		return (bs.low & (1 << index)) != 0
-	default:
+	case index < 81:
 		return (bs.high & (1 << (index - 64))) != 0
+	default:
+		panic("index out of range")
 	}
 }
 
@@ -37,23 +39,27 @@ func (bs *BitSet81) SetTo(index int, value bool) {
 
 func (bs *BitSet81) Reset(index int) {
 	switch {
-	case index < 0 || index > 81:
-		panic("Index out of range")
+	case index < 0:
+		panic("negative index")
 	case index < 64:
 		bs.low &= ^(1 << index)
-	default:
+	case index < 81:
 		bs.high &= ^(1 << (index - 64))
+	default:
+		panic("index out of range")
 	}
 }
 
 func (bs *BitSet81) Set(index int) {
 	switch {
-	case index < 0 || index > 81:
-		panic("Index out of range")
+	case index < 0:
+		panic("negative index")
 	case index < 64:
 		bs.low |= (1 << index)
-	default:
+	case index < 81:
 		bs.high |= (1 << (index - 64))
+	default:
+		panic("index out of range")
 	}
 }
 

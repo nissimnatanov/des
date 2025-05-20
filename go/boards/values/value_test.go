@@ -156,8 +156,8 @@ func TestValueSetSetOperations(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		union := values.Union(c.vs1, c.vs2, c.vs3)
-		intersect := values.Intersect(c.vs1, c.vs2, c.vs3)
+		union := values.Union3(c.vs1, c.vs2, c.vs3)
+		intersect := values.Intersect3(c.vs1, c.vs2, c.vs3)
 
 		if union != c.union {
 			t.Errorf("Union(%v, %v, %v) == %v, want %v", c.vs1, c.vs2, c.vs3, union, c.union)

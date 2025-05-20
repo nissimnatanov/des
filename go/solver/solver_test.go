@@ -54,18 +54,10 @@ func testSanity(t *testing.T, action solver.Action) {
 }
 
 // start: 			2    899252146 ns/op    840329088 B/op   3602781 allocs/op
-// cloneInto:		2	 807244646 ns/op	391684240 B/op	 2901528 allocs/op
-// remove nested ctx:
-// 					2	 681971688 ns/op	249680848 B/op	 1461971 allocs/op
-// remove time:     2	 650324250 ns/op	181400664 B/op	 1461959 allocs/op
-// remove result.options:
-// 					2	 603979375 ns/op	147264624 B/op	 1461957 allocs/op
-// remove extra result:
-// 			        2	 569021250 ns/op	101755528 B/op	  750800 allocs/op
-// remove extra opts, use int8:
-// 					2	 587739542 ns/op	90374112 B/op	  750795 allocs/op
+// cloneInto
+// remove remove nested ctx, time, result.options:
+// use int8:
 // cache nested runner:
-// 			        2	 535637146 ns/op	10718752 B/op	   39626 allocs/op
 // reset only related mask:
 // 				 	2	 501356520 ns/op	10721440 B/op	   39630 allocs/op
 // max recursion = 10:
@@ -73,41 +65,29 @@ func testSanity(t *testing.T, action solver.Action) {
 // max recursion = 14:
 // 					10	 105331192 ns/op	18319923 B/op	   75798 allocs/op
 // values first in base board
-// 					12	  98538781 ns/op	13643741 B/op	   55795 allocs/op
 // the only choice find all instead of return on the first:
-// 					13	  87288247 ns/op	13644072 B/op	   55795 allocs/op
 // intro identify pairs:
 // 					30	  37168156 ns/op	 3566422 B/op	   14393 allocs/op
 // same, change solve to prove:
 // 					19	  61008452 ns/op	 5671026 B/op	   23082 allocs/op
-// trial and error indexes and board cache:
-// 					19	  59378553 ns/op	  343362 B/op	   11614 allocs/op
-// trial and error cache allowed+index:
+// trial and error allowed+index and board cache:
 // 					20	  57833294 ns/op	  530829 B/op	   17364 allocs/op
 // trial and error only sort by allowed size, ignore combined value, and use slices.SortFunc:
 // 					44	  27610850 ns/op	   20978 B/op	      58 allocs/op
 // replace value counts with free cell count only:
-// 					45	  25965642 ns/op	   20274 B/op	      58 allocs/op
 // allowed value cache is always valid, remove row/col/square count caches:
 // 					48	  24858786 ns/op	   19217 B/op	      58 allocs/op
 // make Board and Solution structs instead of interfaces for performance (allows inlining):
 // 					70	  16535683 ns/op	   22024 B/op	      64 allocs/op
 // identify all related pairs (not just first one):
-// 					72	  16318599 ns/op	   22953 B/op	      79 allocs/op
 // identify triplets:
 // 					72	  15989164 ns/op	   22040 B/op	      64 allocs/op
-// single in sequence:
-// 					94	  12936996 ns/op	   24096 B/op	      70 allocs/op
 // single in sequence, recursion fixes, disable identify pairs and triplets in Prove:
 // 					208	   5643597 ns/op	   37840 B/op	      99 allocs/op
 // with hint01 and bitset improvements:
 // 					222	   5334709 ns/op	   37840 B/op	      99 allocs/op
 // continue recursion on disallowed values only:
-//					222	   5277052 ns/op	   37840 B/op	      99 allocs/op
-// minor optimizations:
-// 					225	   5180352 ns/op	   37840 B/op	      99 allocs/op
-// bug fix in the only choice in sequence:
-// 					229	   5140213 ns/op	   38007 B/op	     100 allocs/op
+// optimizations, bug fixes
 // minor improvements in allowed:
 // 					231	   5075807 ns/op	   37984 B/op	     100 allocs/op
 // reintroduce row/col/square value caches:
@@ -116,8 +96,6 @@ func testSanity(t *testing.T, action solver.Action) {
 // - first only		232	   5047332 ns/op	   40481 B/op	     100 allocs/op
 // - all			170	   6956962 ns/op	  113776 B/op	     326 allocs/op
 // AllowedValuesIn, other minor improvements:
-// - first only		238	   4949319 ns/op	   40481 B/op	     100 allocs/op
-// - all			172	   6878837 ns/op	  113777 B/op	     326 allocs/op
 // Remove ctx checks in basic algos:
 // - first only		236	   4941663 ns/op	   40480 B/op	     100 allocs/op
 // - all			172	   7026087 ns/op	  113745 B/op	     326 allocs/op
@@ -127,10 +105,7 @@ func testSanity(t *testing.T, action solver.Action) {
 // Remove golang enumerators and use plain slices in values.Set.Values:
 // - first only		397	   3000775 ns/op	   38573 B/op	      94 allocs/op
 // - all			258	   4669915 ns/op	  103462 B/op	     285 allocs/op
-// Square constraints:
-// - first only		466	   2459033 ns/op	   36564 B/op	      93 allocs/op
-// - all			273	   4262190 ns/op	  103233 B/op	     292 allocs/op
-// Row/Col to Square constraints and improvements:
+// Square to Row/Col and Row/Col to Square constraints:
 // - first only		486	   2402109 ns/op	   35792 B/op	      90 allocs/op
 // - all			277	   4184535 ns/op	  100699 B/op	     286 allocs/op
 // Do not recurse on last value if others are eliminated:
@@ -155,40 +130,25 @@ func BenchmarkProveAll(b *testing.B) {
 // start: with hint01 and bitset improvements:
 // 					246	   4723883 ns/op	   33089 B/op	      82 allocs/op
 // minor optimizations:
-// 					252	   4628111 ns/op	   33109 B/op	      82 allocs/op
 // separate the only choice in sequence out from single in sequence:
-// 					244	   4754792 ns/op	   33248 B/op	      83 allocs/op
 // bug fix in the only choice in sequence:
-// 					250	   4694886 ns/op	   33290 B/op	      83 allocs/op
 // reintroduce row/col/square value caches:
 //					259	   4546273 ns/op	   35072 B/op	      83 allocs/op
 // update bench to solve all sample boards, not just the first one:
 // - first only		260	   4546737 ns/op	   35092 B/op	      83 allocs/op
 // - all			207	   5725250 ns/op	   82961 B/op	     238 allocs/op
 // AllowedValuesIn, other minor improvements:
-// - first only		260	   4566580 ns/op	   35072 B/op	      83 allocs/op
-// - all			206	   5689960 ns/op	   82987 B/op	     238 allocs/op
 // Remove ctx checks in basic algos:
-// - first only		321	   3621153 ns/op	   35089 B/op	      83 allocs/op
-// - all			247	   4727244 ns/op	   82982 B/op	     238 allocs/op
 // Use value counts when calculating sort weight in trial-and-error:
-// - first only		559	   2140627 ns/op	   27968 B/op	      69 allocs/op
-// - all			381	   3107389 ns/op	   75457 B/op	     216 allocs/op
 // Remove golang enumerators and use plain slices in values.Set.Values:
-// - first only		571	   2009837 ns/op	   27968 B/op	      69 allocs/op
-// - all			398	   2911485 ns/op	   75456 B/op	     216 allocs/op
 // Square to Row/Col constraints:
-// - first only		543	   2072138 ns/op	   28154 B/op	      70 allocs/op
-// - all			373	   3093253 ns/op	   76413 B/op	     222 allocs/op
 // Row/Col to Square constraints (increases back but needed for accurate level):
-// - first only		478	   2476159 ns/op	   28251 B/op	      71 allocs/op
-// - all			357	   3311265 ns/op	   72591 B/op	     217 allocs/op
 // Do not recurse on last value if others are eliminated:
-// - first only		471	   2459599 ns/op	   20960 B/op	      58 allocs/op
-// - all			356	   3258418 ns/op	   57344 B/op	     185 allocs/op
 // Bitset improvements:
 // - first only		484	   2342197 ns/op	   20960 B/op	      58 allocs/op
 // - all			387	   3038964 ns/op	   57329 B/op	     185 allocs/op
+// - fast first:	984	   1096763 ns/op	   22832 B/op	      62 allocs/op
+// - fast all:		614	   1824448 ns/op	   67961 B/op	     203 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -199,6 +159,18 @@ func BenchmarkSolveFirstOnly(b *testing.B) {
 func BenchmarkSolveAll(b *testing.B) {
 	benchRun(b, &solver.Options{
 		Action: solver.ActionSolve,
+	}, len(sampleBoards))
+}
+
+func BenchmarkSolveFastFirstOnly(b *testing.B) {
+	benchRun(b, &solver.Options{
+		Action: solver.ActionSolveFast,
+	}, 1)
+}
+
+func BenchmarkSolveFastAll(b *testing.B) {
+	benchRun(b, &solver.Options{
+		Action: solver.ActionSolveFast,
 	}, len(sampleBoards))
 }
 
