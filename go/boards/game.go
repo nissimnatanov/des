@@ -14,12 +14,14 @@ type Game struct {
 	valueCounts [10]int // zero for empty cells
 	validFlags  indexes.BitSet81
 
-	// allowedValues must be always up-2-date
-	allowedValues values.Allowed
-
 	rowSets    [SequenceSize]values.Set
 	colSets    [SequenceSize]values.Set
 	squareSets [SequenceSize]values.Set
+
+	disallowedByRelated [indexes.BoardSize]values.Set
+	disallowedByUser    [indexes.BoardSize]values.Set
+	emptyCells          indexes.BitSet81
+	hints01             indexes.BitSet81
 }
 
 func (b *Game) Mode() Mode {
@@ -45,25 +47,25 @@ func (b *Game) SquareValues(sq int) values.Set {
 // Hint01 returns the first cell that has either zero or one allowed value.
 // If no such cell exists, it returns -1 and false.
 func (b *Game) Hint01() int {
-	return b.allowedValues.Hint01()
+	return b.hints01.First()
 }
 
 func (b *Game) AllAllowedValues(yield func(int, values.Set) bool) {
 	for i := range Size {
-		if b.values[i] == 0 && !yield(i, b.allowedValues.Get(i)) {
+		if b.values[i] == 0 && !yield(i, b.AllowedValues(i)) {
 			return
 		}
 	}
 }
 
 func (b *Game) AllowedValues(index int) values.Set {
-	return b.allowedValues.Get(index)
+	return values.Union(b.disallowedByRelated[index], b.disallowedByUser[index]).Complement()
 }
 
 func (b *Game) AllowedValuesIn(seq indexes.Sequence) func(yield func(int, values.Set) bool) {
 	return func(yield func(int, values.Set) bool) {
 		for _, i := range seq {
-			if b.values[i] == 0 && !yield(i, b.allowedValues.Get(i)) {
+			if b.values[i] == 0 && !yield(i, b.AllowedValues(i)) {
 				return
 			}
 		}
@@ -159,14 +161,16 @@ func (b *Game) DisallowValues(index int, vs values.Set) {
 		// does not make sense
 		panic("Nothing to disallow")
 	}
-	b.allowedValues.DisallowByUser(index, vs)
+	b.disallowedByUser[index] = b.disallowedByUser[index].With(vs)
+	b.updateHint01(index)
 }
 
 func (b *Game) ResetDisallowedByUser(index int) {
 	if b.mode == Immutable {
 		panic("Cannot reset disallowed values on immutable board")
 	}
-	b.allowedValues.ResetDisallowedByUser(index)
+	b.disallowedByUser[index] = values.EmptySet
+	b.updateHint01(index)
 }
 
 func (b *Game) setInternal(index int, v values.Value, readOnly bool) values.Value {
@@ -195,11 +199,14 @@ func (b *Game) initZeroStats(mode Mode) {
 	b.init(mode)
 	clear(b.valueCounts[:])
 	b.valueCounts[0] = Size
-	b.allowedValues.AllowAll()
 	b.validFlags = indexes.MaxBitSet81
 	clear(b.rowSets[:])
 	clear(b.colSets[:])
 	clear(b.squareSets[:])
+	clear(b.disallowedByRelated[:])
+	clear(b.disallowedByUser[:])
+	b.emptyCells = indexes.MaxBitSet81
+	b.hints01 = indexes.MinBitSet81
 	b.checkIntegrity()
 }
 
@@ -216,10 +223,13 @@ func (b *Game) copyStats(source *Game) {
 
 	b.valueCounts = source.valueCounts
 	b.validFlags = source.validFlags
-	b.allowedValues = source.allowedValues.Clone()
 	b.rowSets = source.rowSets
 	b.colSets = source.colSets
 	b.squareSets = source.squareSets
+	b.disallowedByRelated = source.disallowedByRelated
+	b.disallowedByUser = source.disallowedByUser
+	b.emptyCells = source.emptyCells
+	b.hints01 = source.hints01
 }
 
 func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
@@ -238,7 +248,7 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 			allowedValues = b.calcRelatedValues(index).Complement()
 		} else {
 			// if cell was empty before, its allowed values cache was valid
-			allowedValues = b.allowedValues.GetByRelated(index)
+			allowedValues = b.valuesDisallowedByRelated(index)
 		}
 		isValid = isValid && allowedValues.Contains(newValue)
 	}
@@ -278,15 +288,15 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 
 	if newValue == 0 {
 		// if we set non-empty to empty, recalculate the allowed values
-		b.allowedValues.ReportEmpty(index, b.calcRelatedValues(index))
+		b.updateOnEmpty(index, b.calcRelatedValues(index))
 	} else {
-		b.allowedValues.ReportPresent(index)
+		b.updateOnPresent(index)
 	}
 
 	if oldValue == 0 && newValue != 0 {
 		// optimization - disallowing related indexes for a new value runs 2% faster
 		// if run directly against values.Allowed.
-		b.allowedValues.DisallowRelatedOf(index, newValue)
+		b.disallowRelatedOf(index, newValue)
 	} else {
 		relatedSeq := indexes.RelatedSequence(index)
 		for _, relatedIndex := range relatedSeq {
@@ -297,12 +307,12 @@ func (b *Game) updateStats(index int, oldValue, newValue values.Value) {
 			if oldValue != 0 {
 				// If old value was present, we cannot just add it to the allowed set of
 				// related indexes since the same value may appear in other related cells.
-				b.allowedValues.ReportEmpty(relatedIndex, b.calcRelatedValues(relatedIndex))
+				b.updateOnEmpty(relatedIndex, b.calcRelatedValues(relatedIndex))
 			}
 			if newValue != 0 {
 				// if we added new value than it is totally safe to include this
 				// value to the disallowed values based on the related cells.
-				b.allowedValues.DisallowRelated(relatedIndex, newValue)
+				b.disallowRelated(relatedIndex, newValue)
 			}
 		}
 	}
@@ -325,9 +335,9 @@ func (b *Game) recalculateAllStats() {
 	for i := range Size {
 		b.valueCounts[b.values[i]]++
 		if b.values[i] == 0 {
-			b.allowedValues.ReportEmpty(i, b.calcRelatedValues(i))
+			b.updateOnEmpty(i, b.calcRelatedValues(i))
 		} else {
-			b.allowedValues.ReportPresent(i)
+			b.updateOnPresent(i)
 		}
 	}
 
@@ -363,4 +373,44 @@ func (b *Game) markSequenceInvalid(v values.Value, s indexes.Sequence) {
 			b.validFlags.Reset(roi)
 		}
 	}
+}
+
+func (b *Game) valuesDisallowedByRelated(index int) values.Set {
+	return b.disallowedByRelated[index].Complement()
+}
+
+func (b *Game) disallowRelated(index int, v values.Value) {
+	if !b.emptyCells.Get(index) {
+		panic("disallowing a value in a cell that has a value")
+	}
+	b.disallowedByRelated[index] = b.disallowedByRelated[index].With(v.AsSet())
+	b.updateHint01(index)
+}
+
+// ReportPresent is used when board cell has a value set
+func (b *Game) updateOnPresent(index int) {
+	b.disallowedByRelated[index] = values.FullSet
+	b.disallowedByUser[index] = values.EmptySet
+	b.emptyCells.Reset(index)
+	b.hints01.Reset(index)
+}
+
+func (b *Game) updateOnEmpty(index int, related values.Set) {
+	b.disallowedByRelated[index] = related
+	b.emptyCells.Set(index)
+	b.updateHint01(index)
+}
+
+func (b *Game) disallowRelatedOf(index int, newValue values.Value) {
+	newValueSet := newValue.AsSet()
+	relatedEmpty := b.emptyCells.Intersect(indexes.RelatedSet(index))
+	for related := range relatedEmpty.Indexes {
+		b.disallowedByRelated[related] = b.disallowedByRelated[related].With(newValueSet)
+		b.updateHint01(related)
+	}
+}
+
+func (b *Game) updateHint01(index int) {
+	isHint01 := b.AllowedValues(index).Size() <= 1
+	b.hints01.SetTo(index, isHint01)
 }
