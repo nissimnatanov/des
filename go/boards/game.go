@@ -346,13 +346,13 @@ func (b *Game) markSequenceInvalid(v values.Value, s indexes.Sequence) {
 			readOnly = append(readOnly, index)
 		} else {
 			foundReadWrite = true
-			b.validFlags.Set(index, false)
+			b.validFlags.Reset(index)
 		}
 	}
 
 	if !foundReadWrite && len(readOnly) > 1 {
 		for _, roi := range readOnly {
-			b.validFlags.Set(roi, false)
+			b.validFlags.Reset(roi)
 		}
 	}
 }

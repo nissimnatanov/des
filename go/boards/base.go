@@ -53,7 +53,7 @@ func (b *base) setInternal(index int, v values.Value, readOnly bool) values.Valu
 	v.Validate()
 	prev := b.values[index]
 	b.values[index] = v
-	b.readOnlyFlags.Set(index, readOnly)
+	b.readOnlyFlags.SetTo(index, readOnly)
 	return prev
 }
 

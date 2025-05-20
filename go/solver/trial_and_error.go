@@ -109,14 +109,24 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	var disallowedAtLeastOne bool
 	for _, tei := range indexes {
 		index := tei.index
-		testValues := b.AllowedValues(index)
+		testValues := b.AllowedValues(index).Values()
 		var foundBoards []*boards.Game
 		var foundUnknown bool
-		var foundDisallowed bool
-		for _, testValue := range testValues.Values() {
+		var foundDisallowed int
+		for tvi, testValue := range testValues {
 			if ctx.Err() != nil {
 				// if the context is done, we should stop the deep recursion
 				return StatusError
+			}
+
+			if tvi == len(testValues)-1 && tvi == foundDisallowed {
+				// If we are at the last value and we have eliminated all others, we can skip
+				// the recursion and set the value directly, this is a bit faster and also
+				// more accurate in level calculation since it is equivalent to
+				// the only choice in cell.
+				state.AddStep(Step(a.String()), StepComplexityMedium, 1)
+				b.Set(index, testValue)
+				return StatusSucceeded
 			}
 
 			b.CloneInto(boards.Play, testBoard)
@@ -141,7 +151,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 				// we just disallowed one value, let's finish this cell since we already here
 				// and restarting the recursive loop can be a waste of cycles
 				// if only one value left, next loop will just set it and try to solve again
-				foundDisallowed = true
+				foundDisallowed++
 				continue
 			}
 
@@ -183,7 +193,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			// keep going, we have more cells to check
 		}
 		// no solution found, did we disallow any values?
-		if foundDisallowed {
+		if foundDisallowed > 0 {
 			allowed := b.AllowedValues(index).Values()
 			switch len(allowed) {
 			case 0:
@@ -193,6 +203,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 				// the unknown value that is left is the only option available
 				// we can set it and return
 				b.Set(index, allowed[0])
+				state.AddStep(Step(a.String()), StepComplexityMedium, 1)
 			}
 
 			// We disallowed one or more values on the cell, it is a bit faster (~2%) to keep going

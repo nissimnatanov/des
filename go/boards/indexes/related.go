@@ -32,7 +32,7 @@ func initRelatedIndexes() [BoardSize]relatedInfo {
 			}
 			cache[i].indexes[related] = rowIndex
 			related++
-			cache[i].mask.Set(rowIndex, true)
+			cache[i].mask.Set(rowIndex)
 		}
 
 		cs := ColumnSequence(col)
@@ -42,7 +42,7 @@ func initRelatedIndexes() [BoardSize]relatedInfo {
 			}
 			cache[i].indexes[related] = colIndex
 			related++
-			cache[i].mask.Set(colIndex, true)
+			cache[i].mask.Set(colIndex)
 		}
 		ss := SquareSequence(square)
 		for _, squareIndex := range ss {
@@ -52,7 +52,7 @@ func initRelatedIndexes() [BoardSize]relatedInfo {
 			}
 			cache[i].indexes[related] = squareIndex
 			related++
-			cache[i].mask.Set(squareIndex, true)
+			cache[i].mask.Set(squareIndex)
 		}
 
 		if related != RelatedSize {

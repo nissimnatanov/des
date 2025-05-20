@@ -226,7 +226,8 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 			}
 			if status == StatusSucceeded &&
 				r.board.FreeCellCount() == freeBefore &&
-				!r.action.LevelRequested() {
+				!r.action.LevelRequested() &&
+				r.board.Hint01() < 0 {
 				// If we do not need an accurate level, it is proven to be faster if we
 				// try harder algorithms if the current one was only able to eliminate some
 				// choices without finding a new value. The algos that eliminate only need to

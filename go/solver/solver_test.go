@@ -133,6 +133,12 @@ func testSanity(t *testing.T, action solver.Action) {
 // Row/Col to Square constraints and improvements:
 // - first only		486	   2402109 ns/op	   35792 B/op	      90 allocs/op
 // - all			277	   4184535 ns/op	  100699 B/op	     286 allocs/op
+// Do not recurse on last value if others are eliminated:
+// - first only		477	   2397224 ns/op	   26072 B/op	      72 allocs/op
+// - all			283	   4116613 ns/op	   77955 B/op	     237 allocs/op
+// Bitset improvements:
+// - first only		529	   2130160 ns/op	   26082 B/op	      72 allocs/op
+// - all			322	   3593113 ns/op	   77953 B/op	     237 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -177,6 +183,12 @@ func BenchmarkProveAll(b *testing.B) {
 // Row/Col to Square constraints (increases back but needed for accurate level):
 // - first only		478	   2476159 ns/op	   28251 B/op	      71 allocs/op
 // - all			357	   3311265 ns/op	   72591 B/op	     217 allocs/op
+// Do not recurse on last value if others are eliminated:
+// - first only		471	   2459599 ns/op	   20960 B/op	      58 allocs/op
+// - all			356	   3258418 ns/op	   57344 B/op	     185 allocs/op
+// Bitset improvements:
+// - first only		484	   2342197 ns/op	   20960 B/op	      58 allocs/op
+// - all			387	   3038964 ns/op	   57329 B/op	     185 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{

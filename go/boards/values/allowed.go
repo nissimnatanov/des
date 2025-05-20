@@ -23,13 +23,13 @@ func (a *Allowed) GetByRelated(index int) Set {
 func (a *Allowed) ReportPresent(index int) {
 	a.disallowedByRelated[index] = FullSet
 	a.disallowedByUser[index] = EmptySet
-	a.emptyCells.Set(index, false)
-	a.hints01.Set(index, false)
+	a.emptyCells.Reset(index)
+	a.hints01.Reset(index)
 }
 
 func (a *Allowed) ReportEmpty(index int, related Set) {
 	a.disallowedByRelated[index] = related
-	a.emptyCells.Set(index, true)
+	a.emptyCells.Set(index)
 	a.updateHint(index)
 }
 
@@ -82,5 +82,5 @@ func (a *Allowed) ResetDisallowedByUser(index int) {
 
 func (a *Allowed) updateHint(index int) {
 	isHint01 := a.Get(index).Size() <= 1
-	a.hints01.Set(index, isHint01)
+	a.hints01.SetTo(index, isHint01)
 }
