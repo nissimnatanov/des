@@ -127,6 +127,12 @@ func testSanity(t *testing.T, action solver.Action) {
 // Remove golang enumerators and use plain slices in values.Set.Values:
 // - first only		397	   3000775 ns/op	   38573 B/op	      94 allocs/op
 // - all			258	   4669915 ns/op	  103462 B/op	     285 allocs/op
+// Square constraints:
+// - first only		466	   2459033 ns/op	   36564 B/op	      93 allocs/op
+// - all			273	   4262190 ns/op	  103233 B/op	     292 allocs/op
+// Row/Col to Square constraints and improvements:
+// - first only		486	   2402109 ns/op	   35792 B/op	      90 allocs/op
+// - all			277	   4184535 ns/op	  100699 B/op	     286 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -165,6 +171,12 @@ func BenchmarkProveAll(b *testing.B) {
 // Remove golang enumerators and use plain slices in values.Set.Values:
 // - first only		571	   2009837 ns/op	   27968 B/op	      69 allocs/op
 // - all			398	   2911485 ns/op	   75456 B/op	     216 allocs/op
+// Square to Row/Col constraints:
+// - first only		543	   2072138 ns/op	   28154 B/op	      70 allocs/op
+// - all			373	   3093253 ns/op	   76413 B/op	     222 allocs/op
+// Row/Col to Square constraints (increases back but needed for accurate level):
+// - first only		478	   2476159 ns/op	   28251 B/op	      71 allocs/op
+// - all			357	   3311265 ns/op	   72591 B/op	     217 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{

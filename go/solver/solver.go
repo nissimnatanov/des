@@ -189,6 +189,7 @@ func (r *runner) run(ctx context.Context) *Result {
 }
 
 func (r *runner) tryAlgorithms(ctx context.Context) Status {
+	eliminationOnly := false
 	for _, algo := range r.algorithms {
 		if ctx.Err() != nil {
 			r.result.completeErr(ctx.Err())
@@ -199,6 +200,7 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 			startBoard = r.board.Clone(boards.Immutable)
 		}
 
+		freeBefore := r.board.FreeCellCount()
 		status := algo.Run(ctx, r)
 
 		if boards.GetIntegrityChecks() {
@@ -222,6 +224,16 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 					r.result.completeErr(fmt.Errorf("algo %s reported an error", algo))
 				}
 			}
+			if status == StatusSucceeded &&
+				r.board.FreeCellCount() == freeBefore &&
+				!r.action.LevelRequested() {
+				// If we do not need an accurate level, it is proven to be faster if we
+				// try harder algorithms if the current one was only able to eliminate some
+				// choices without finding a new value. The algos that eliminate only need to
+				// check for the zero-or-one allowed left in the cell post elimination.
+				eliminationOnly = true
+				continue
+			}
 			return status
 		}
 		// with unknown status all algos must retain the board as is
@@ -232,6 +244,9 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 					algo, startBoard, r.board))
 			}
 		}
+	}
+	if eliminationOnly {
+		return StatusSucceeded
 	}
 	return StatusUnknown
 }
