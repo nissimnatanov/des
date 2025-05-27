@@ -27,7 +27,7 @@ void generate(SudokuLevel level, int count)
     int less_than_20 = 0;
     int timeouts = 0;
     auto printStats = [&](bool always) {
-        auto end = std::chrono::steady_clock::now();
+        auto end = chrono::steady_clock::now();
         double elapsed_seconds = chrono::duration_cast<chrono::duration<double>>(end - last).count();
         if (always || elapsed_seconds > 60)
         {
@@ -36,7 +36,7 @@ void generate(SudokuLevel level, int count)
             last = start + chrono::minutes((int)elapsed_minutes_since_start);
             cerr << "Status [" << elapsed_minutes_since_start << "] { " << endl;
             cerr << "  All: total = " << total
-                 << ", 19- = " << less_than_20
+                 << ", <20 = " << less_than_20
                  << ", timeouts = " << timeouts
                  << endl;
             for (auto s : allStats)

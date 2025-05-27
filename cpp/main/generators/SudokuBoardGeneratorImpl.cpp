@@ -12,7 +12,7 @@ SudokuResultConstShared SudokuBoardGeneratorImpl::generate(
 {
     SudokuSolverShared solver = createSolver();
 
-    if (level >= SudokuLevel::VERYHARD)
+    if (level >= SudokuLevel::VERY_HARD)
     {
         auto state = make_shared<SudokuBoardGeneratorState>(level, r, solutionOrNull, solver);
         return generateSlow(r, state);
@@ -205,7 +205,7 @@ vector<SudokuBoardGeneratorStateConstShared> SudokuBoardGeneratorImpl::generateP
             maxRetries);
     }
     sortByComplexityAndTrim(next, /* trimTo= */ phase.selectCount, phase.minComplexity);
-    return move(next);
+    return std::move(next);
 }
 
 void printBest(int iter, const char *state, int minComplexity, const vector<SudokuBoardGeneratorStateConstShared> &best)
@@ -290,7 +290,7 @@ void findAllPossibleBoards(
             candidate.first->indexes().removeIndex(index);
         }
 
-        // recursivly find more boards.
+        // recursively find more boards.
         findAllPossibleBoards(r, candidate.first, best, depth + 1);
         mustStayIndexes.push_back(candidate.second);
     }
@@ -390,14 +390,14 @@ SudokuResultConstShared SudokuBoardGeneratorImpl::generateSlow(
             findAllPossibleBoards(r, bLast, last, 1);
         }
         sortByComplexityAndTrim(last, /* trimTo= */ 3, /* minComplexity= */ 0);
-        current = move(last);
+        current = std::move(last);
     }
     printBest(phase_count, "last", 0, current);
 
     for (SudokuBoardGeneratorStateConstShared b : current)
     {
         auto result = b->getLastResultOrSolve();
-        if (result->getLevel() < SudokuLevel::DARKEVIL)
+        if (result->getLevel() < SudokuLevel::DARK_EVIL)
         {
             break;
         }

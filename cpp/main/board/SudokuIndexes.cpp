@@ -15,9 +15,9 @@ array<sequence, 9> initRowIndexes()
         {
             indexes.at(column) = indexFromCoordinates(row, column);
         }
-        rows.at(row) = move(indexes);
+        rows.at(row) = std::move(indexes);
     }
-    return move(rows);
+    return std::move(rows);
 }
 
 array<sequence, 9> initColumnIndexes()
@@ -30,9 +30,9 @@ array<sequence, 9> initColumnIndexes()
         {
             indexes.at(row) = indexFromCoordinates(row, column);
         }
-        columns.at(column) = move(indexes);
+        columns.at(column) = std::move(indexes);
     }
-    return move(columns);
+    return std::move(columns);
 }
 
 array<sequence, 9> initSquareIndexes()
@@ -45,9 +45,9 @@ array<sequence, 9> initSquareIndexes()
         {
             indexes.at(cell) = indexFromSquare(square, cell);
         }
-        squares.at(square) = move(indexes);
+        squares.at(square) = std::move(indexes);
     }
-    return move(squares);
+    return std::move(squares);
 }
 
 array<int, 81> initBoardIndexes()
@@ -57,7 +57,7 @@ array<int, 81> initBoardIndexes()
     {
         indexes.at(i) = i;
     }
-    return move(indexes);
+    return std::move(indexes);
 }
 
 array<related, 81> initIndexToRelated()
@@ -101,7 +101,7 @@ array<related, 81> initIndexToRelated()
         }
     }
 
-    return move(all);
+    return std::move(all);
 }
 
 array<sequence, 9> rowIndexes = initRowIndexes();

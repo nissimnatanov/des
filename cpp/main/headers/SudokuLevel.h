@@ -8,9 +8,9 @@ enum class SudokuLevel
     EASY,
     MEDIUM,
     HARD,
-    VERYHARD,
+    VERY_HARD,
     EVIL,
-    DARKEVIL,
+    DARK_EVIL,
     NIGHTMARE,
     BLACKHOLE,
 };
@@ -20,9 +20,9 @@ enum class SudokuLevelBar : unsigned long
     EASY_BAR = 100,
     MEDIUM_BAR = 250,
     HARD_BAR = 500,
-    VERYHARD_BAR = 1000,
+    VERY_HARD_BAR = 1000,
     EVIL_BAR = 2000,
-    DARKEVIL_BAR = 5000,
+    DARK_EVIL_BAR = 5000,
     NIGHTMARE_BAR = 15000,
 };
 
@@ -45,17 +45,17 @@ inline SudokuLevel fromComplexity(unsigned long complexity)
     {
         return SudokuLevel::HARD;
     }
-    else if (complexity <= SudokuLevelBar::VERYHARD_BAR)
+    else if (complexity <= SudokuLevelBar::VERY_HARD_BAR)
     {
-        return SudokuLevel::VERYHARD;
+        return SudokuLevel::VERY_HARD;
     }
     else if (complexity <= SudokuLevelBar::EVIL_BAR)
     {
         return SudokuLevel::EVIL;
     }
-    else if (complexity <= SudokuLevelBar::DARKEVIL_BAR)
+    else if (complexity <= SudokuLevelBar::DARK_EVIL_BAR)
     {
-        return SudokuLevel::DARKEVIL;
+        return SudokuLevel::DARK_EVIL;
     }
     else if (complexity <= SudokuLevelBar::NIGHTMARE_BAR)
     {
@@ -79,11 +79,11 @@ inline const char *nameOf(const SudokuLevel &level)
         return "Medium";
     case SudokuLevel::HARD:
         return "Hard";
-    case SudokuLevel::VERYHARD:
+    case SudokuLevel::VERY_HARD:
         return "VeryHard";
     case SudokuLevel::EVIL:
         return "Evil";
-    case SudokuLevel::DARKEVIL:
+    case SudokuLevel::DARK_EVIL:
         return "DarkEvil";
     case SudokuLevel::NIGHTMARE:
         return "Nightmare";

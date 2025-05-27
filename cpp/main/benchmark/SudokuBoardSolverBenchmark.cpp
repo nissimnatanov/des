@@ -541,6 +541,6 @@ void runSudokuBoardSamplesBenchmark()
     testTimedOutBoards();
 
     SteadyTimePoint endTime = SteadyClock::now();
-    int elapsed_milliseconds = chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    int elapsed_milliseconds = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
     cerr << "Elapsed (milliseconds): " << elapsed_milliseconds << endl;
 }

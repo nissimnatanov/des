@@ -7,3 +7,7 @@ build
 
 # Ignore generated files
 **/obj/**
+**/bin/**
+
+# Ignore MacOS C++ generated files
+**.dSYM

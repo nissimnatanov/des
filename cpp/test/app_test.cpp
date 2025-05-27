@@ -11,7 +11,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-    cout << "Welcome to Dark Evil Sudoku Tests!" << std::endl;
+    cout << "Welcome to Dark Evil Sudoku Tests!" << endl;
     setIntegrityChecks(true);
 
     try
@@ -20,8 +20,8 @@ int main(int argc, char *argv[])
         runSudokuValueTests();
         runSudokuBoardTests();
         runSudokuSolutionGeneratorTests();
-        runSudokuBoardGeneratorBenchmark(SudokuLevel::EVIL, 10);
         runSudokuBoardSamplesBenchmark();
+        runSudokuBoardGeneratorBenchmark(SudokuLevel::EVIL, 5);
         cout << "Done!" << endl;
     }
     catch (assertion_error ae)
@@ -38,6 +38,5 @@ int main(int argc, char *argv[])
     catch (...) {
         cerr << "Got exception, cannot understand its type!" << endl;
     }
-    // assert(greeter.greeting().compare("Hello, World!") == 0);
     return 0;
 }

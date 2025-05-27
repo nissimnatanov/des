@@ -92,7 +92,7 @@ string serializeBoard(const SudokuBoard *board)
     return s.str();
 }
 
-SudokuEditBoardShared deserializeSudokuBoard(std::string input)
+SudokuEditBoardShared deserializeSudokuBoard(string input)
 {
     SudokuEditBoardShared board = newEditBoard();
     int i = 0;

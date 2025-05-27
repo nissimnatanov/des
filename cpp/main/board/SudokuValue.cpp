@@ -46,7 +46,7 @@ vector<SudokuValueSetInfo> initialize()
     {
         all.emplace_back(SudokuValueSetInfo(mask));
     }
-    return move(all);
+    return std::move(all);
 }
 
 static vector<SudokuValueSetInfo> allValues = initialize();

@@ -14,7 +14,7 @@ bool shouldContinueByLevel(SudokuLevel desiredLevel, Random &r)
     case SudokuLevel::HARD:
         // For hard games - continue in half of the cases..
         return r.percentProbability(50);
-    case SudokuLevel::VERYHARD:
+    case SudokuLevel::VERY_HARD:
         // For very hard games - make it even harder, but stop sometimes.
         return r.percentProbability(75);
     default:

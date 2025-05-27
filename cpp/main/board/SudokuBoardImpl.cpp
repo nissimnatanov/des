@@ -21,7 +21,7 @@ SudokuBoardImpl::SudokuBoardImpl(const SudokuBoard &other)
     }
 }
 
-bool SudokuBoardImpl::isEquivalentTo(std::shared_ptr<const SudokuBoard> board) const
+bool SudokuBoardImpl::isEquivalentTo(shared_ptr<const SudokuBoard> board) const
 {
     for (int i = 0; i < BOARD_SIZE; i++)
     {
