@@ -108,17 +108,16 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 
 	var disallowedAtLeastOne bool
 	for _, tei := range indexes {
+		if ctx.Err() != nil {
+			// if the context is done, we should stop the deep recursion
+			return StatusError
+		}
 		index := tei.index
 		testValues := b.AllowedValues(index).Values()
 		var foundBoards []*boards.Game
 		var foundUnknown bool
 		var foundDisallowed int
 		for tvi, testValue := range testValues {
-			if ctx.Err() != nil {
-				// if the context is done, we should stop the deep recursion
-				return StatusError
-			}
-
 			if tvi == len(testValues)-1 && tvi == foundDisallowed {
 				// If we are at the last value and we have eliminated all others, we can skip
 				// the recursion and set the value directly, this is a bit faster and also

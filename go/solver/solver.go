@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"runtime/debug"
+	"time"
 
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/boards/values"
@@ -37,19 +38,33 @@ func New(opts *Options) *Solver {
 }
 
 func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
-	result := &Result{
-		Status:    StatusUnknown,
-		Solutions: &Solutions{},
+	r := &runner{
+		board:                 b,
+		action:                s.opts.Action,
+		currentRecursionDepth: 0,
+		result: Result{
+			Status: StatusUnknown,
+
+			// solutions are shared so that we can deduplicate them and
+			// stop once two solutions are found
+			Solutions: &Solutions{},
+		},
+		algorithms: GetAlgorithms(s.opts.Action),
 	}
 
+	start := time.Now()
+	defer func() {
+		r.result.Elapsed = time.Since(start)
+	}()
+
 	if b == nil {
-		return result.completeErr(fmt.Errorf("board is nil"))
+		return r.result.completeErr(fmt.Errorf("board is nil"))
 	}
 
 	// basic checks first, do them once, there is no point in repeating them each recursion
 	if b.FreeCellCount() > MaxFreeCellsForValidBoard {
 		// Boards with less than 17 values are mathematically proven to be wrong.
-		return result.complete(StatusLessThan17)
+		return r.result.complete(StatusLessThan17)
 	}
 
 	var valueCounts [boards.SequenceSize]int
@@ -66,26 +81,13 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
 	}
 	if missingValues >= 2 {
 		// There is no point to try solving boards with two or more values missing.
-		return result.complete(StatusTwoOrMoreValuesMissing)
+		return r.result.complete(StatusTwoOrMoreValuesMissing)
 	}
 
 	if !b.IsValid() {
-		return result.complete(StatusNoSolution)
+		return r.result.complete(StatusNoSolution)
 	}
 
-	r := &runner{
-		board:                 b,
-		action:                s.opts.Action,
-		currentRecursionDepth: 0,
-		result: Result{
-			Status: StatusUnknown,
-
-			// solutions are shared so that we can deduplicate them and
-			// stop once two solutions are found
-			Solutions: result.Solutions,
-		},
-		algorithms: GetAlgorithms(s.opts.Action),
-	}
 	if boards.GetIntegrityChecks() {
 		// capture the original board for integrity checks to make sure algos do not corrupt
 		// the board and their solutions solve the input

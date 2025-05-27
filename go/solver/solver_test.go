@@ -17,6 +17,10 @@ func TestProveSanity(t *testing.T) {
 	testSanity(t, solver.ActionProve)
 }
 
+func TestSolveFastSanity(t *testing.T) {
+	testSanity(t, solver.ActionSolveFast)
+}
+
 func testSanity(t *testing.T, action solver.Action) {
 	boards.SetIntegrityChecks(true)
 
