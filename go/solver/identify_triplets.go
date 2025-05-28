@@ -60,7 +60,7 @@ func (a identifyTriplets) Run(ctx context.Context, state AlgorithmState) Status 
 		}
 	}
 	if eliminationCount > 0 {
-		state.AddStep(Step(a.String()), StepComplexityHarder, eliminationCount)
+		state.AddStep(Step(a.String()), a.Complexity(), eliminationCount)
 		return StatusSucceeded
 	}
 
@@ -159,7 +159,7 @@ func (a identifyTriplets) findPeers(
 }
 
 func (a identifyTriplets) Complexity() StepComplexity {
-	return StepComplexityHard
+	return StepComplexityHarder
 }
 
 func (a identifyTriplets) String() string {

@@ -60,7 +60,7 @@ func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 	if eliminationCount > 0 {
 		// if we found at least one index that lead to elimination, let's stop
 		// and go back to cheaper algorithm such as theOnlyChoice
-		state.AddStep(Step(a.String()), StepComplexityHarder, eliminationCount)
+		state.AddStep(Step(a.String()), a.Complexity(), eliminationCount)
 		return StatusSucceeded
 	}
 	return StatusUnknown

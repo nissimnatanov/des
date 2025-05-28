@@ -41,7 +41,7 @@ func testSanity(t *testing.T, action solver.Action) {
 
 			assert.Equal(t, res.Status, solver.StatusSucceeded)
 			if action == solver.ActionSolve {
-				assert.Assert(t, res.Steps.Level >= solver.LevelNightmare)
+				assert.Assert(t, res.Steps.Level >= solver.LevelDarkEvil)
 			}
 			assert.Equal(t, res.Solutions.Size(), 1)
 			sol := res.Solutions.At(0)
@@ -151,8 +151,13 @@ func BenchmarkProveAll(b *testing.B) {
 // Bitset improvements:
 // - first only		484	   2342197 ns/op	   20960 B/op	      58 allocs/op
 // - all			387	   3038964 ns/op	   57329 B/op	     185 allocs/op
-// - fast first:	984	   1096763 ns/op	   22832 B/op	      62 allocs/op
-// - fast all:		614	   1824448 ns/op	   67961 B/op	     203 allocs/op
+// - fast first		984	   1096763 ns/op	   22832 B/op	      62 allocs/op
+// - fast all		614	   1824448 ns/op	   67961 B/op	     203 allocs/op
+// Layered recursion and reduce value bias in scoring:
+// - first only		92	  12721382 ns/op	    6896 B/op	      30 allocs/op
+// - all			21	  55324716 ns/op	   26824 B/op	     117 allocs/op
+// - fast first		943	   1130329 ns/op	   22960 B/op	      61 allocs/op
+// - fast all		637	   1830455 ns/op	   68280 B/op	     199 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -200,7 +205,9 @@ func benchRun(b *testing.B, opts *solver.Options, numBoards int) {
 			res := s.Run(ctx, bd.Clone(boards.Play))
 			assert.NilError(b, res.Error)
 			assert.Equal(b, res.Status, solver.StatusSucceeded)
-			assert.Assert(b, res.Steps.Level >= solver.LevelNightmare)
+			if opts.Action.LevelRequested() {
+				assert.Assert(b, res.Steps.Level >= solver.LevelDarkEvil)
+			}
 			assert.Equal(b, res.Solutions.Size(), 1)
 		}
 	}

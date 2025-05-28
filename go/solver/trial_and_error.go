@@ -7,6 +7,8 @@ import (
 	"github.com/nissimnatanov/des/go/boards"
 )
 
+const trialAndErrorStepName = Step("Trial and Error")
+
 type indexWithAllowedSize struct {
 	index  int
 	weight int
@@ -39,7 +41,7 @@ func newTrialAndError() *trialAndError {
 }
 
 func (a trialAndError) String() string {
-	return "Trial and Error"
+	return string(trialAndErrorStepName)
 }
 
 func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
@@ -119,18 +121,22 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 		var foundDisallowed int
 		for tvi, testValue := range testValues {
 			if tvi == len(testValues)-1 && tvi == foundDisallowed {
-				// If we are at the last value and we have eliminated all others, we can skip
-				// the recursion and set the value directly, this is a bit faster and also
-				// more accurate in level calculation since it is equivalent to
-				// the only choice in cell.
-				state.AddStep(Step(a.String()), StepComplexityMedium, 1)
-				b.Set(index, testValue)
+				if !state.Action().LevelRequested() {
+					// If we are at the last value and we have eliminated all others, we can skip
+					// the recursion and set the value directly, this is a bit faster and also
+					// more accurate in level calculation since it is equivalent to
+					// the only choice in cell.
+					state.AddStep(trialAndErrorStepName, StepComplexityMedium, 1)
+					b.Set(index, testValue)
+				} // else let the Solver detect new value and report an accurate step and level for it
 				return StatusSucceeded
 			}
 
 			b.CloneInto(boards.Play, testBoard)
 			testBoard.Set(index, testValue)
 			result := state.recursiveRun(ctx, testBoard)
+			// recursiveRun will also report the recursion step's complexity and merge the child
+			// steps appropriately
 
 			if result.Status == StatusUnknown {
 				// remember that we had a value with unknown result and try the next one
@@ -140,9 +146,6 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			if result.Status == StatusError {
 				return StatusError
 			}
-
-			a.reportStep(state)
-			state.MergeSteps(&result.Steps)
 
 			if result.Status == StatusNoSolution {
 				// when settings this value, the board cannot be solved, disallow it for future use
@@ -164,15 +167,17 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 				panic("unexpected state of TrialAndError: " + result.Status.String())
 			}
 
-			if !state.Action().ProofRequested() {
-				// if we do not need to prove >=1 solution, just bail report success
-				// with the test board set
+			if !state.Action().ProofRequested() && !state.Action().LevelRequested() {
+				// If we do not need to prove >=1 solution, report success with the test board set.
+				// Also, in a Solve mode, let's finish this cell for a stable leveling, otherwise
+				// board's complexity can dramatically change after its values are shuffled.
 				copyFromTestBoard(testBoard, b)
 				return StatusSucceeded
 			}
 
-			// proof requested, we must keep going with other options on the same cell to prove
-			// that the found solution is the only one on that cell
+			// proof or accurate level requested, we must keep going with other options on the same
+			// cell to prove that the found solution is the only one on that cell or to reduce the
+			// 'value order bias' from the level score
 			foundBoards = append(foundBoards, testBoard.Clone(boards.Immutable))
 			if len(foundBoards) > 1 {
 				// if we found more than one board, we can stop
@@ -180,37 +185,40 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 				return StatusMoreThanOneSolution
 			}
 		}
+		// found boards can be either empty or have one board in it, we just checked above for >1
 		if len(foundBoards) == 1 {
-			if !foundUnknown {
-				// If proof is requested, and for each value we either found a solution or proved
-				// no solution is possible, we can use the found value
-				// If, however, foundUnknown is true, we cannot use the found value since we do not
-				// have a hard proof that it is the only option available on the cell.
+			if !foundUnknown || !state.Action().ProofRequested() {
+				// if all test values except one were disallowed, and that lucky one lead to a solution,
+				// then, we can conclude that this is the only solution.
+				// Also, in a Solve mode, we are not asked to prove the solution, we can return early
+				// to keep leveling accurate.
 				copyFromTestBoard(foundBoards[0], b)
 				return StatusSucceeded
 			}
-			// keep going, we have more cells to check
+			// If proof is requested, and we have at least one inconclusive test value, we have to
+			// keep going since we do not know if the board has more than one solution or not.
 		}
 		// no solution found, did we disallow any values?
 		if foundDisallowed > 0 {
 			allowed := b.AllowedValues(index).Values()
-			switch len(allowed) {
-			case 0:
+			if len(allowed) == 0 {
 				// we disallowed all the values, bail out
 				return StatusNoSolution
-			case 1:
-				// the unknown value that is left is the only option available
-				// we can set it and return
-				b.Set(index, allowed[0])
-				state.AddStep(Step(a.String()), StepComplexityMedium, 1)
 			}
 
-			// We disallowed one or more values on the cell, it is a bit faster (~2%) to keep going
-			// with the recursive algorithm than leaving to start over. If level is not needed,
-			// just continue with the next cell until we exhaust them all or set a value.
 			if state.Action().LevelRequested() {
+				// for accurate level calculation, let the solver try simpler algorithms
 				return StatusSucceeded
 			}
+
+			if len(allowed) == 1 {
+				b.Set(index, allowed[0])
+				state.AddStep(trialAndErrorStepName, StepComplexityMedium, 1)
+			}
+
+			// If we disallowed one or more values on the cell, or even set a value, it is a bit faster
+			// (~2%) to keep going with the recursive algorithm than leaving to start over. If level is
+			// not needed, just continue with the next cell until we exhaust them all.
 			disallowedAtLeastOne = true
 		}
 	}
@@ -220,23 +228,6 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	}
 
 	return StatusUnknown
-}
-
-func (a *trialAndError) reportStep(state AlgorithmState) {
-	var complexity StepComplexity
-	switch state.CurrentRecursionDepth() {
-	case 0:
-		complexity = StepComplexityRecursion1
-	case 1:
-		complexity = StepComplexityRecursion2
-	case 2:
-		complexity = StepComplexityRecursion3
-	case 3:
-		complexity = StepComplexityRecursion4
-	default:
-		complexity = StepComplexityRecursion5
-	}
-	state.AddStep(Step(a.String()), complexity, 1)
 }
 
 func copyFromTestBoard(testBoard, b *boards.Game) {

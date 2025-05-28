@@ -44,14 +44,18 @@ func (l Level) String() string {
 type LevelComplexityBar int64
 
 const (
-	// TODO: need to adjust level bars
-	LevelEasyBar      LevelComplexityBar = 100
-	LevelMediumBar    LevelComplexityBar = 250
-	LevelHardBar      LevelComplexityBar = 500
-	LevelVeryHardBar  LevelComplexityBar = 1000
-	LevelEvilBar      LevelComplexityBar = 2000
-	LevelDarkEvilBar  LevelComplexityBar = 5000
-	LevelNightmareBar LevelComplexityBar = 15000
+	LevelEasyBar     LevelComplexityBar = 125
+	LevelMediumBar   LevelComplexityBar = 250
+	LevelHardBar     LevelComplexityBar = 500
+	LevelVeryHardBar LevelComplexityBar = 1000
+
+	// usually at least one recursive step is needed
+	LevelEvilBar LevelComplexityBar = 5000
+	// aligned with the second recursion step complexity
+	LevelDarkEvilBar LevelComplexityBar = 20000
+	// have not seen yet a puzzle with complexity above this level (at least one third recursion or way
+	// too many second and/or first recursions)
+	LevelNightmareBar LevelComplexityBar = 100000
 )
 
 // LevelFromComplexity returns the level of the Sudoku puzzle based on its complexity

@@ -13,7 +13,6 @@ type AlgorithmState interface {
 	CurrentRecursionDepth() int
 	MaxRecursionDepth() int
 	AddStep(step Step, complexity StepComplexity, count int)
-	MergeSteps(steps *StepStats)
 
 	// recursiveRun is used to run the algorithm recursively
 	recursiveRun(ctx context.Context, b *boards.Game) *Result

@@ -88,9 +88,11 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
 		return r.result.complete(StatusNoSolution)
 	}
 
-	if boards.GetIntegrityChecks() {
-		// capture the original board for integrity checks to make sure algos do not corrupt
-		// the board and their solutions solve the input
+	if boards.GetIntegrityChecks() || (r.action.ProofRequested() && r.currentRecursionDepth == 0) {
+		// Capture the original board if:
+		// * integrity checks are enabled, so we can verify that the algorithms do not corrupt the board
+		// * solve is used and we just went abnormally deep into recursion (> 2), meaning we just just
+		//   a super hard board - let's unconditionally print the input board
 		r.inputBoard = b.Clone(boards.Immutable)
 	}
 
@@ -121,7 +123,7 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
 			}
 			r.result.completeErr(err)
 		}()
-		r.run(ctx)
+		r.solve(ctx)
 	}()
 
 	if r.result.Solutions.Size() > 1 && r.action.ProofRequested() && r.result.Status == StatusSucceeded {
@@ -140,12 +142,37 @@ type runner struct {
 	maxRecursionDepth     int8
 	result                Result
 
-	// inputBoard for integrity checks of the solutions
+	// inputBoard for integrity checks of the solutions or if Solve is used on the first recursive tier
 	inputBoard *boards.Game
 
 	// to reduce calls into alloc, cache nested runner to speed up its access
 	nestedCache *runner
 	algorithms  []Algorithm
+}
+
+func (r *runner) solve(ctx context.Context) *Result {
+	if !r.action.LevelRequested() || r.maxRecursionDepth < 2 {
+		return r.run(ctx)
+	}
+
+	// For accurate leveling, use layer recursion: start with the recursion depth of 1 and slowly
+	// increase it until we reach the max recursion or the board is solved.
+	var result *Result
+	maxRecursionOriginal := r.maxRecursionDepth
+	for maxRecursionCurrent := int8(1); maxRecursionCurrent <= maxRecursionOriginal; maxRecursionCurrent++ {
+		r.maxRecursionDepth = maxRecursionCurrent
+		result = r.run(ctx)
+		if result.Status != StatusUnknown {
+			return result
+		}
+		// since we are about to increase the recursion depth, we will re-run same steps again
+		if maxRecursionCurrent < maxRecursionOriginal {
+			r.result.Error = nil
+			r.result.Steps.reset()
+		}
+	}
+	// return the last tried result in case max recursion depth was not enough
+	return result
 }
 
 func (r *runner) run(ctx context.Context) *Result {
@@ -270,11 +297,58 @@ func (r *runner) AddStep(step Step, complexity StepComplexity, count int) {
 	r.result.Steps.AddStep(step, complexity, count)
 }
 
-func (r *runner) MergeSteps(steps *StepStats) {
-	r.result.Steps.Merge(steps)
+func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) *Result {
+	result := r.recursiveRunNested(ctx, b)
+	// merge the sub-steps into the parent result
+
+	// before we return, let's check the mode
+	if !r.action.LevelRequested() {
+		// fast solvers do nto care about levels and can use very deep recursion
+		// for efficiency, hence it does not matter how deep we are
+		result.Steps.AddStep(trialAndErrorStepName, StepComplexityRecursion1, 1)
+		r.result.Steps.Merge(&result.Steps)
+		return result
+	}
+
+	// Solve uses layered recursion to calculate the level, starting from maxRecursionDepth of 1
+	// and increasing it until max allowed value by the options. What matters is how deep we had
+	// to go to solve the board, with higher score going for the root nodes that trigger the
+	// recursion (rather than the leaves).
+	usedDepth := r.maxRecursionDepth - r.currentRecursionDepth
+
+	var complexity StepComplexity
+	switch usedDepth {
+	case 0:
+		// trialAndError only triggers nested run if current depth < max (hence delta is always at least 1)
+		panic("usedDepth must be > 0, got 0")
+	case 1:
+		// guessed value or eliminated it with only one recursion allowed
+		complexity = StepComplexityRecursion1
+	case 2:
+		// in order to guess this value (or eliminate it) we had to go two levels deep
+		complexity = StepComplexityRecursion2
+	case 3:
+		// this depth is not yet reached, but hope one day we will
+		complexity = StepComplexityRecursion3
+		fmt.Printf("Warning: Recursion3!\n%s.\n", r.inputOrActiveBoard())
+	case 4:
+		complexity = StepComplexityRecursion4
+		fmt.Printf("Warning: Recursion4!\n%s.\n", r.inputOrActiveBoard())
+	default:
+		// We should not call Solve for unproven boards, it is not effective. For proven boards,
+		// we have never reached StepComplexityRecursion3, and even if we reach it one day,
+		// the next one (StepComplexityRecursion4) will be even harder and likely never reached.
+		// If we go beyond that, there is a terrible bug in the code somewhere.
+		panic(fmt.Sprintf(
+			"Unexpected usedDepth %d, something is likely wrong with the Solve algorithm.\n%s.\n",
+			usedDepth, r.inputOrActiveBoard()))
+	}
+	result.Steps.AddStep(trialAndErrorStepName, complexity, 1)
+	r.result.Steps.Merge(&result.Steps)
+	return result
 }
 
-func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) *Result {
+func (r *runner) recursiveRunNested(ctx context.Context, b *boards.Game) *Result {
 	nested := r.nestedCache
 	if nested == nil {
 		nested = &runner{
@@ -293,6 +367,7 @@ func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) *Result {
 		r.nestedCache = nested
 	} else {
 		// we just need to set the board and reset the result's status
+		nested.maxRecursionDepth = r.maxRecursionDepth
 		nested.board = b
 		nested.result.Status = StatusUnknown
 		nested.result.Error = nil
@@ -315,4 +390,12 @@ func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) *Result {
 	}
 
 	return nested.run(ctx)
+}
+
+// inputOrActiveBoard can be used for troubleshooting or logging abnormal cases
+func (r *runner) inputOrActiveBoard() string {
+	if r.inputBoard != nil {
+		return "Input board: " + boards.Serialize(r.inputBoard)
+	}
+	return "Current board: " + r.board.String()
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/nissimnatanov/des/go/boards/values"
 )
 
-const crossSequenceConstraintComplexity = StepComplexityHard
+const crossSequenceConstraintComplexity = StepComplexityHarder
 
 func eliminateInSequence(
 	b *boards.Game, v values.Value, eliminateInSeq indexes.Sequence,
