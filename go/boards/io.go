@@ -87,21 +87,17 @@ func WriteValues(b Base, bw *bufio.Writer) {
 }
 
 func writeEmpty(count int, bw *bufio.Writer) {
-	for count >= 27 {
-		count -= 27
+	for count >= 26 {
+		count -= 26
 		bw.WriteRune('Z')
 	}
 	if count == 0 {
 		return
 	}
 
-	if count == 1 {
-		bw.WriteRune('0')
-	} else {
-		// A - 2 empty cells; B -> 3; ... Z - 27
-		c := rune('A' + (count - 2))
-		bw.WriteRune(c)
-	}
+	// A -> 1 empty cell; B -> 2; ... Z -> 26
+	c := rune('A' + (count - 1))
+	bw.WriteRune(c)
 }
 
 func writeSerialized(b Base, bw *bufio.Writer) {
@@ -160,6 +156,7 @@ func deserializeBase(s string, b *base) error {
 		case c >= 'A' && c <= 'Z':
 			i += int(1 + c - 'A')
 		case c == '0':
+			// same as 'A'
 			i++
 		case c >= '1' && c <= '9':
 			v := values.Value(c - '0')

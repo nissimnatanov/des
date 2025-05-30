@@ -238,6 +238,10 @@ const vector<string> my_nightmares = {
     "D9A57C956B1H8B4D9B9B7C2A23B5C742A9F53B24B7D5B2",     // 6384
 };
 
+const vector<string> my_go_nightmares = {
+    "B4B7C5D9D1A6B5B6B1A8A4A38F1D2E37D25B89C63E29B",   // complexity 41428 in Go, in C++
+};
+
 const vector<string> boards_19_or_less = {
     "E6B4B9G7C4B3F5F2B1B46B7E8A1B9E5C76F5A", // values: 19, complexity: 524
     "C1D7B2A8I3N4A52C6F91B5C8B1A39E2E56A",   // values: 19, complexity: 408
@@ -404,18 +408,13 @@ void run(SudokuBoardConstShared board, SudokuSolverOptions options, string name,
         return;
     }
 
-    if (result->getOptions().getAction() != SudokuSolverAction::SOLVE ||
-        result->getLevel() >= SudokuLevel::NIGHTMARE ||
-        result->getOriginalBoard()->getFreeCellCount() > 61)
+    cerr << ">>> Game " << name << endl;
+    if (result->getOptions().getAction() == SudokuSolverAction::SOLVE &&
+        result->getLevel() >= SudokuLevel::BLACKHOLE)
     {
-        cerr << ">>> Game " << name << endl;
-        if (result->getOptions().getAction() == SudokuSolverAction::SOLVE &&
-            result->getLevel() >= SudokuLevel::BLACKHOLE)
-        {
-            cerr << result->getOriginalBoard();
-        }
-        cerr << *result;
+        cerr << result->getOriginalBoard();
     }
+    cerr << *result;
 }
 
 void run(SudokuBoardConstShared board, SudokuSolverOptions options, string name)
@@ -501,14 +500,16 @@ void myBoards()
     runTimed(my_nightmares, defaultSolveOptions, "My Nightmare Board ");
     runTimed(my_nightmares, defaultProveOptions, "My Nightmare Board (Prove) ");
 
-    /*
+    runTimed(my_go_nightmares, defaultSolveOptions, "My Go Nightmare Board ");
+    runTimed(my_go_nightmares, defaultProveOptions, "My Go Nightmare Board (Prove) ");
+
     runTimed(boards_19_or_less, defaultSolveOptions, "My 19 or Less Board ");
     runTimed(boards_19_or_less, defaultProveOptions, "My 19 or Less Board (Prove) ");
 
     cout << "other games" << endl;
     runTimed(my_other_games, defaultSolveOptions, "My Game ");
     cout << "other games (prove)" << endl;
-    runTimed(my_other_games, defaultProveOptions, "My Game (Prove) ");*/
+    runTimed(my_other_games, defaultProveOptions, "My Game (Prove) ");
 }
 
 void testTimedOutBoards()

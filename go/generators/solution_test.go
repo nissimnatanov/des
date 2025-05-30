@@ -6,6 +6,7 @@ import (
 
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/generators"
+	"github.com/nissimnatanov/des/go/generators/internal"
 	"gotest.tools/v3/assert"
 )
 
@@ -24,14 +25,14 @@ func TestSolutionFindFastestOrder(t *testing.T) {
 	var fastestRetriesTime time.Duration
 
 	const inLoop = 1000
-	var rSeq = generators.NewRandom()
+	var rSeq = internal.NewRandom()
 
 	for range 10 {
 		// Reset the stats before running the benchmark
 		generators.Stats.Reset()
 
 		for range inLoop {
-			var r = generators.NewRandom()
+			var r = internal.NewRandom()
 			solution := generators.GenerateSolutionWithCustomOrder(r, order[:])
 			assert.Assert(t, solution != nil, "Generated solution is nil")
 		}
@@ -46,7 +47,7 @@ func TestSolutionFindFastestOrder(t *testing.T) {
 			fastestRetriesOrder = order
 			fastestRetriesTime = stats.Elapsed
 		}
-		generators.RandShuffle(rSeq, order[3:])
+		internal.RandShuffle(rSeq, order[3:])
 	}
 	t.Logf("Fastest time order: %v, with time: %v, retries: %v",
 		fastestTimeOrder, fastestTime/time.Duration(inLoop), fastestTimeRetries)
@@ -67,7 +68,7 @@ func BenchmarkGenerateSolution(b *testing.B) {
 	defer boards.SetIntegrityChecks(prev)
 	// Reset the stats before running the benchmark
 	generators.Stats.Reset()
-	var r = generators.NewRandom()
+	var r = internal.NewRandom()
 
 	for b.Loop() {
 		solution := generators.GenerateSolution(r)

@@ -110,22 +110,22 @@ Serialized: 123456789789123456456789123ZZB
 Running SudokuSolutionGenerator tests...
 
 xe2x95x94xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95xa6xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95xa6xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x97
-xe2x95x91 7 5 9 xe2x95x91 4 1 3 xe2x95x91 2 8 6 xe2x95x91
-xe2x95x91 6 4 1 xe2x95x91 8 7 2 xe2x95x91 3 9 5 xe2x95x91
-xe2x95x91 3 2 8 xe2x95x91 5 6 9 xe2x95x91 4 1 7 xe2x95x91
+xe2x95x91 6 3 7 xe2x95x91 8 1 2 xe2x95x91 4 9 5 xe2x95x91
+xe2x95x91 9 4 2 xe2x95x91 5 6 7 xe2x95x91 8 1 3 xe2x95x91
+xe2x95x91 1 5 8 xe2x95x91 4 9 3 xe2x95x91 2 6 7 xe2x95x91
 xe2x95xa0xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95xacxe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95xacxe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95xa3
-xe2x95x91 1 9 6 xe2x95x91 2 8 5 xe2x95x91 7 4 3 xe2x95x91
-xe2x95x91 4 8 2 xe2x95x91 9 3 7 xe2x95x91 6 5 1 xe2x95x91
-xe2x95x91 5 7 3 xe2x95x91 1 4 6 xe2x95x91 9 2 8 xe2x95x91
+xe2x95x91 2 1 6 xe2x95x91 9 3 4 xe2x95x91 7 5 8 xe2x95x91
+xe2x95x91 7 9 3 xe2x95x91 2 8 5 xe2x95x91 6 4 1 xe2x95x91
+xe2x95x91 5 8 4 xe2x95x91 6 7 1 xe2x95x91 3 2 9 xe2x95x91
 xe2x95xa0xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95xacxe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95xacxe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95xa3
-xe2x95x91 2 1 7 xe2x95x91 3 5 4 xe2x95x91 8 6 9 xe2x95x91
-xe2x95x91 9 3 5 xe2x95x91 6 2 8 xe2x95x91 1 7 4 xe2x95x91
-xe2x95x91 8 6 4 xe2x95x91 7 9 1 xe2x95x91 5 3 2 xe2x95x91
+xe2x95x91 4 2 9 xe2x95x91 3 5 8 xe2x95x91 1 7 6 xe2x95x91
+xe2x95x91 3 7 5 xe2x95x91 1 4 6 xe2x95x91 9 8 2 xe2x95x91
+xe2x95x91 8 6 1 xe2x95x91 7 2 9 xe2x95x91 5 3 4 xe2x95x91
 xe2x95x9axe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95xa9xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95xa9xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x90xe2x95x9d
 Rows: 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789
 Columns: 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789
 Squares: 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789
-Time to generate 100 solutions: 0.266486 seconds.
+Time to generate 100 solutions: 0.278386 seconds.
 -----------------------------
 Running Sudoku Board Samples Benchmark...
 >>> Game Arto Inkala Hardest
@@ -148,7 +148,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (23750)
   board:  B53E8F2B7B1A5B4D53C1B7C6B32C8B6A5D9B4D3F97B
-  elapsed (microseconds): 131284
+  elapsed (microseconds): 130686
   value count: 23
   steps: {
     Easy [Single In Square, 1] X 697: 697
@@ -165,7 +165,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  B53E8F2B7B1A5B4D53C1B7C6B32C8B6A5D9B4D3F97B
-  elapsed (microseconds): 8237
+  elapsed (microseconds): 8154
   value count: 23
   steps: {
     Easy [Single In Square, 1] X 1372: 1372
@@ -184,7 +184,7 @@ Sudoku Result {
   action: FastSolve
   status: Succeeded
   board:  B53E8F2B7B1A5B4D53C1B7C6B32C8B6A5D9B4D3F97B
-  elapsed (microseconds): 837
+  elapsed (microseconds): 823
   value count: 23
   steps: {
     Easy [Single In Square, 1] X 133: 133
@@ -217,7 +217,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (26301)
   board:  6D894A9D61C7B4D2B61J2C89B2G6C5G3A8D16B
-  elapsed (microseconds): 1.85834e+06
+  elapsed (microseconds): 1.88924e+06
   value count: 22
   steps: {
     Easy [Single In Square, 1] X 305: 305
@@ -234,7 +234,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  6D894A9D61C7B4D2B61J2C89B2G6C5G3A8D16B
-  elapsed (microseconds): 265849
+  elapsed (microseconds): 260992
   value count: 22
   steps: {
     Easy [Single In Square, 1] X 41269: 41269
@@ -253,7 +253,7 @@ Sudoku Result {
   action: FastSolve
   status: Succeeded
   board:  6D894A9D61C7B4D2B61J2C89B2G6C5G3A8D16B
-  elapsed (microseconds): 165069
+  elapsed (microseconds): 161834
   value count: 22
   steps: {
     Easy [Single In Square, 1] X 25555: 25555
@@ -287,7 +287,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (18561)
   board:  8J36F7B9A2C5C7G457E1C3C1D68B85C1B9D4B
-  elapsed (microseconds): 315206
+  elapsed (microseconds): 313602
   value count: 21
   steps: {
     Easy [Single In Square, 1] X 271: 271
@@ -305,7 +305,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): Nightmare (13139)
   board:  1D7A9B3B2C8B96B5D53B9C1B8C26D4C3F1B4F7B7C3B
-  elapsed (microseconds): 149221
+  elapsed (microseconds): 148893
   value count: 23
   steps: {
     Easy [Single In Square, 1] X 385: 385
@@ -337,7 +337,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (41655)
   board:  B1A6A5B4A8B16C5E12B4E3C9F3B7B6A2C3C1A156C7A8B7E
-  elapsed (microseconds): 342561
+  elapsed (microseconds): 340939
   value count: 25
   steps: {
     Easy [Single In Square, 1] X 902: 902
@@ -369,7 +369,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (34777)
   board:  I1B38A5C9B5A31A7B54B6B36C4F6C8I5C3B41A7B1683A
-  elapsed (microseconds): 259037
+  elapsed (microseconds): 259045
   value count: 26
   steps: {
     Easy [Single In Square, 1] X 988: 988
@@ -401,7 +401,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (33434)
   board:  B3A85C6B1G27C5E17A8B6B3A51F6B7A9A3A86B1C7F5C8B
-  elapsed (microseconds): 736411
+  elapsed (microseconds): 709351
   value count: 25
   steps: {
     Easy [Single In Square, 1] X 676: 676
@@ -432,7 +432,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (27270)
   board:  B1D4C9A4A5A14C2A83B4B32A7A6B4C8A7G4A8A37B2E6A7E2A8C
-  elapsed (microseconds): 447444
+  elapsed (microseconds): 447716
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 572: 572
@@ -464,7 +464,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (26471)
   board:  5A12B3A4G6A3H1E5D5A2C3A4A5B1A6C47F61E4B396B5
-  elapsed (microseconds): 253284
+  elapsed (microseconds): 251800
   value count: 25
   steps: {
     Easy [Single In Square, 1] X 497: 497
@@ -496,7 +496,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (22162)
   board:  9D4B1C72A6C2A1A9A8D3A71C7E4A3B94D1B29A3B7B4A3D3E2A
-  elapsed (microseconds): 124115
+  elapsed (microseconds): 120872
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 645: 645
@@ -528,7 +528,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (21106)
   board:  J6C9A1C3C8A7A8D1D9B874C6A3B8C8A572C74B35C9C4C
-  elapsed (microseconds): 284180
+  elapsed (microseconds): 280586
   value count: 25
   steps: {
     Easy [Single In Square, 1] X 574: 574
@@ -560,7 +560,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (20910)
   board:  1B5A64I7B5F1B16E4C79A5A79A38E16B894C4C6B9C6B17
-  elapsed (microseconds): 165135
+  elapsed (microseconds): 164263
   value count: 28
   steps: {
     Easy [Single In Square, 1] X 573: 573
@@ -591,7 +591,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (20171)
   board:  6B5D7B9B63A8A78I3G7A68A5A3A6A578A9C84C59I6B259B
-  elapsed (microseconds): 242946
+  elapsed (microseconds): 244936
   value count: 28
   steps: {
     Easy [Single In Square, 1] X 463: 463
@@ -601,6 +601,23 @@ Sudoku Result {
     Hard [Identify Pairs, 20] X 2: 40
     Recursion1 [Trial & Error, 100] X 16: 1600
     Recursion2 [Trial & Error, 1000] X 18: 18000
+  }
+}
+>>> Game My Blackhole Board 9
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (3810)
+  board:  B3A8C7B5A1A38A8E1E34A7I6E764B3147B6B7A8B4B19D1C
+  elapsed (microseconds): 331023
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 186: 186
+    Easy [Single In Row, 1] X 13: 13
+    Easy [Single In Column, 1] X 1: 1
+    Medium [The Only Choice, 5] X 2: 10
+    Recursion1 [Trial & Error, 100] X 16: 1600
+    Recursion2 [Trial & Error, 1000] X 2: 2000
   }
 }
 >>> Game My Blackhole Board 10
@@ -623,7 +640,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (18489)
   board:  B9E1D9B7347B2A9B5C4A7E8A6A9H8C7A84A2A92A5F4D5B
-  elapsed (microseconds): 366086
+  elapsed (microseconds): 334399
   value count: 25
   steps: {
     Easy [Single In Square, 1] X 850: 850
@@ -655,7 +672,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (17469)
   board:  B23C1A9I1B86C8C35A2A5B8B13D61C82A65A8G2B6A49E52
-  elapsed (microseconds): 127896
+  elapsed (microseconds): 126154
   value count: 28
   steps: {
     Easy [Single In Square, 1] X 431: 431
@@ -686,7 +703,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (17320)
   board:  6B3B5C3C6B4B2A9E4B5A8A25D8C8A64D3C9B4A8C8D5B8A3A21A
-  elapsed (microseconds): 139598
+  elapsed (microseconds): 136627
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 633: 633
@@ -717,7 +734,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): BlackHole (16304)
   board:  J71E658C1A2A3C8E125A3A8D1A23C95A1A8A3A3A9D2C3A5A9A
-  elapsed (microseconds): 157093
+  elapsed (microseconds): 137701
   value count: 28
   steps: {
     Easy [Single In Square, 1] X 329: 329
@@ -735,7 +752,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): Nightmare (14051)
   board:  7A568C1B9B2B86D12D38C25E5E62B7D2B7A6A96F7A4D5B
-  elapsed (microseconds): 165551
+  elapsed (microseconds): 163701
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 335: 335
@@ -752,7 +769,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  B1A6A5B4A8B16C5E12B4E3C9F3B7B6A2C3C1A156C7A8B7E
-  elapsed (microseconds): 11958
+  elapsed (microseconds): 11720
   value count: 25
   steps: {
     Easy [Single In Square, 1] X 2101: 2101
@@ -771,7 +788,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  I1B38A5C9B5A31A7B54B6B36C4F6C8I5C3B41A7B1683A
-  elapsed (microseconds): 7743
+  elapsed (microseconds): 7473
   value count: 26
   steps: {
     Easy [Single In Square, 1] X 1382: 1382
@@ -790,7 +807,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  B3A85C6B1G27C5E17A8B6B3A51F6B7A9A3A86B1C7F5C8B
-  elapsed (microseconds): 3989
+  elapsed (microseconds): 3937
   value count: 25
   steps: {
     Easy [Single In Square, 1] X 1002: 1002
@@ -809,7 +826,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  B1D4C9A4A5A14C2A83B4B32A7A6B4C8A7G4A8A37B2E6A7E2A8C
-  elapsed (microseconds): 7450
+  elapsed (microseconds): 7269
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 1239: 1239
@@ -828,7 +845,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  5A12B3A4G6A3H1E5D5A2C3A4A5B1A6C47F61E4B396B5
-  elapsed (microseconds): 8278
+  elapsed (microseconds): 8111
   value count: 25
   steps: {
     Easy [Single In Square, 1] X 1744: 1744
@@ -847,7 +864,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  9D4B1C72A6C2A1A9A8D3A71C7E4A3B94D1B29A3B7B4A3D3E2A
-  elapsed (microseconds): 6261
+  elapsed (microseconds): 6095
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 1240: 1240
@@ -866,7 +883,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  J6C9A1C3C8A7A8D1D9B874C6A3B8C8A572C74B35C9C4C
-  elapsed (microseconds): 7189
+  elapsed (microseconds): 6972
   value count: 25
   steps: {
     Easy [Single In Square, 1] X 799: 799
@@ -885,7 +902,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  1B5A64I7B5F1B16E4C79A5A79A38E16B894C4C6B9C6B17
-  elapsed (microseconds): 6931
+  elapsed (microseconds): 6580
   value count: 28
   steps: {
     Easy [Single In Square, 1] X 1351: 1351
@@ -904,7 +921,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  6B5D7B9B63A8A78I3G7A68A5A3A6A578A9C84C59I6B259B
-  elapsed (microseconds): 4895
+  elapsed (microseconds): 4680
   value count: 28
   steps: {
     Easy [Single In Square, 1] X 899: 899
@@ -923,7 +940,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  B3A8C7B5A1A38A8E1E34A7I6E764B3147B6B7A8B4B19D1C
-  elapsed (microseconds): 15066
+  elapsed (microseconds): 14856
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 2431: 2431
@@ -942,7 +959,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  B9E1D9B7347B2A9B5C4A7E8A6A9H8C7A84A2A92A5F4D5B
-  elapsed (microseconds): 9499
+  elapsed (microseconds): 9463
   value count: 25
   steps: {
     Easy [Single In Square, 1] X 1048: 1048
@@ -961,7 +978,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  B23C1A9I1B86C8C35A2A5B8B13D61C82A65A8G2B6A49E52
-  elapsed (microseconds): 8688
+  elapsed (microseconds): 8547
   value count: 28
   steps: {
     Easy [Single In Square, 1] X 1590: 1590
@@ -980,7 +997,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  6B3B5C3C6B4B2A9E4B5A8A25D8C8A64D3C9B4A8C8D5B8A3A21A
-  elapsed (microseconds): 13100
+  elapsed (microseconds): 12810
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 2501: 2501
@@ -999,7 +1016,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  J71E658C1A2A3C8E125A3A8D1A23C95A1A8A3A3A9D2C3A5A9A
-  elapsed (microseconds): 6239
+  elapsed (microseconds): 6210
   value count: 28
   steps: {
     Easy [Single In Square, 1] X 1273: 1273
@@ -1018,7 +1035,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  7A568C1B9B2B86D12D38C25E5E62B7D2B7A6A96F7A4D5B
-  elapsed (microseconds): 5465
+  elapsed (microseconds): 5278
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 780: 780
@@ -1038,7 +1055,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): Nightmare (13576)
   board:  G3F761A1A76D2C35C94B9B3G8B67A1C2B6B1B9A339B7C1
-  elapsed (microseconds): 174890
+  elapsed (microseconds): 172715
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 411: 411
@@ -1055,7 +1072,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): Nightmare (13449)
   board:  A3C9A8C1A5G3B6C8B36A54D9A1D64A8A3A9C6B1C2C8C139B5B
-  elapsed (microseconds): 68932
+  elapsed (microseconds): 67860
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 407: 407
@@ -1073,7 +1090,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): Nightmare (12908)
   board:  41E3B37C6A19G7C14A9I7A6A4B9G37B57A541D3B5A2A4A
-  elapsed (microseconds): 36807
+  elapsed (microseconds): 36214
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 313: 313
@@ -1091,7 +1108,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): Nightmare (9823)
   board:  A1C2B76A21B3E6C1A3E2C7A9C3A2A6B3A79I924B7C13C69A8
-  elapsed (microseconds): 367817
+  elapsed (microseconds): 360535
   value count: 28
   steps: {
     Easy [Single In Square, 1] X 304: 304
@@ -1109,7 +1126,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): Nightmare (7182)
   board:  J2B4A93A7C96428D2B8G6B3D8A95I24B59C9A5A8A2A3
-  elapsed (microseconds): 113275
+  elapsed (microseconds): 111402
   value count: 26
   steps: {
     Easy [Single In Square, 1] X 248: 248
@@ -1126,7 +1143,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): Nightmare (6548)
   board:  A7B5I4B55B6B23G9D7A69A4C4A8A3C2E5A3C7C9B58A3A26
-  elapsed (microseconds): 350938
+  elapsed (microseconds): 345652
   value count: 26
   steps: {
     Easy [Single In Square, 1] X 904: 904
@@ -1143,7 +1160,7 @@ Sudoku Result {
   status: Succeeded
   level (complexity): Nightmare (6384)
   board:  D9A57C956B1H8B4D9B9B7C2A23B5C742A9F53B24B7D5B2
-  elapsed (microseconds): 82553
+  elapsed (microseconds): 82387
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 161: 161
@@ -1159,7 +1176,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  G3F761A1A76D2C35C94B9B3G8B67A1C2B6B1B9A339B7C1
-  elapsed (microseconds): 9898
+  elapsed (microseconds): 9821
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 1746: 1746
@@ -1178,7 +1195,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  A3C9A8C1A5G3B6C8B36A54D9A1D64A8A3A9C6B1C2C8C139B5B
-  elapsed (microseconds): 22095
+  elapsed (microseconds): 6369
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 1203: 1203
@@ -1197,7 +1214,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  41E3B37C6A19G7C14A9I7A6A4B9G37B57A541D3B5A2A4A
-  elapsed (microseconds): 7559
+  elapsed (microseconds): 5930
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 1118: 1118
@@ -1216,7 +1233,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  A1C2B76A21B3E6C1A3E2C7A9C3A2A6B3A79I924B7C13C69A8
-  elapsed (microseconds): 9012
+  elapsed (microseconds): 8869
   value count: 28
   steps: {
     Easy [Single In Square, 1] X 1691: 1691
@@ -1235,7 +1252,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  J2B4A93A7C96428D2B8G6B3D8A95I24B59C9A5A8A2A3
-  elapsed (microseconds): 8699
+  elapsed (microseconds): 8267
   value count: 26
   steps: {
     Easy [Single In Square, 1] X 1670: 1670
@@ -1254,7 +1271,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  A7B5I4B55B6B23G9D7A69A4C4A8A3C2E5A3C7C9B58A3A26
-  elapsed (microseconds): 3844
+  elapsed (microseconds): 3746
   value count: 26
   steps: {
     Easy [Single In Square, 1] X 485: 485
@@ -1273,7 +1290,7 @@ Sudoku Result {
   action: Prove
   status: Succeeded
   board:  D9A57C956B1H8B4D9B9B7C2A23B5C742A9F53B24B7D5B2
-  elapsed (microseconds): 9137
+  elapsed (microseconds): 9011
   value count: 27
   steps: {
     Easy [Single In Square, 1] X 1939: 1939
@@ -1287,51 +1304,4058 @@ Sudoku Result {
     Recursion4 [Trial & Error, 100000] X 53: 5300000
   }
 }
-Elapsed (milliseconds): 9208
+>>> Game My Go Nightmare Board 0
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1518)
+  board:  B4B7C5D9D1A6B5B6B1A8A4A38F1D2E37D25B89C63E29B
+  elapsed (microseconds): 20922
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 370: 370
+    Easy [Single In Row, 1] X 22: 22
+    Easy [Single In Column, 1] X 11: 11
+    Medium [The Only Choice, 5] X 7: 35
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 10: 1000
+  }
+}
+>>> Game My Go Nightmare Board (Prove) 0
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B4B7C5D9D1A6B5B6B1A8A4A38F1D2E37D25B89C63E29B
+  elapsed (microseconds): 5215
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 788: 788
+    Easy [Single In Row, 1] X 49: 49
+    Easy [Single In Column, 1] X 30: 30
+    Medium [The Only Choice, 5] X 13: 65
+    Hard [Identify Pairs, 20] X 19: 380
+    Recursion1 [Trial & Error, 100] X 9: 900
+    Recursion2 [Trial & Error, 1000] X 8: 8000
+    Recursion3 [Trial & Error, 10000] X 9: 90000
+    Recursion4 [Trial & Error, 100000] X 3: 300000
+  }
+}
+>>> Game My 19 or Less Board 0
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): VeryHard (524)
+  board:  E6B4B9G7C4B3F5F2B1B46B7E8A1B9E5C76F5A
+  elapsed (microseconds): 727
+  value count: 19
+  steps: {
+    Easy [Single In Square, 1] X 98: 98
+    Easy [Single In Row, 1] X 6: 6
+    Easy [Single In Column, 1] X 5: 5
+    Medium [The Only Choice, 5] X 3: 15
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 3: 300
+  }
+}
+>>> Game My 19 or Less Board 1
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Hard (429)
+  board:  C1D7B2A8I3N4A52C6F91B5C8B1A39E2E56A
+  elapsed (microseconds): 869
+  value count: 19
+  steps: {
+    Easy [Single In Square, 1] X 87: 87
+    Easy [Single In Row, 1] X 9: 9
+    Easy [Single In Column, 1] X 3: 3
+    Medium [The Only Choice, 5] X 2: 10
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 3: 300
+  }
+}
+>>> Game My 19 or Less Board 2
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Hard (309)
+  board:  E4D59E2A6E7D1D9D5A6B3D74E2C8D9D54A7F
+  elapsed (microseconds): 980
+  value count: 19
+  steps: {
+    Easy [Single In Square, 1] X 63: 63
+    Easy [Single In Row, 1] X 7: 7
+    Easy [Single In Column, 1] X 4: 4
+    Medium [The Only Choice, 5] X 3: 15
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 2: 200
+  }
+}
+>>> Game My 19 or Less Board (Prove) 0
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  E6B4B9G7C4B3F5F2B1B46B7E8A1B9E5C76F5A
+  elapsed (microseconds): 6249
+  value count: 19
+  steps: {
+    Easy [Single In Square, 1] X 191: 191
+    Easy [Single In Row, 1] X 6: 6
+    Easy [Single In Column, 1] X 5: 5
+    Medium [The Only Choice, 5] X 3: 15
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 6: 600
+    Recursion2 [Trial & Error, 1000] X 2: 2000
+    Recursion3 [Trial & Error, 10000] X 1: 10000
+  }
+}
+>>> Game My 19 or Less Board (Prove) 1
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C1D7B2A8I3N4A52C6F91B5C8B1A39E2E56A
+  elapsed (microseconds): 7504
+  value count: 19
+  steps: {
+    Easy [Single In Square, 1] X 299: 299
+    Easy [Single In Row, 1] X 12: 12
+    Easy [Single In Column, 1] X 12: 12
+    Medium [The Only Choice, 5] X 5: 25
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 8: 800
+    Recursion2 [Trial & Error, 1000] X 4: 4000
+    Recursion3 [Trial & Error, 10000] X 3: 30000
+    Recursion4 [Trial & Error, 100000] X 1: 100000
+  }
+}
+>>> Game My 19 or Less Board (Prove) 2
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  E4D59E2A6E7D1D9D5A6B3D74E2C8D9D54A7F
+  elapsed (microseconds): 2506
+  value count: 19
+  steps: {
+    Easy [Single In Square, 1] X 63: 63
+    Easy [Single In Row, 1] X 7: 7
+    Easy [Single In Column, 1] X 4: 4
+    Medium [The Only Choice, 5] X 3: 15
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 2: 200
+  }
+}
+other games
+>>> Game My Game 0
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (4292)
+  board:  A7A5D1C8A9C5D17B9A53C7E8B9A8E523C9B3B6A1G3C76B
+  elapsed (microseconds): 120920
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 788: 788
+    Easy [Single In Row, 1] X 40: 40
+    Easy [Single In Column, 1] X 44: 44
+    Medium [The Only Choice, 5] X 28: 140
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 32: 3200
+  }
+}
+>>> Game My Game 1
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (3722)
+  board:  I2F86B4B67A9D674G96D98C3A78C29C467A8A1A1C4D
+  elapsed (microseconds): 26802
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 473: 473
+    Easy [Single In Row, 1] X 35: 35
+    Easy [Single In Column, 1] X 9: 9
+    Medium [The Only Choice, 5] X 17: 85
+    Hard [Identify Pairs, 20] X 6: 120
+    Recursion1 [Trial & Error, 100] X 30: 3000
+  }
+}
+>>> Game My Game 2
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (4083)
+  board:  A6A2C4C8A35A6G8B59F74C8E23A4C9B5F68B5A3G69B
+  elapsed (microseconds): 40956
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 667: 667
+    Easy [Single In Row, 1] X 13: 13
+    Easy [Single In Column, 1] X 8: 8
+    Medium [The Only Choice, 5] X 15: 75
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 33: 3300
+  }
+}
+>>> Game My Game 3
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (4362)
+  board:  B2F47C1G7B96C6E32D5B19A3B2A7B7C1G4B92B1A7B3
+  elapsed (microseconds): 71918
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 564: 564
+    Easy [Single In Row, 1] X 42: 42
+    Easy [Single In Column, 1] X 16: 16
+    Medium [The Only Choice, 5] X 20: 100
+    Hard [Identify Pairs, 20] X 12: 240
+    Recursion1 [Trial & Error, 100] X 34: 3400
+  }
+}
+>>> Game My Game 4
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (4046)
+  board:  74A2A8B1A1B35C5F8H3D541A2F3B5B6B97A319H8A1B6B
+  elapsed (microseconds): 116271
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 654: 654
+    Easy [Single In Row, 1] X 49: 49
+    Easy [Single In Column, 1] X 8: 8
+    Medium [The Only Choice, 5] X 15: 75
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 32: 3200
+  }
+}
+>>> Game My Game 5
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (4179)
+  board:  A1C3B57D9C9B716B2A4A1B2H6A7D97D9A37A5G4C37B2C1
+  elapsed (microseconds): 47513
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 534: 534
+    Easy [Single In Row, 1] X 76: 76
+    Easy [Single In Column, 1] X 29: 29
+    Medium [The Only Choice, 5] X 32: 160
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 33: 3300
+  }
+}
+>>> Game My Game 6
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (3961)
+  board:  7B92A5J36B7C24D6B3A8A7B3D6A4D1B6F3A1B4B645B7D
+  elapsed (microseconds): 63348
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 618: 618
+    Easy [Single In Row, 1] X 44: 44
+    Easy [Single In Column, 1] X 29: 29
+    Medium [The Only Choice, 5] X 34: 170
+    Hard [Identify Pairs, 20] X 15: 300
+    Recursion1 [Trial & Error, 100] X 28: 2800
+  }
+}
+>>> Game My Game 7
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (4255)
+  board:  97F2B5B3A4D92D6512F4C9B1D5J7C1D4A9D7652A
+  elapsed (microseconds): 42984
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 539: 539
+    Easy [Single In Row, 1] X 23: 23
+    Easy [Single In Column, 1] X 28: 28
+    Medium [The Only Choice, 5] X 29: 145
+    Hard [Identify Pairs, 20] X 11: 220
+    Recursion1 [Trial & Error, 100] X 33: 3300
+  }
+}
+>>> Game My Game 8
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (3796)
+  board:  3D91E58E49E79D861C71I327A571A493E4B5D93F
+  elapsed (microseconds): 71927
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 551: 551
+    Easy [Single In Row, 1] X 23: 23
+    Easy [Single In Column, 1] X 22: 22
+    Medium [The Only Choice, 5] X 8: 40
+    Hard [Identify Pairs, 20] X 8: 160
+    Recursion1 [Trial & Error, 100] X 30: 3000
+  }
+}
+>>> Game My Game 9
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (3041)
+  board:  9A4A7F12A43C2C8A1F57B8D29D271C54B1F5E49F87A
+  elapsed (microseconds): 23377
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 491: 491
+    Easy [Single In Row, 1] X 34: 34
+    Easy [Single In Column, 1] X 11: 11
+    Medium [The Only Choice, 5] X 13: 65
+    Hard [Identify Pairs, 20] X 7: 140
+    Recursion1 [Trial & Error, 100] X 23: 2300
+  }
+}
+>>> Game My Game 10
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (4052)
+  board:  6C279I7D4A98C1D4G8A29D32B898F146C138C3C2B
+  elapsed (microseconds): 77730
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 526: 526
+    Easy [Single In Row, 1] X 31: 31
+    Easy [Single In Column, 1] X 15: 15
+    Medium [The Only Choice, 5] X 36: 180
+    Hard [Identify Pairs, 20] X 20: 400
+    Recursion1 [Trial & Error, 100] X 29: 2900
+  }
+}
+>>> Game My Game 11
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2635)
+  board:  65A2H98A1D95A6B2F8B59A8A2A16A76A1A2C3H87C59H7A
+  elapsed (microseconds): 21444
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 330: 330
+    Easy [Single In Row, 1] X 19: 19
+    Easy [Single In Column, 1] X 16: 16
+    Medium [The Only Choice, 5] X 14: 70
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 21: 2100
+  }
+}
+>>> Game My Game 12
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (224)
+  board:  1A9B6C3B4G5D248E5A34B13C7E8G7E5A6914E2C6A
+  elapsed (microseconds): 463
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 48: 48
+    Easy [Single In Row, 1] X 2: 2
+    Easy [Single In Column, 1] X 4: 4
+    Medium [The Only Choice, 5] X 2: 10
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 13
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Hard (294)
+  board:  8C75C9E8C5A6A9A3K47B69F9A7A31F5E1C2A68A5A4A1
+  elapsed (microseconds): 1344
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 54: 54
+    Easy [Single In Row, 1] X 1: 1
+    Easy [Single In Column, 1] X 4: 4
+    Medium [The Only Choice, 5] X 3: 15
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 2: 200
+  }
+}
+>>> Game My Game 14
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (179)
+  board:  A69A4A1D79A36D8B7C7E21B4E8A1A6I7A5D2D75D4B32A
+  elapsed (microseconds): 535
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 41: 41
+    Easy [Single In Row, 1] X 1: 1
+    Easy [Single In Column, 1] X 7: 7
+    Medium [The Only Choice, 5] X 6: 30
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 15
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (202)
+  board:  E3A968A6G1C4C3C6A8A54C9C7A7B3H7B3C5F1D8A2A
+  elapsed (microseconds): 783
+  value count: 22
+  steps: {
+    Easy [Single In Square, 1] X 49: 49
+    Easy [Single In Row, 1] X 6: 6
+    Easy [Single In Column, 1] X 2: 2
+    Medium [The Only Choice, 5] X 1: 5
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 16
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (159)
+  board:  C2B94C5A4E42A87B5B842A1E17623F3C6B3F7K6B9A
+  elapsed (microseconds): 281
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 53: 53
+    Easy [Single In Row, 1] X 1: 1
+    Medium [The Only Choice, 5] X 1: 5
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 17
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): VeryHard (570)
+  board:  D4I87C56D23A6F9A3A52A1F9B3D8D2B7C3B9A4B2B6
+  elapsed (microseconds): 2530
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 121: 121
+    Easy [Single In Row, 1] X 6: 6
+    Easy [Single In Column, 1] X 8: 8
+    Medium [The Only Choice, 5] X 7: 35
+    Recursion1 [Trial & Error, 100] X 4: 400
+  }
+}
+>>> Game My Game 18
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (200)
+  board:  A4D31C2A8A97B7A2D4C9I7D5D683F5C48F12A37C4A
+  elapsed (microseconds): 1166
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 58: 58
+    Easy [Single In Row, 1] X 1: 1
+    Easy [Single In Column, 1] X 1: 1
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 19
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Hard (430)
+  board:  B1C5B5C3C2A6B4937A7E8A6B3B8B7B862K5D7B6A3A9D7B
+  elapsed (microseconds): 1932
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 71: 71
+    Easy [Single In Row, 1] X 7: 7
+    Easy [Single In Column, 1] X 2: 2
+    Medium [The Only Choice, 5] X 2: 10
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 3: 300
+  }
+}
+>>> Game My Game 20
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (155)
+  board:  B2A4E4A8C5A81C54E4D2F8A3B59B14A25C9C13A26J6B
+  elapsed (microseconds): 375
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 49: 49
+    Easy [Single In Row, 1] X 6: 6
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 21
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (180)
+  board:  5D38G154D6A5B3B32B65B8I7E4D864C75C3A1B6F
+  elapsed (microseconds): 387
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 52: 52
+    Easy [Single In Row, 1] X 1: 1
+    Easy [Single In Column, 1] X 2: 2
+    Medium [The Only Choice, 5] X 1: 5
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 22
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Hard (479)
+  board:  A6C2B1C4D875E6G3B9B5A4D7C3C6B1C89B59B7G6A2A
+  elapsed (microseconds): 1386
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 54: 54
+    Easy [Single In Row, 1] X 3: 3
+    Easy [Single In Column, 1] X 2: 2
+    Medium [The Only Choice, 5] X 4: 20
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 3: 300
+  }
+}
+>>> Game My Game 23
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): VeryHard (569)
+  board:  9I1A2A3A4E9A76A8E3A674A6A2B5C5I2A8E4C5B3C61B
+  elapsed (microseconds): 3373
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 56: 56
+    Easy [Single In Row, 1] X 1: 1
+    Easy [Single In Column, 1] X 7: 7
+    Medium [The Only Choice, 5] X 5: 25
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 4: 400
+  }
+}
+>>> Game My Game 24
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): VeryHard (626)
+  board:  C63B2C2B76A53D1C1C8A9C8C2K1C4C67A2D81A7D62B
+  elapsed (microseconds): 1170
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 72: 72
+    Easy [Single In Row, 1] X 7: 7
+    Easy [Single In Column, 1] X 2: 2
+    Medium [The Only Choice, 5] X 5: 25
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 5: 500
+  }
+}
+>>> Game My Game 25
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (184)
+  board:  94A6C717O6A57E3C1C2A4C9F2B57B61D632C4B9C
+  elapsed (microseconds): 423
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 51: 51
+    Easy [Single In Row, 1] X 2: 2
+    Easy [Single In Column, 1] X 1: 1
+    Medium [The Only Choice, 5] X 2: 10
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 26
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Hard (441)
+  board:  A48C1D52A489C7D6D7M27B435B8B25A1B341A8B5K
+  elapsed (microseconds): 2599
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 62: 62
+    Easy [Single In Row, 1] X 7: 7
+    Easy [Single In Column, 1] X 2: 2
+    Medium [The Only Choice, 5] X 10: 50
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 3: 300
+  }
+}
+>>> Game My Game 27
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Hard (282)
+  board:  F537A73C1A2B8H71A3H9B3A26B8C6B84F4D2B59F
+  elapsed (microseconds): 3912
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 56: 56
+    Easy [Single In Row, 1] X 2: 2
+    Easy [Single In Column, 1] X 4: 4
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 2: 200
+  }
+}
+>>> Game My Game 28
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): VeryHard (524)
+  board:  8B2A34B2B7J5A6B6B8A3C3A1C4C8C21A6C4D9G5B7A5B8A
+  elapsed (microseconds): 3092
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 91: 91
+    Easy [Single In Row, 1] X 3: 3
+    Easy [Single In Column, 1] X 5: 5
+    Medium [The Only Choice, 5] X 5: 25
+    Recursion1 [Trial & Error, 100] X 4: 400
+  }
+}
+>>> Game My Game 29
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1383)
+  board:  E2A58A2B5F41C2A4A1C7C5A7A3C6F923D7A89A7E4E68C
+  elapsed (microseconds): 4825
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 181: 181
+    Easy [Single In Row, 1] X 8: 8
+    Easy [Single In Column, 1] X 9: 9
+    Medium [The Only Choice, 5] X 9: 45
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 11: 1100
+  }
+}
+>>> Game My Game 30
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1759)
+  board:  B75F6C235F4A7E3B8B51A2C43B7E9G8F9D4B12B
+  elapsed (microseconds): 11596
+  value count: 22
+  steps: {
+    Easy [Single In Square, 1] X 310: 310
+    Easy [Single In Row, 1] X 23: 23
+    Easy [Single In Column, 1] X 6: 6
+    Medium [The Only Choice, 5] X 16: 80
+    Hard [Identify Pairs, 20] X 12: 240
+    Recursion1 [Trial & Error, 100] X 11: 1100
+  }
+}
+>>> Game My Game 31
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): VeryHard (625)
+  board:  A71B2D9D8B34E2E237A4C4C591B9D3A19E7A2D4B4D7C
+  elapsed (microseconds): 6554
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 69: 69
+    Easy [Single In Row, 1] X 4: 4
+    Easy [Single In Column, 1] X 2: 2
+    Medium [The Only Choice, 5] X 2: 10
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 5: 500
+  }
+}
+>>> Game My Game 32
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): VeryHard (816)
+  board:  B8D7A26C4A1A3F28B3C46E63F4D1A5A8M249B257A3
+  elapsed (microseconds): 3397
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 131: 131
+    Easy [Single In Row, 1] X 11: 11
+    Easy [Single In Column, 1] X 9: 9
+    Medium [The Only Choice, 5] X 5: 25
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 6: 600
+  }
+}
+>>> Game My Game 33
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (166)
+  board:  B4A9A7C8A3E1C8A32A7I5C6E34C5A24A6B571E246J
+  elapsed (microseconds): 999
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 50: 50
+    Easy [Single In Row, 1] X 3: 3
+    Easy [Single In Column, 1] X 3: 3
+    Medium [The Only Choice, 5] X 2: 10
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 34
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (179)
+  board:  B4A8F37B621K68B57A4G6A7A2B8B6B15E45A7F2C16A
+  elapsed (microseconds): 703
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 42: 42
+    Easy [Single In Row, 1] X 4: 4
+    Easy [Single In Column, 1] X 8: 8
+    Medium [The Only Choice, 5] X 1: 5
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 35
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (182)
+  board:  I2C378A5A7A6C3H5A3B9A6E15B7D7A2E6F9A98D1A
+  elapsed (microseconds): 1174
+  value count: 22
+  steps: {
+    Easy [Single In Square, 1] X 61: 61
+    Easy [Single In Row, 1] X 1: 1
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 36
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Hard (265)
+  board:  B4E6A3B5D17C3A2F2G9C2C8A1A439F6A5E4B62A7B8B
+  elapsed (microseconds): 1651
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 48: 48
+    Easy [Single In Row, 1] X 4: 4
+    Easy [Single In Column, 1] X 3: 3
+    Medium [The Only Choice, 5] X 2: 10
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 37
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (182)
+  board:  I2C378A5A7A6C3H5A3B9A6E15B7D7A2E6F9A98D1A
+  elapsed (microseconds): 1087
+  value count: 22
+  steps: {
+    Easy [Single In Square, 1] X 61: 61
+    Easy [Single In Row, 1] X 1: 1
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 38
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (208)
+  board:  C5C325A4C9B92E8A76J4F8C762B4A2D1A1C8B4B8D7A
+  elapsed (microseconds): 1196
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 50: 50
+    Easy [Single In Row, 1] X 1: 1
+    Easy [Single In Column, 1] X 2: 2
+    Medium [The Only Choice, 5] X 3: 15
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 39
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): VeryHard (967)
+  board:  8A71J8E43D6B8A6A9A592D8N91A7C7C265A3C87C
+  elapsed (microseconds): 2165
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 113: 113
+    Easy [Single In Row, 1] X 10: 10
+    Easy [Single In Column, 1] X 4: 4
+    Medium [The Only Choice, 5] X 4: 20
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 8: 800
+  }
+}
+>>> Game My Game 40
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (179)
+  board:  B4A8F37B621K68B57A4G6A7A2B8B6B15E45A7F2C16A
+  elapsed (microseconds): 464
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 42: 42
+    Easy [Single In Row, 1] X 4: 4
+    Easy [Single In Column, 1] X 8: 8
+    Medium [The Only Choice, 5] X 1: 5
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 41
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Hard (265)
+  board:  B4E6A3B5D17C3A2F2G9C2C8A1A439F6A5E4B62A7B8B
+  elapsed (microseconds): 1725
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 48: 48
+    Easy [Single In Row, 1] X 4: 4
+    Easy [Single In Column, 1] X 3: 3
+    Medium [The Only Choice, 5] X 2: 10
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 42
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (169)
+  board:  C6G5A7A6A9G4A46C13A8A52D1K3B8D2B3A68D42C5A
+  elapsed (microseconds): 661
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 45: 45
+    Easy [Single In Row, 1] X 9: 9
+    Medium [The Only Choice, 5] X 3: 15
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 43
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Medium (180)
+  board:  F6A8A46A7E9B8B2A2B1C56D24H3E5B91C3A2C6A1A9D8A
+  elapsed (microseconds): 840
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 50: 50
+    Easy [Single In Row, 1] X 3: 3
+    Easy [Single In Column, 1] X 2: 2
+    Medium [The Only Choice, 5] X 1: 5
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 1: 100
+  }
+}
+>>> Game My Game 44
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1640)
+  board:  92A3H4F31A27B5C2A1A34A5B7B1I7D9D31C8C67C38B
+  elapsed (microseconds): 4848
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 199: 199
+    Easy [Single In Row, 1] X 10: 10
+    Easy [Single In Column, 1] X 11: 11
+    Medium [The Only Choice, 5] X 16: 80
+    Hard [Identify Pairs, 20] X 7: 140
+    Recursion1 [Trial & Error, 100] X 12: 1200
+  }
+}
+>>> Game My Game 45
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1440)
+  board:  C2B7B2C73D1C6D3B15C7E81I3B49D86A8C59C2A6D
+  elapsed (microseconds): 15320
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 218: 218
+    Easy [Single In Row, 1] X 11: 11
+    Easy [Single In Column, 1] X 6: 6
+    Medium [The Only Choice, 5] X 13: 65
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 11: 1100
+  }
+}
+>>> Game My Game 46
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1474)
+  board:  C7A4A1D3E48B2C5B45D11F985D3A2G86F2C29E5A
+  elapsed (microseconds): 11959
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 214: 214
+    Easy [Single In Row, 1] X 12: 12
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 11: 55
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 11: 1100
+  }
+}
+>>> Game My Game 47
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2432)
+  board:  A69D4D5D18G7B4A7B3B38B6H4B5A2C9A54I9B8B2B
+  elapsed (microseconds): 102378
+  value count: 22
+  steps: {
+    Easy [Single In Square, 1] X 317: 317
+    Easy [Single In Row, 1] X 39: 39
+    Easy [Single In Column, 1] X 16: 16
+    Medium [The Only Choice, 5] X 24: 120
+    Hard [Identify Pairs, 20] X 7: 140
+    Recursion1 [Trial & Error, 100] X 18: 1800
+  }
+}
+>>> Game My Game 48
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2445)
+  board:  78K7A3A6B9C4E1B8C73A49E8G9B1B5A1A5B6B3E3B9
+  elapsed (microseconds): 29947
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 359: 359
+    Easy [Single In Row, 1] X 14: 14
+    Easy [Single In Column, 1] X 22: 22
+    Medium [The Only Choice, 5] X 30: 150
+    Hard [Identify Pairs, 20] X 10: 200
+    Recursion1 [Trial & Error, 100] X 17: 1700
+  }
+}
+>>> Game My Game 49
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (3667)
+  board:  B6E4C4A9D4C812A7A5A2I3B9B9G917B5D7A5D5F68
+  elapsed (microseconds): 173779
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 474: 474
+    Easy [Single In Row, 1] X 34: 34
+    Easy [Single In Column, 1] X 19: 19
+    Medium [The Only Choice, 5] X 16: 80
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 30: 3000
+  }
+}
+>>> Game My Game 50
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2109)
+  board:  D9B45E2C3A6A541I871A7D9A4C6I6D5B3B14B2B13B
+  elapsed (microseconds): 18125
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 375: 375
+    Easy [Single In Row, 1] X 19: 19
+    Easy [Single In Column, 1] X 15: 15
+    Medium [The Only Choice, 5] X 24: 120
+    Hard [Identify Pairs, 20] X 9: 180
+    Recursion1 [Trial & Error, 100] X 14: 1400
+  }
+}
+>>> Game My Game 51
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1776)
+  board:  5D7C6A4A5E916E16A9D5A2D81F52D3B94A2C74J98A
+  elapsed (microseconds): 9036
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 325: 325
+    Easy [Single In Row, 1] X 15: 15
+    Easy [Single In Column, 1] X 11: 11
+    Medium [The Only Choice, 5] X 9: 45
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 13: 1300
+  }
+}
+>>> Game My Game 52
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1799)
+  board:  9D1B8A7A3I9C42B4A89C3G8B7A3B1B9C867A1G3A79B4B
+  elapsed (microseconds): 18357
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 293: 293
+    Easy [Single In Row, 1] X 21: 21
+    Easy [Single In Column, 1] X 5: 5
+    Medium [The Only Choice, 5] X 8: 40
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 14: 1400
+  }
+}
+>>> Game My Game 53
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2115)
+  board:  C89D2C13A6C36B2B16C7B8K4A8931A8E1E9C53A7B4D
+  elapsed (microseconds): 15651
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 428: 428
+    Easy [Single In Row, 1] X 37: 37
+    Easy [Single In Column, 1] X 5: 5
+    Medium [The Only Choice, 5] X 9: 45
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 54
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2170)
+  board:  F7A9A37D8A5A2E11D8A3E721C9C3F4A6A2C5B7I6A5
+  elapsed (microseconds): 16208
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 284: 284
+    Easy [Single In Row, 1] X 8: 8
+    Easy [Single In Column, 1] X 8: 8
+    Medium [The Only Choice, 5] X 10: 50
+    Hard [Identify Pairs, 20] X 6: 120
+    Recursion1 [Trial & Error, 100] X 17: 1700
+  }
+}
+>>> Game My Game 55
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1898)
+  board:  C32B9E78B67H5D29D15D4B2D8A95B1B4781C5F9E
+  elapsed (microseconds): 13651
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 295: 295
+    Easy [Single In Row, 1] X 19: 19
+    Easy [Single In Column, 1] X 9: 9
+    Medium [The Only Choice, 5] X 7: 35
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 15: 1500
+  }
+}
+>>> Game My Game 56
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2172)
+  board:  7D62B5E78E87A6A3B4B8C1A3D287B5A1B4M2B5A28D1A
+  elapsed (microseconds): 22053
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 462: 462
+    Easy [Single In Row, 1] X 13: 13
+    Easy [Single In Column, 1] X 7: 7
+    Medium [The Only Choice, 5] X 10: 50
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 57
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2299)
+  board:  B4B2H3A726C7A1B7G9B5A4E4C956C18B6F2C5A3C6A8A
+  elapsed (microseconds): 44673
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 462: 462
+    Easy [Single In Row, 1] X 23: 23
+    Easy [Single In Column, 1] X 24: 24
+    Medium [The Only Choice, 5] X 18: 90
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 58
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1713)
+  board:  A3A4A25F6I146A2G7A8B7F61A4C869B3A2H357F9A
+  elapsed (microseconds): 14093
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 232: 232
+    Easy [Single In Row, 1] X 13: 13
+    Easy [Single In Column, 1] X 23: 23
+    Medium [The Only Choice, 5] X 21: 105
+    Hard [Identify Pairs, 20] X 12: 240
+    Recursion1 [Trial & Error, 100] X 11: 1100
+  }
+}
+>>> Game My Game 59
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2035)
+  board:  B8A7A3B4A56C9A2E64A69A5D2C8C7C7A2C1B62E1D82B7C4D
+  elapsed (microseconds): 36680
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 422: 422
+    Easy [Single In Row, 1] X 13: 13
+    Easy [Single In Column, 1] X 15: 15
+    Medium [The Only Choice, 5] X 9: 45
+    Hard [Identify Pairs, 20] X 7: 140
+    Recursion1 [Trial & Error, 100] X 14: 1400
+  }
+}
+>>> Game My Game 60
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2255)
+  board:  B51B9A73C4E9A7A2H4F26B5A236D1B5C98B9C2B45C4B1B
+  elapsed (microseconds): 25762
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 437: 437
+    Easy [Single In Row, 1] X 27: 27
+    Easy [Single In Column, 1] X 16: 16
+    Medium [The Only Choice, 5] X 11: 55
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 17: 1700
+  }
+}
+>>> Game My Game 61
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2076)
+  board:  C3E8C1B96B3E41B24E6B3C5A2C1B84B7698A3E3A7G5B
+  elapsed (microseconds): 31638
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 398: 398
+    Easy [Single In Row, 1] X 12: 12
+    Easy [Single In Column, 1] X 6: 6
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 15: 1500
+  }
+}
+>>> Game My Game 62
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): VeryHard (817)
+  board:  5F12C8D7B9F7B3A5G6A7B9D2A3C4E8A6A28B53B5A7A6B
+  elapsed (microseconds): 12560
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 137: 137
+    Easy [Single In Row, 1] X 5: 5
+    Easy [Single In Column, 1] X 15: 15
+    Medium [The Only Choice, 5] X 4: 20
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 6: 600
+  }
+}
+>>> Game My Game 63
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2141)
+  board:  B4A89A1B582A1C2B4H1B6C463D7A2C4G7A1I5A79E62
+  elapsed (microseconds): 16814
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 370: 370
+    Easy [Single In Row, 1] X 22: 22
+    Easy [Single In Column, 1] X 9: 9
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 64
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2060)
+  board:  A2A3495E6B9A1A4I2D5A65A9B1C8F6A9L523A5C74C
+  elapsed (microseconds): 10921
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 339: 339
+    Easy [Single In Row, 1] X 11: 11
+    Easy [Single In Column, 1] X 10: 10
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 65
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2195)
+  board:  E9C6A4A5E8A1D21A93D7D2F89B4A342E6B5C3A84E6C
+  elapsed (microseconds): 28076
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 409: 409
+    Easy [Single In Row, 1] X 22: 22
+    Easy [Single In Column, 1] X 14: 14
+    Medium [The Only Choice, 5] X 14: 70
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 66
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2856)
+  board:  32B915C8G9E3D4B7B961A8B2D8B4C16B8B7C2E6D6A9B
+  elapsed (microseconds): 30794
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 547: 547
+    Easy [Single In Row, 1] X 10: 10
+    Easy [Single In Column, 1] X 9: 9
+    Medium [The Only Choice, 5] X 10: 50
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 22: 2200
+  }
+}
+>>> Game My Game 67
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2132)
+  board:  A574I9D8A9A2E1E5C2A1C6A9C7B2C8C4A5F6C6B137A
+  elapsed (microseconds): 27345
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 272: 272
+    Easy [Single In Row, 1] X 22: 22
+    Easy [Single In Column, 1] X 38: 38
+    Medium [The Only Choice, 5] X 20: 100
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 68
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2028)
+  board:  A3C12B1A5A2A7A37E5G34B38C4D9A21A6C5A8D6D6A1I2A
+  elapsed (microseconds): 8495
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 305: 305
+    Easy [Single In Row, 1] X 15: 15
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 11: 55
+    Hard [Identify Pairs, 20] X 7: 140
+    Recursion1 [Trial & Error, 100] X 15: 1500
+  }
+}
+>>> Game My Game 69
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2089)
+  board:  C9A6B4D3B1C78A4A365B1C4C8C1A5E36C4A72A3C2C5B87A3F
+  elapsed (microseconds): 21510
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 442: 442
+    Easy [Single In Row, 1] X 24: 24
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 6: 30
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 15: 1500
+  }
+}
+>>> Game My Game 70
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2371)
+  board:  B5C6B82H19A3H4A37C2B7A8B3B9C6E6B1A8A2B5C5D42A
+  elapsed (microseconds): 53413
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 463: 463
+    Easy [Single In Row, 1] X 21: 21
+    Easy [Single In Column, 1] X 12: 12
+    Medium [The Only Choice, 5] X 7: 35
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 18: 1800
+  }
+}
+>>> Game My Game 71
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (2000)
+  board:  F5C82A9B6C93C2J3B78A9D8A59B1A93A7B15A1C6A3A8A65D2
+  elapsed (microseconds): 11304
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 330: 330
+    Easy [Single In Row, 1] X 8: 8
+    Easy [Single In Column, 1] X 17: 17
+    Medium [The Only Choice, 5] X 17: 85
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 15: 1500
+  }
+}
+>>> Game My Game 72
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2183)
+  board:  B6F1B2A8D259C1D1B2B6C4C3B4D5A8C9B2A5A3B7B8F3A6
+  elapsed (microseconds): 24400
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 423: 423
+    Easy [Single In Row, 1] X 34: 34
+    Easy [Single In Column, 1] X 11: 11
+    Medium [The Only Choice, 5] X 15: 75
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 73
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2117)
+  board:  5A4E7A37G89A57I3A5A7B1B6D234A7D8C24A1B75B3C1E
+  elapsed (microseconds): 16685
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 424: 424
+    Easy [Single In Row, 1] X 26: 26
+    Easy [Single In Column, 1] X 7: 7
+    Medium [The Only Choice, 5] X 8: 40
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 74
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2318)
+  board:  A1B36B2C5B7D32A41B2B3C8A9A1E4B5G5B47B3A6D52J
+  elapsed (microseconds): 22141
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 305: 305
+    Easy [Single In Row, 1] X 27: 27
+    Easy [Single In Column, 1] X 11: 11
+    Medium [The Only Choice, 5] X 27: 135
+    Hard [Identify Pairs, 20] X 7: 140
+    Recursion1 [Trial & Error, 100] X 17: 1700
+  }
+}
+>>> Game My Game 75
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2194)
+  board:  8C125A95C6A2I7A185E7B2A5A9B4C8G6E7C95B1A6B71C
+  elapsed (microseconds): 14841
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 356: 356
+    Easy [Single In Row, 1] X 28: 28
+    Easy [Single In Column, 1] X 15: 15
+    Medium [The Only Choice, 5] X 15: 75
+    Hard [Identify Pairs, 20] X 6: 120
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 76
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2253)
+  board:  58A1B7F6D9B8A5J3B3B51A2B5A9A38E3A42D2E514E7A
+  elapsed (microseconds): 9114
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 410: 410
+    Easy [Single In Row, 1] X 30: 30
+    Easy [Single In Column, 1] X 23: 23
+    Medium [The Only Choice, 5] X 18: 90
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 77
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2131)
+  board:  D1B4A4B6A5E38C9F85B6A1B2H697A2A4D6A38F4B6C38A
+  elapsed (microseconds): 31549
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 434: 434
+    Easy [Single In Row, 1] X 12: 12
+    Easy [Single In Column, 1] X 10: 10
+    Medium [The Only Choice, 5] X 19: 95
+    Hard [Identify Pairs, 20] X 9: 180
+    Recursion1 [Trial & Error, 100] X 14: 1400
+  }
+}
+>>> Game My Game 78
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2047)
+  board:  C3A85B7E43E7C9A9G3B5F85B6C5G41A27D3B94A52B
+  elapsed (microseconds): 19310
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 348: 348
+    Easy [Single In Row, 1] X 23: 23
+    Easy [Single In Column, 1] X 21: 21
+    Medium [The Only Choice, 5] X 11: 55
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 15: 1500
+  }
+}
+>>> Game My Game 79
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2254)
+  board:  7A3D2G8A3F9D9A8B422B4B7A9C6B13A4B5C7C1B7D5B24C
+  elapsed (microseconds): 13973
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 338: 338
+    Easy [Single In Row, 1] X 16: 16
+    Easy [Single In Column, 1] X 10: 10
+    Medium [The Only Choice, 5] X 10: 50
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 18: 1800
+  }
+}
+>>> Game My Game 80
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2243)
+  board:  B2C71A4A1A72B6F2A4B4B31E9E3B18F935C772B1A34H9A
+  elapsed (microseconds): 15564
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 382: 382
+    Easy [Single In Row, 1] X 12: 12
+    Easy [Single In Column, 1] X 14: 14
+    Medium [The Only Choice, 5] X 11: 55
+    Hard [Identify Pairs, 20] X 9: 180
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 81
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1687)
+  board:  E951B3A25A9C6E7A7E2A1C7A2F6A8A5A3A8G9C1B5A5D76A
+  elapsed (microseconds): 26257
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 282: 282
+    Easy [Single In Row, 1] X 15: 15
+    Easy [Single In Column, 1] X 20: 20
+    Medium [The Only Choice, 5] X 6: 30
+    Hard [Identify Pairs, 20] X 7: 140
+    Recursion1 [Trial & Error, 100] X 12: 1200
+  }
+}
+>>> Game My Game 82
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1996)
+  board:  A6A459B3D8C6B5C9D6A73D1B4C78E6D3C7A5B83A5C1F4A
+  elapsed (microseconds): 12931
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 359: 359
+    Easy [Single In Row, 1] X 19: 19
+    Easy [Single In Column, 1] X 23: 23
+    Medium [The Only Choice, 5] X 15: 75
+    Hard [Identify Pairs, 20] X 11: 220
+    Recursion1 [Trial & Error, 100] X 13: 1300
+  }
+}
+>>> Game My Game 83
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2047)
+  board:  B1A4B2A7B69C3B4B7B53B4B57A9E16L9A35D8A2C57A2G
+  elapsed (microseconds): 29362
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 279: 279
+    Easy [Single In Row, 1] X 16: 16
+    Easy [Single In Column, 1] X 7: 7
+    Medium [The Only Choice, 5] X 17: 85
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 84
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2348)
+  board:  E9D9A8B37B3C15D3A6D7A9B4A6C6B7A1A5C4A1A9A1A29A7J8
+  elapsed (microseconds): 12320
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 447: 447
+    Easy [Single In Row, 1] X 10: 10
+    Easy [Single In Column, 1] X 6: 6
+    Medium [The Only Choice, 5] X 13: 65
+    Hard [Identify Pairs, 20] X 6: 120
+    Recursion1 [Trial & Error, 100] X 17: 1700
+  }
+}
+>>> Game My Game 85
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2282)
+  board:  C42F9A8A4A7E1C4B21A8B5D6D9D2A67D2C845H2C51A
+  elapsed (microseconds): 20986
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 189: 189
+    Easy [Single In Row, 1] X 50: 50
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 22: 110
+    Hard [Identify Pairs, 20] X 11: 220
+    Recursion1 [Trial & Error, 100] X 17: 1700
+  }
+}
+>>> Game My Game 86
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2354)
+  board:  C3D6B4A2D6A859A4C9D5A4B7F5B7A9A8B8B6A3D6B5A1A24F5
+  elapsed (microseconds): 10482
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 414: 414
+    Easy [Single In Row, 1] X 36: 36
+    Easy [Single In Column, 1] X 14: 14
+    Medium [The Only Choice, 5] X 10: 50
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 18: 1800
+  }
+}
+>>> Game My Game 87
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): Evil (1982)
+  board:  E78C75D4A9B453H4A787C2A3B8A93A5C5D8A97G8E921B
+  elapsed (microseconds): 11806
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 248: 248
+    Easy [Single In Row, 1] X 16: 16
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 5: 25
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 88
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2081)
+  board:  B9B4A5D69H2C1B1B58C4A9C1A7E2C85H4C196B37C8A
+  elapsed (microseconds): 10134
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 364: 364
+    Easy [Single In Row, 1] X 26: 26
+    Easy [Single In Column, 1] X 16: 16
+    Medium [The Only Choice, 5] X 15: 75
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 15: 1500
+  }
+}
+>>> Game My Game 89
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2187)
+  board:  B3B62C92A15B8C3D9B58A1B691E5B48C3G8F15C34A16A3C
+  elapsed (microseconds): 11879
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 398: 398
+    Easy [Single In Row, 1] X 20: 20
+    Easy [Single In Column, 1] X 9: 9
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 90
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2390)
+  board:  G6C65A92I5E184D1E88A24A3A1A1A863A5D5A9C332C5A8A
+  elapsed (microseconds): 15504
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 469: 469
+    Easy [Single In Row, 1] X 31: 31
+    Easy [Single In Column, 1] X 10: 10
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 6: 120
+    Recursion1 [Trial & Error, 100] X 17: 1700
+  }
+}
+>>> Game My Game 91
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (3501)
+  board:  A3A6C5B9B8A4F7B68B9B5A4D21A6G4A2E275A424A1C7B87C2B
+  elapsed (microseconds): 37415
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 509: 509
+    Easy [Single In Row, 1] X 26: 26
+    Easy [Single In Column, 1] X 16: 16
+    Medium [The Only Choice, 5] X 22: 110
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 28: 2800
+  }
+}
+>>> Game My Game 92
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2160)
+  board:  E79B31H7E62B62B3A5C57B9B5B6B27C3A1B62C8D1C4B7A
+  elapsed (microseconds): 17554
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 393: 393
+    Easy [Single In Row, 1] X 21: 21
+    Easy [Single In Column, 1] X 16: 16
+    Medium [The Only Choice, 5] X 18: 90
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 93
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2464)
+  board:  B32D62A74B9B8J8D47I416B78A2J841B7A37C39A84
+  elapsed (microseconds): 11144
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 460: 460
+    Easy [Single In Row, 1] X 50: 50
+    Easy [Single In Column, 1] X 4: 4
+    Medium [The Only Choice, 5] X 18: 90
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 18: 1800
+  }
+}
+>>> Game My Game 94
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2081)
+  board:  H21B3B497C4A25A3463A21H82G9B16F7A7A9A6A1D5C9B
+  elapsed (microseconds): 5454
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 309: 309
+    Easy [Single In Row, 1] X 20: 20
+    Easy [Single In Column, 1] X 7: 7
+    Medium [The Only Choice, 5] X 17: 85
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 95
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2258)
+  board:  C76D7D5D9F4A79B8B3B65B9A853A9C76A6D18B21F3B1D7
+  elapsed (microseconds): 19739
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 392: 392
+    Easy [Single In Row, 1] X 32: 32
+    Easy [Single In Column, 1] X 9: 9
+    Medium [The Only Choice, 5] X 9: 45
+    Hard [Identify Pairs, 20] X 9: 180
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 96
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2588)
+  board:  A8D7B4A5A1A23B2C356F8D4A1C7I6A9I19A6A5A6A84A2C
+  elapsed (microseconds): 6365
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 321: 321
+    Easy [Single In Row, 1] X 24: 24
+    Easy [Single In Column, 1] X 18: 18
+    Medium [The Only Choice, 5] X 21: 105
+    Hard [Identify Pairs, 20] X 6: 120
+    Recursion1 [Trial & Error, 100] X 20: 2000
+  }
+}
+>>> Game My Game 97
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2050)
+  board:  8D64E39E2F66B2B5D3A897D5B1B2A9F41C4B2E126A9
+  elapsed (microseconds): 8480
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 424: 424
+    Easy [Single In Row, 1] X 11: 11
+    Easy [Single In Column, 1] X 5: 5
+    Medium [The Only Choice, 5] X 10: 50
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 15: 1500
+  }
+}
+>>> Game My Game 98
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2033)
+  board:  B7A9E5A8D768A2B1D39A2D4B3B91B8D269P48B1C5A
+  elapsed (microseconds): 3274
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 201: 201
+    Easy [Single In Row, 1] X 6: 6
+    Easy [Single In Column, 1] X 6: 6
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 17: 1700
+  }
+}
+>>> Game My Game 99
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2594)
+  board:  1E5A9A2D76B8C9E4C9A5D52C2B4B6C78A4D5A32A8F3E
+  elapsed (microseconds): 16455
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 349: 349
+    Easy [Single In Row, 1] X 14: 14
+    Easy [Single In Column, 1] X 21: 21
+    Medium [The Only Choice, 5] X 22: 110
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 20: 2000
+  }
+}
+>>> Game My Game 100
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2365)
+  board:  A6E3B1B478A54A5E1A2B9A6G2F781A52G8B51824C9H
+  elapsed (microseconds): 12819
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 415: 415
+    Easy [Single In Row, 1] X 26: 26
+    Easy [Single In Column, 1] X 24: 24
+    Medium [The Only Choice, 5] X 32: 160
+    Hard [Identify Pairs, 20] X 7: 140
+    Recursion1 [Trial & Error, 100] X 16: 1600
+  }
+}
+>>> Game My Game 101
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2607)
+  board:  B1A4D8B2K7A6B48D5B9C6C8B9B1B4B3I6A746A8B129A
+  elapsed (microseconds): 18726
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 348: 348
+    Easy [Single In Row, 1] X 13: 13
+    Easy [Single In Column, 1] X 11: 11
+    Medium [The Only Choice, 5] X 23: 115
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 21: 2100
+  }
+}
+>>> Game My Game 102
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2906)
+  board:  6B34B92A34E1C8B3D7C91B6B7D2B9C87B6A9E2A4A7I4A8
+  elapsed (microseconds): 59605
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 553: 553
+    Easy [Single In Row, 1] X 20: 20
+    Easy [Single In Column, 1] X 43: 43
+    Medium [The Only Choice, 5] X 18: 90
+    Hard [Identify Pairs, 20] X 10: 200
+    Recursion1 [Trial & Error, 100] X 20: 2000
+  }
+}
+>>> Game My Game 103
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (3057)
+  board:  A1E4A6C9A1D4A7C2B35A8A69B53E48F37A893C139B57L
+  elapsed (microseconds): 18022
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 477: 477
+    Easy [Single In Row, 1] X 17: 17
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 26: 130
+    Hard [Identify Pairs, 20] X 11: 220
+    Recursion1 [Trial & Error, 100] X 22: 2200
+  }
+}
+>>> Game My Game 104
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2801)
+  board:  B62E5C9F7A8A95A2D783B8A53C29B8D117A3C8C9A7A3K
+  elapsed (microseconds): 25437
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 474: 474
+    Easy [Single In Row, 1] X 16: 16
+    Easy [Single In Column, 1] X 11: 11
+    Medium [The Only Choice, 5] X 8: 40
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 22: 2200
+  }
+}
+>>> Game My Game 105
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (3026)
+  board:  B68B3B7D6A94A3A9A7A8B6A7B4C7E53B1A85J41E45B1B57A9B
+  elapsed (microseconds): 20289
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 581: 581
+    Easy [Single In Row, 1] X 31: 31
+    Easy [Single In Column, 1] X 9: 9
+    Medium [The Only Choice, 5] X 13: 65
+    Hard [Identify Pairs, 20] X 7: 140
+    Recursion1 [Trial & Error, 100] X 22: 2200
+  }
+}
+>>> Game My Game 106
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (3010)
+  board:  B38A29B96F2B1D5A1C295B49F8C18D3A9A75A1A2B3B7D5D3A
+  elapsed (microseconds): 35276
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 570: 570
+    Easy [Single In Row, 1] X 19: 19
+    Easy [Single In Column, 1] X 11: 11
+    Medium [The Only Choice, 5] X 14: 70
+    Hard [Identify Pairs, 20] X 7: 140
+    Recursion1 [Trial & Error, 100] X 22: 2200
+  }
+}
+>>> Game My Game 107
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (2581)
+  board:  B8A9A5C1G5B64A1B6D5A17D6B5D9A28B7A28A6G2B9C6C7B
+  elapsed (microseconds): 94004
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 455: 455
+    Easy [Single In Row, 1] X 55: 55
+    Easy [Single In Column, 1] X 31: 31
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 9: 180
+    Recursion1 [Trial & Error, 100] X 18: 1800
+  }
+}
+>>> Game My Game 108
+Sudoku Result {
+  action: Solve
+  status: Succeeded
+  level (complexity): DarkEvil (3176)
+  board:  C5B9D47A638A56B83A4B3D4D6C8B94A8D265E9F7B3B3A5A6B
+  elapsed (microseconds): 101095
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 526: 526
+    Easy [Single In Row, 1] X 24: 24
+    Easy [Single In Column, 1] X 31: 31
+    Medium [The Only Choice, 5] X 19: 95
+    Hard [Identify Pairs, 20] X 10: 200
+    Recursion1 [Trial & Error, 100] X 23: 2300
+  }
+}
+other games (prove)
+>>> Game My Game (Prove) 0
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A7A5D1C8A9C5D17B9A53C7E8B9A8E523C9B3B6A1G3C76B
+  elapsed (microseconds): 32425
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 1844: 1844
+    Easy [Single In Row, 1] X 15: 15
+    Easy [Single In Column, 1] X 64: 64
+    Medium [The Only Choice, 5] X 54: 270
+    Hard [Identify Pairs, 20] X 32: 640
+    Recursion1 [Trial & Error, 100] X 13: 1300
+    Recursion2 [Trial & Error, 1000] X 14: 14000
+    Recursion3 [Trial & Error, 10000] X 16: 160000
+    Recursion4 [Trial & Error, 100000] X 66: 6600000
+  }
+}
+>>> Game My Game (Prove) 1
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  I2F86B4B67A9D674G96D98C3A78C29C467A8A1A1C4D
+  elapsed (microseconds): 13857
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 1509: 1509
+    Easy [Single In Row, 1] X 56: 56
+    Easy [Single In Column, 1] X 79: 79
+    Medium [The Only Choice, 5] X 28: 140
+    Hard [Identify Pairs, 20] X 14: 280
+    Recursion1 [Trial & Error, 100] X 22: 2200
+    Recursion2 [Trial & Error, 1000] X 15: 15000
+    Recursion3 [Trial & Error, 10000] X 15: 150000
+    Recursion4 [Trial & Error, 100000] X 69: 6900000
+  }
+}
+>>> Game My Game (Prove) 2
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A6A2C4C8A35A6G8B59F74C8E23A4C9B5F68B5A3G69B
+  elapsed (microseconds): 3905
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 706: 706
+    Easy [Single In Row, 1] X 11: 11
+    Easy [Single In Column, 1] X 18: 18
+    Medium [The Only Choice, 5] X 15: 75
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 7: 700
+    Recursion2 [Trial & Error, 1000] X 14: 14000
+    Recursion3 [Trial & Error, 10000] X 14: 140000
+    Recursion4 [Trial & Error, 100000] X 8: 800000
+  }
+}
+>>> Game My Game (Prove) 3
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B2F47C1G7B96C6E32D5B19A3B2A7B7C1G4B92B1A7B3
+  elapsed (microseconds): 17013
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 2321: 2321
+    Easy [Single In Row, 1] X 183: 183
+    Easy [Single In Column, 1] X 55: 55
+    Medium [The Only Choice, 5] X 55: 275
+    Hard [Identify Pairs, 20] X 53: 1060
+    Recursion1 [Trial & Error, 100] X 14: 1400
+    Recursion2 [Trial & Error, 1000] X 16: 16000
+    Recursion3 [Trial & Error, 10000] X 24: 240000
+    Recursion4 [Trial & Error, 100000] X 103: 10300000
+  }
+}
+>>> Game My Game (Prove) 4
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  74A2A8B1A1B35C5F8H3D541A2F3B5B6B97A319H8A1B6B
+  elapsed (microseconds): 4992
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 720: 720
+    Easy [Single In Row, 1] X 58: 58
+    Easy [Single In Column, 1] X 21: 21
+    Medium [The Only Choice, 5] X 17: 85
+    Hard [Identify Pairs, 20] X 17: 340
+    Recursion1 [Trial & Error, 100] X 13: 1300
+    Recursion2 [Trial & Error, 1000] X 13: 13000
+    Recursion3 [Trial & Error, 10000] X 11: 110000
+    Recursion4 [Trial & Error, 100000] X 7: 700000
+  }
+}
+>>> Game My Game (Prove) 5
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A1C3B57D9C9B716B2A4A1B2H6A7D97D9A37A5G4C37B2C1
+  elapsed (microseconds): 11719
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 1622: 1622
+    Easy [Single In Row, 1] X 31: 31
+    Easy [Single In Column, 1] X 42: 42
+    Medium [The Only Choice, 5] X 34: 170
+    Hard [Identify Pairs, 20] X 30: 600
+    Recursion1 [Trial & Error, 100] X 17: 1700
+    Recursion2 [Trial & Error, 1000] X 16: 16000
+    Recursion3 [Trial & Error, 10000] X 18: 180000
+    Recursion4 [Trial & Error, 100000] X 63: 6300000
+  }
+}
+>>> Game My Game (Prove) 6
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  7B92A5J36B7C24D6B3A8A7B3D6A4D1B6F3A1B4B645B7D
+  elapsed (microseconds): 10763
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 1779: 1779
+    Easy [Single In Row, 1] X 42: 42
+    Easy [Single In Column, 1] X 69: 69
+    Medium [The Only Choice, 5] X 41: 205
+    Hard [Identify Pairs, 20] X 17: 340
+    Recursion1 [Trial & Error, 100] X 12: 1200
+    Recursion2 [Trial & Error, 1000] X 21: 21000
+    Recursion3 [Trial & Error, 10000] X 22: 220000
+    Recursion4 [Trial & Error, 100000] X 30: 3000000
+  }
+}
+>>> Game My Game (Prove) 7
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  97F2B5B3A4D92D6512F4C9B1D5J7C1D4A9D7652A
+  elapsed (microseconds): 12848
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 1773: 1773
+    Easy [Single In Row, 1] X 106: 106
+    Easy [Single In Column, 1] X 43: 43
+    Medium [The Only Choice, 5] X 33: 165
+    Hard [Identify Pairs, 20] X 32: 640
+    Recursion1 [Trial & Error, 100] X 16: 1600
+    Recursion2 [Trial & Error, 1000] X 18: 18000
+    Recursion3 [Trial & Error, 10000] X 18: 180000
+    Recursion4 [Trial & Error, 100000] X 76: 7600000
+  }
+}
+>>> Game My Game (Prove) 8
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  3D91E58E49E79D861C71I327A571A493E4B5D93F
+  elapsed (microseconds): 4740
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 895: 895
+    Easy [Single In Row, 1] X 28: 28
+    Easy [Single In Column, 1] X 17: 17
+    Medium [The Only Choice, 5] X 10: 50
+    Hard [Identify Pairs, 20] X 15: 300
+    Recursion1 [Trial & Error, 100] X 9: 900
+    Recursion2 [Trial & Error, 1000] X 12: 12000
+    Recursion3 [Trial & Error, 10000] X 14: 140000
+    Recursion4 [Trial & Error, 100000] X 18: 1800000
+  }
+}
+>>> Game My Game (Prove) 9
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  9A4A7F12A43C2C8A1F57B8D29D271C54B1F5E49F87A
+  elapsed (microseconds): 3167
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 608: 608
+    Easy [Single In Row, 1] X 15: 15
+    Easy [Single In Column, 1] X 7: 7
+    Medium [The Only Choice, 5] X 8: 40
+    Hard [Identify Pairs, 20] X 15: 300
+    Recursion1 [Trial & Error, 100] X 10: 1000
+    Recursion2 [Trial & Error, 1000] X 12: 12000
+    Recursion3 [Trial & Error, 10000] X 6: 60000
+    Recursion4 [Trial & Error, 100000] X 4: 400000
+  }
+}
+>>> Game My Game (Prove) 10
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  6C279I7D4A98C1D4G8A29D32B898F146C138C3C2B
+  elapsed (microseconds): 6887
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 1282: 1282
+    Easy [Single In Row, 1] X 39: 39
+    Easy [Single In Column, 1] X 31: 31
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 18: 360
+    Recursion1 [Trial & Error, 100] X 12: 1200
+    Recursion2 [Trial & Error, 1000] X 16: 16000
+    Recursion3 [Trial & Error, 10000] X 25: 250000
+    Recursion4 [Trial & Error, 100000] X 37: 3700000
+  }
+}
+>>> Game My Game (Prove) 11
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  65A2H98A1D95A6B2F8B59A8A2A16A76A1A2C3H87C59H7A
+  elapsed (microseconds): 7750
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 904: 904
+    Easy [Single In Row, 1] X 27: 27
+    Easy [Single In Column, 1] X 31: 31
+    Medium [The Only Choice, 5] X 51: 255
+    Hard [Identify Pairs, 20] X 37: 740
+    Recursion1 [Trial & Error, 100] X 19: 1900
+    Recursion2 [Trial & Error, 1000] X 18: 18000
+    Recursion3 [Trial & Error, 10000] X 16: 160000
+    Recursion4 [Trial & Error, 100000] X 32: 3200000
+  }
+}
+>>> Game My Game (Prove) 12
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  1A9B6C3B4G5D248E5A34B13C7E8G7E5A6914E2C6A
+  elapsed (microseconds): 5001
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 840: 840
+    Easy [Single In Row, 1] X 41: 41
+    Easy [Single In Column, 1] X 19: 19
+    Medium [The Only Choice, 5] X 14: 70
+    Hard [Identify Pairs, 20] X 9: 180
+    Recursion1 [Trial & Error, 100] X 1: 100
+    Recursion2 [Trial & Error, 1000] X 5: 5000
+    Recursion3 [Trial & Error, 10000] X 12: 120000
+    Recursion4 [Trial & Error, 100000] X 28: 2800000
+  }
+}
+>>> Game My Game (Prove) 13
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  8C75C9E8C5A6A9A3K47B69F9A7A31F5E1C2A68A5A4A1
+  elapsed (microseconds): 6545
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 960: 960
+    Easy [Single In Row, 1] X 47: 47
+    Easy [Single In Column, 1] X 31: 31
+    Medium [The Only Choice, 5] X 23: 115
+    Hard [Identify Pairs, 20] X 18: 360
+    Recursion1 [Trial & Error, 100] X 8: 800
+    Recursion2 [Trial & Error, 1000] X 6: 6000
+    Recursion3 [Trial & Error, 10000] X 9: 90000
+    Recursion4 [Trial & Error, 100000] X 26: 2600000
+  }
+}
+>>> Game My Game (Prove) 14
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A69A4A1D79A36D8B7C7E21B4E8A1A6I7A5D2D75D4B32A
+  elapsed (microseconds): 3434
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 518: 518
+    Easy [Single In Row, 1] X 25: 25
+    Easy [Single In Column, 1] X 18: 18
+    Medium [The Only Choice, 5] X 11: 55
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 1: 100
+    Recursion2 [Trial & Error, 1000] X 5: 5000
+    Recursion3 [Trial & Error, 10000] X 10: 100000
+    Recursion4 [Trial & Error, 100000] X 24: 2400000
+  }
+}
+>>> Game My Game (Prove) 15
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  E3A968A6G1C4C3C6A8A54C9C7A7B3H7B3C5F1D8A2A
+  elapsed (microseconds): 7286
+  value count: 22
+  steps: {
+    Easy [Single In Square, 1] X 1234: 1234
+    Easy [Single In Row, 1] X 58: 58
+    Easy [Single In Column, 1] X 14: 14
+    Medium [The Only Choice, 5] X 54: 270
+    Hard [Identify Pairs, 20] X 16: 320
+    Recursion1 [Trial & Error, 100] X 3: 300
+    Recursion2 [Trial & Error, 1000] X 11: 11000
+    Recursion3 [Trial & Error, 10000] X 21: 210000
+    Recursion4 [Trial & Error, 100000] X 16: 1600000
+  }
+}
+>>> Game My Game (Prove) 16
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C2B94C5A4E42A87B5B842A1E17623F3C6B3F7K6B9A
+  elapsed (microseconds): 3536
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 686: 686
+    Easy [Single In Row, 1] X 15: 15
+    Easy [Single In Column, 1] X 26: 26
+    Medium [The Only Choice, 5] X 2: 10
+    Hard [Identify Pairs, 20] X 17: 340
+    Recursion1 [Trial & Error, 100] X 1: 100
+    Recursion2 [Trial & Error, 1000] X 2: 2000
+    Recursion3 [Trial & Error, 10000] X 5: 50000
+    Recursion4 [Trial & Error, 100000] X 32: 3200000
+  }
+}
+>>> Game My Game (Prove) 17
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  D4I87C56D23A6F9A3A52A1F9B3D8D2B7C3B9A4B2B6
+  elapsed (microseconds): 9229
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 1387: 1387
+    Easy [Single In Row, 1] X 56: 56
+    Easy [Single In Column, 1] X 34: 34
+    Medium [The Only Choice, 5] X 24: 120
+    Hard [Identify Pairs, 20] X 18: 360
+    Recursion1 [Trial & Error, 100] X 12: 1200
+    Recursion2 [Trial & Error, 1000] X 12: 12000
+    Recursion3 [Trial & Error, 10000] X 15: 150000
+    Recursion4 [Trial & Error, 100000] X 32: 3200000
+  }
+}
+>>> Game My Game (Prove) 18
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A4D31C2A8A97B7A2D4C9I7D5D683F5C48F12A37C4A
+  elapsed (microseconds): 11057
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 2188: 2188
+    Easy [Single In Row, 1] X 48: 48
+    Easy [Single In Column, 1] X 55: 55
+    Medium [The Only Choice, 5] X 16: 80
+    Hard [Identify Pairs, 20] X 45: 900
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 19: 19000
+    Recursion3 [Trial & Error, 10000] X 23: 230000
+    Recursion4 [Trial & Error, 100000] X 67: 6700000
+  }
+}
+>>> Game My Game (Prove) 19
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B1C5B5C3C2A6B4937A7E8A6B3B8B7B862K5D7B6A3A9D7B
+  elapsed (microseconds): 3722
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 645: 645
+    Easy [Single In Row, 1] X 18: 18
+    Easy [Single In Column, 1] X 12: 12
+    Medium [The Only Choice, 5] X 17: 85
+    Hard [Identify Pairs, 20] X 13: 260
+    Recursion1 [Trial & Error, 100] X 4: 400
+    Recursion2 [Trial & Error, 1000] X 5: 5000
+    Recursion3 [Trial & Error, 10000] X 5: 50000
+    Recursion4 [Trial & Error, 100000] X 27: 2700000
+  }
+}
+>>> Game My Game (Prove) 20
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B2A4E4A8C5A81C54E4D2F8A3B59B14A25C9C13A26J6B
+  elapsed (microseconds): 7070
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 1484: 1484
+    Easy [Single In Row, 1] X 35: 35
+    Easy [Single In Column, 1] X 19: 19
+    Medium [The Only Choice, 5] X 17: 85
+    Hard [Identify Pairs, 20] X 34: 680
+    Recursion1 [Trial & Error, 100] X 3: 300
+    Recursion2 [Trial & Error, 1000] X 9: 9000
+    Recursion3 [Trial & Error, 10000] X 14: 140000
+    Recursion4 [Trial & Error, 100000] X 93: 9300000
+  }
+}
+>>> Game My Game (Prove) 21
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  5D38G154D6A5B3B32B65B8I7E4D864C75C3A1B6F
+  elapsed (microseconds): 9604
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 1014: 1014
+    Easy [Single In Row, 1] X 120: 120
+    Easy [Single In Column, 1] X 50: 50
+    Medium [The Only Choice, 5] X 41: 205
+    Hard [Identify Pairs, 20] X 30: 600
+    Recursion1 [Trial & Error, 100] X 5: 500
+    Recursion2 [Trial & Error, 1000] X 10: 10000
+    Recursion3 [Trial & Error, 10000] X 21: 210000
+    Recursion4 [Trial & Error, 100000] X 28: 2800000
+  }
+}
+>>> Game My Game (Prove) 22
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A6C2B1C4D875E6G3B9B5A4D7C3C6B1C89B59B7G6A2A
+  elapsed (microseconds): 14462
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 2224: 2224
+    Easy [Single In Row, 1] X 98: 98
+    Easy [Single In Column, 1] X 33: 33
+    Medium [The Only Choice, 5] X 53: 265
+    Hard [Identify Pairs, 20] X 25: 500
+    Recursion1 [Trial & Error, 100] X 6: 600
+    Recursion2 [Trial & Error, 1000] X 11: 11000
+    Recursion3 [Trial & Error, 10000] X 19: 190000
+    Recursion4 [Trial & Error, 100000] X 60: 6000000
+  }
+}
+>>> Game My Game (Prove) 23
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  9I1A2A3A4E9A76A8E3A674A6A2B5C5I2A8E4C5B3C61B
+  elapsed (microseconds): 3500
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 787: 787
+    Easy [Single In Row, 1] X 18: 18
+    Easy [Single In Column, 1] X 9: 9
+    Medium [The Only Choice, 5] X 5: 25
+    Hard [Identify Pairs, 20] X 22: 440
+    Recursion1 [Trial & Error, 100] X 8: 800
+    Recursion2 [Trial & Error, 1000] X 7: 7000
+    Recursion3 [Trial & Error, 10000] X 8: 80000
+    Recursion4 [Trial & Error, 100000] X 36: 3600000
+  }
+}
+>>> Game My Game (Prove) 24
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C63B2C2B76A53D1C1C8A9C8C2K1C4C67A2D81A7D62B
+  elapsed (microseconds): 10503
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 2150: 2150
+    Easy [Single In Row, 1] X 71: 71
+    Easy [Single In Column, 1] X 82: 82
+    Medium [The Only Choice, 5] X 16: 80
+    Hard [Identify Pairs, 20] X 10: 200
+    Recursion1 [Trial & Error, 100] X 8: 800
+    Recursion2 [Trial & Error, 1000] X 8: 8000
+    Recursion3 [Trial & Error, 10000] X 17: 170000
+    Recursion4 [Trial & Error, 100000] X 110: 11000000
+  }
+}
+>>> Game My Game (Prove) 25
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  94A6C717O6A57E3C1C2A4C9F2B57B61D632C4B9C
+  elapsed (microseconds): 5709
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 1213: 1213
+    Easy [Single In Row, 1] X 29: 29
+    Easy [Single In Column, 1] X 20: 20
+    Medium [The Only Choice, 5] X 21: 105
+    Hard [Identify Pairs, 20] X 14: 280
+    Recursion1 [Trial & Error, 100] X 1: 100
+    Recursion2 [Trial & Error, 1000] X 3: 3000
+    Recursion3 [Trial & Error, 10000] X 6: 60000
+    Recursion4 [Trial & Error, 100000] X 59: 5900000
+  }
+}
+>>> Game My Game (Prove) 26
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A48C1D52A489C7D6D7M27B435B8B25A1B341A8B5K
+  elapsed (microseconds): 4520
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 1169: 1169
+    Easy [Single In Row, 1] X 6: 6
+    Easy [Single In Column, 1] X 20: 20
+    Medium [The Only Choice, 5] X 11: 55
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 4: 400
+    Recursion2 [Trial & Error, 1000] X 4: 4000
+    Recursion3 [Trial & Error, 10000] X 8: 80000
+    Recursion4 [Trial & Error, 100000] X 67: 6700000
+  }
+}
+>>> Game My Game (Prove) 27
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  F537A73C1A2B8H71A3H9B3A26B8C6B84F4D2B59F
+  elapsed (microseconds): 5159
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 250: 250
+    Easy [Single In Row, 1] X 57: 57
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 14: 70
+    Hard [Identify Pairs, 20] X 24: 480
+    Recursion1 [Trial & Error, 100] X 3: 300
+    Recursion2 [Trial & Error, 1000] X 10: 10000
+    Recursion3 [Trial & Error, 10000] X 17: 170000
+    Recursion4 [Trial & Error, 100000] X 29: 2900000
+  }
+}
+>>> Game My Game (Prove) 28
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  8B2A34B2B7J5A6B6B8A3C3A1C4C8C21A6C4D9G5B7A5B8A
+  elapsed (microseconds): 8700
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 1389: 1389
+    Easy [Single In Row, 1] X 43: 43
+    Easy [Single In Column, 1] X 49: 49
+    Medium [The Only Choice, 5] X 40: 200
+    Hard [Identify Pairs, 20] X 22: 440
+    Recursion1 [Trial & Error, 100] X 8: 800
+    Recursion2 [Trial & Error, 1000] X 16: 16000
+    Recursion3 [Trial & Error, 10000] X 13: 130000
+    Recursion4 [Trial & Error, 100000] X 22: 2200000
+  }
+}
+>>> Game My Game (Prove) 29
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  E2A58A2B5F41C2A4A1C7C5A7A3C6F923D7A89A7E4E68C
+  elapsed (microseconds): 7549
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 1176: 1176
+    Easy [Single In Row, 1] X 57: 57
+    Easy [Single In Column, 1] X 20: 20
+    Medium [The Only Choice, 5] X 38: 190
+    Hard [Identify Pairs, 20] X 22: 440
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 11: 11000
+    Recursion3 [Trial & Error, 10000] X 16: 160000
+    Recursion4 [Trial & Error, 100000] X 50: 5000000
+  }
+}
+>>> Game My Game (Prove) 30
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B75F6C235F4A7E3B8B51A2C43B7E9G8F9D4B12B
+  elapsed (microseconds): 9194
+  value count: 22
+  steps: {
+    Easy [Single In Square, 1] X 1508: 1508
+    Easy [Single In Row, 1] X 58: 58
+    Easy [Single In Column, 1] X 36: 36
+    Medium [The Only Choice, 5] X 31: 155
+    Hard [Identify Pairs, 20] X 17: 340
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 10: 10000
+    Recursion3 [Trial & Error, 10000] X 13: 130000
+    Recursion4 [Trial & Error, 100000] X 38: 3800000
+  }
+}
+>>> Game My Game (Prove) 31
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A71B2D9D8B34E2E237A4C4C591B9D3A19E7A2D4B4D7C
+  elapsed (microseconds): 5933
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 1517: 1517
+    Easy [Single In Row, 1] X 41: 41
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 13: 65
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 10: 1000
+    Recursion2 [Trial & Error, 1000] X 17: 17000
+    Recursion3 [Trial & Error, 10000] X 22: 220000
+    Recursion4 [Trial & Error, 100000] X 57: 5700000
+  }
+}
+>>> Game My Game (Prove) 32
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B8D7A26C4A1A3F28B3C46E63F4D1A5A8M249B257A3
+  elapsed (microseconds): 5908
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 1122: 1122
+    Easy [Single In Row, 1] X 35: 35
+    Easy [Single In Column, 1] X 16: 16
+    Medium [The Only Choice, 5] X 17: 85
+    Hard [Identify Pairs, 20] X 31: 620
+    Recursion1 [Trial & Error, 100] X 12: 1200
+    Recursion2 [Trial & Error, 1000] X 18: 18000
+    Recursion3 [Trial & Error, 10000] X 21: 210000
+    Recursion4 [Trial & Error, 100000] X 32: 3200000
+  }
+}
+>>> Game My Game (Prove) 33
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B4A9A7C8A3E1C8A32A7I5C6E34C5A24A6B571E246J
+  elapsed (microseconds): 7131
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 1731: 1731
+    Easy [Single In Row, 1] X 20: 20
+    Easy [Single In Column, 1] X 42: 42
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 18: 360
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 24: 24000
+    Recursion3 [Trial & Error, 10000] X 28: 280000
+    Recursion4 [Trial & Error, 100000] X 63: 6300000
+  }
+}
+>>> Game My Game (Prove) 34
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B4A8F37B621K68B57A4G6A7A2B8B6B15E45A7F2C16A
+  elapsed (microseconds): 5855
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 1110: 1110
+    Easy [Single In Row, 1] X 22: 22
+    Easy [Single In Column, 1] X 37: 37
+    Medium [The Only Choice, 5] X 22: 110
+    Hard [Identify Pairs, 20] X 14: 280
+    Recursion1 [Trial & Error, 100] X 1: 100
+    Recursion2 [Trial & Error, 1000] X 1: 1000
+    Recursion3 [Trial & Error, 10000] X 1: 10000
+    Recursion4 [Trial & Error, 100000] X 94: 9400000
+  }
+}
+>>> Game My Game (Prove) 35
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  I2C378A5A7A6C3H5A3B9A6E15B7D7A2E6F9A98D1A
+  elapsed (microseconds): 24690
+  value count: 22
+  steps: {
+    Easy [Single In Square, 1] X 4866: 4866
+    Easy [Single In Row, 1] X 69: 69
+    Easy [Single In Column, 1] X 104: 104
+    Medium [The Only Choice, 5] X 59: 295
+    Hard [Identify Pairs, 20] X 70: 1400
+    Recursion1 [Trial & Error, 100] X 14: 1400
+    Recursion2 [Trial & Error, 1000] X 23: 23000
+    Recursion3 [Trial & Error, 10000] X 41: 410000
+    Recursion4 [Trial & Error, 100000] X 297: 29700000
+  }
+}
+>>> Game My Game (Prove) 36
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B4E6A3B5D17C3A2F2G9C2C8A1A439F6A5E4B62A7B8B
+  elapsed (microseconds): 15694
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 2788: 2788
+    Easy [Single In Row, 1] X 66: 66
+    Easy [Single In Column, 1] X 49: 49
+    Medium [The Only Choice, 5] X 41: 205
+    Hard [Identify Pairs, 20] X 43: 860
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 25: 25000
+    Recursion3 [Trial & Error, 10000] X 39: 390000
+    Recursion4 [Trial & Error, 100000] X 96: 9600000
+  }
+}
+>>> Game My Game (Prove) 37
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  I2C378A5A7A6C3H5A3B9A6E15B7D7A2E6F9A98D1A
+  elapsed (microseconds): 25494
+  value count: 22
+  steps: {
+    Easy [Single In Square, 1] X 4866: 4866
+    Easy [Single In Row, 1] X 69: 69
+    Easy [Single In Column, 1] X 104: 104
+    Medium [The Only Choice, 5] X 59: 295
+    Hard [Identify Pairs, 20] X 70: 1400
+    Recursion1 [Trial & Error, 100] X 14: 1400
+    Recursion2 [Trial & Error, 1000] X 23: 23000
+    Recursion3 [Trial & Error, 10000] X 41: 410000
+    Recursion4 [Trial & Error, 100000] X 297: 29700000
+  }
+}
+>>> Game My Game (Prove) 38
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C5C325A4C9B92E8A76J4F8C762B4A2D1A1C8B4B8D7A
+  elapsed (microseconds): 18881
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 4015: 4015
+    Easy [Single In Row, 1] X 78: 78
+    Easy [Single In Column, 1] X 88: 88
+    Medium [The Only Choice, 5] X 50: 250
+    Hard [Identify Pairs, 20] X 69: 1380
+    Recursion1 [Trial & Error, 100] X 14: 1400
+    Recursion2 [Trial & Error, 1000] X 29: 29000
+    Recursion3 [Trial & Error, 10000] X 52: 520000
+    Recursion4 [Trial & Error, 100000] X 193: 19300000
+  }
+}
+>>> Game My Game (Prove) 39
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  8A71J8E43D6B8A6A9A592D8N91A7C7C265A3C87C
+  elapsed (microseconds): 13773
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 3004: 3004
+    Easy [Single In Row, 1] X 75: 75
+    Easy [Single In Column, 1] X 65: 65
+    Medium [The Only Choice, 5] X 36: 180
+    Hard [Identify Pairs, 20] X 46: 920
+    Recursion1 [Trial & Error, 100] X 5: 500
+    Recursion2 [Trial & Error, 1000] X 8: 8000
+    Recursion3 [Trial & Error, 10000] X 16: 160000
+    Recursion4 [Trial & Error, 100000] X 174: 17400000
+  }
+}
+>>> Game My Game (Prove) 40
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B4A8F37B621K68B57A4G6A7A2B8B6B15E45A7F2C16A
+  elapsed (microseconds): 5793
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 1110: 1110
+    Easy [Single In Row, 1] X 22: 22
+    Easy [Single In Column, 1] X 37: 37
+    Medium [The Only Choice, 5] X 22: 110
+    Hard [Identify Pairs, 20] X 14: 280
+    Recursion1 [Trial & Error, 100] X 1: 100
+    Recursion2 [Trial & Error, 1000] X 1: 1000
+    Recursion3 [Trial & Error, 10000] X 1: 10000
+    Recursion4 [Trial & Error, 100000] X 94: 9400000
+  }
+}
+>>> Game My Game (Prove) 41
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B4E6A3B5D17C3A2F2G9C2C8A1A439F6A5E4B62A7B8B
+  elapsed (microseconds): 64389
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 2788: 2788
+    Easy [Single In Row, 1] X 66: 66
+    Easy [Single In Column, 1] X 49: 49
+    Medium [The Only Choice, 5] X 41: 205
+    Hard [Identify Pairs, 20] X 43: 860
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 25: 25000
+    Recursion3 [Trial & Error, 10000] X 39: 390000
+    Recursion4 [Trial & Error, 100000] X 96: 9600000
+  }
+}
+>>> Game My Game (Prove) 42
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C6G5A7A6A9G4A46C13A8A52D1K3B8D2B3A68D42C5A
+  elapsed (microseconds): 29106
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 6838: 6838
+    Easy [Single In Row, 1] X 89: 89
+    Easy [Single In Column, 1] X 33: 33
+    Medium [The Only Choice, 5] X 78: 390
+    Hard [Identify Pairs, 20] X 69: 1380
+    Recursion1 [Trial & Error, 100] X 4: 400
+    Recursion2 [Trial & Error, 1000] X 10: 10000
+    Recursion3 [Trial & Error, 10000] X 20: 200000
+    Recursion4 [Trial & Error, 100000] X 361: 36100000
+  }
+}
+>>> Game My Game (Prove) 43
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  F6A8A46A7E9B8B2A2B1C56D24H3E5B91C3A2C6A1A9D8A
+  elapsed (microseconds): 11288
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 1994: 1994
+    Easy [Single In Row, 1] X 51: 51
+    Easy [Single In Column, 1] X 35: 35
+    Medium [The Only Choice, 5] X 30: 150
+    Hard [Identify Pairs, 20] X 22: 440
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 10: 10000
+    Recursion3 [Trial & Error, 10000] X 14: 140000
+    Recursion4 [Trial & Error, 100000] X 96: 9600000
+  }
+}
+>>> Game My Game (Prove) 44
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  92A3H4F31A27B5C2A1A34A5B7B1I7D9D31C8C67C38B
+  elapsed (microseconds): 11660
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 2209: 2209
+    Easy [Single In Row, 1] X 74: 74
+    Easy [Single In Column, 1] X 50: 50
+    Medium [The Only Choice, 5] X 33: 165
+    Hard [Identify Pairs, 20] X 32: 640
+    Recursion1 [Trial & Error, 100] X 4: 400
+    Recursion2 [Trial & Error, 1000] X 10: 10000
+    Recursion3 [Trial & Error, 10000] X 10: 100000
+    Recursion4 [Trial & Error, 100000] X 99: 9900000
+  }
+}
+>>> Game My Game (Prove) 45
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C2B7B2C73D1C6D3B15C7E81I3B49D86A8C59C2A6D
+  elapsed (microseconds): 8554
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 1454: 1454
+    Easy [Single In Row, 1] X 63: 63
+    Easy [Single In Column, 1] X 39: 39
+    Medium [The Only Choice, 5] X 25: 125
+    Hard [Identify Pairs, 20] X 16: 320
+    Recursion1 [Trial & Error, 100] X 6: 600
+    Recursion2 [Trial & Error, 1000] X 7: 7000
+    Recursion3 [Trial & Error, 10000] X 13: 130000
+    Recursion4 [Trial & Error, 100000] X 61: 6100000
+  }
+}
+>>> Game My Game (Prove) 46
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C7A4A1D3E48B2C5B45D11F985D3A2G86F2C29E5A
+  elapsed (microseconds): 6339
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 1341: 1341
+    Easy [Single In Row, 1] X 35: 35
+    Easy [Single In Column, 1] X 14: 14
+    Medium [The Only Choice, 5] X 15: 75
+    Hard [Identify Pairs, 20] X 30: 600
+    Recursion1 [Trial & Error, 100] X 5: 500
+    Recursion2 [Trial & Error, 1000] X 5: 5000
+    Recursion3 [Trial & Error, 10000] X 6: 60000
+    Recursion4 [Trial & Error, 100000] X 48: 4800000
+  }
+}
+>>> Game My Game (Prove) 47
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A69D4D5D18G7B4A7B3B38B6H4B5A2C9A54I9B8B2B
+  elapsed (microseconds): 14991
+  value count: 22
+  steps: {
+    Easy [Single In Square, 1] X 1562: 1562
+    Easy [Single In Row, 1] X 82: 82
+    Easy [Single In Column, 1] X 57: 57
+    Medium [The Only Choice, 5] X 64: 320
+    Hard [Identify Pairs, 20] X 23: 460
+    Recursion1 [Trial & Error, 100] X 10: 1000
+    Recursion2 [Trial & Error, 1000] X 22: 22000
+    Recursion3 [Trial & Error, 10000] X 23: 230000
+    Recursion4 [Trial & Error, 100000] X 49: 4900000
+  }
+}
+>>> Game My Game (Prove) 48
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  78K7A3A6B9C4E1B8C73A49E8G9B1B5A1A5B6B3E3B9
+  elapsed (microseconds): 19286
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 2713: 2713
+    Easy [Single In Row, 1] X 70: 70
+    Easy [Single In Column, 1] X 36: 36
+    Medium [The Only Choice, 5] X 108: 540
+    Hard [Identify Pairs, 20] X 69: 1380
+    Recursion1 [Trial & Error, 100] X 18: 1800
+    Recursion2 [Trial & Error, 1000] X 26: 26000
+    Recursion3 [Trial & Error, 10000] X 31: 310000
+    Recursion4 [Trial & Error, 100000] X 61: 6100000
+  }
+}
+>>> Game My Game (Prove) 49
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B6E4C4A9D4C812A7A5A2I3B9B9G917B5D7A5D5F68
+  elapsed (microseconds): 6269
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 989: 989
+    Easy [Single In Row, 1] X 32: 32
+    Easy [Single In Column, 1] X 18: 18
+    Medium [The Only Choice, 5] X 28: 140
+    Hard [Identify Pairs, 20] X 34: 680
+    Recursion1 [Trial & Error, 100] X 8: 800
+    Recursion2 [Trial & Error, 1000] X 6: 6000
+    Recursion3 [Trial & Error, 10000] X 4: 40000
+    Recursion4 [Trial & Error, 100000] X 41: 4100000
+  }
+}
+>>> Game My Game (Prove) 50
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  D9B45E2C3A6A541I871A7D9A4C6I6D5B3B14B2B13B
+  elapsed (microseconds): 4672
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 778: 778
+    Easy [Single In Row, 1] X 40: 40
+    Easy [Single In Column, 1] X 28: 28
+    Medium [The Only Choice, 5] X 23: 115
+    Hard [Identify Pairs, 20] X 11: 220
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 10: 10000
+    Recursion3 [Trial & Error, 10000] X 6: 60000
+    Recursion4 [Trial & Error, 100000] X 10: 1000000
+  }
+}
+>>> Game My Game (Prove) 51
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  5D7C6A4A5E916E16A9D5A2D81F52D3B94A2C74J98A
+  elapsed (microseconds): 5635
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 692: 692
+    Easy [Single In Row, 1] X 58: 58
+    Easy [Single In Column, 1] X 46: 46
+    Medium [The Only Choice, 5] X 27: 135
+    Hard [Identify Pairs, 20] X 1: 20
+    Recursion1 [Trial & Error, 100] X 13: 1300
+    Recursion2 [Trial & Error, 1000] X 8: 8000
+    Recursion3 [Trial & Error, 10000] X 7: 70000
+    Recursion4 [Trial & Error, 100000] X 8: 800000
+  }
+}
+>>> Game My Game (Prove) 52
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  9D1B8A7A3I9C42B4A89C3G8B7A3B1B9C867A1G3A79B4B
+  elapsed (microseconds): 4658
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 830: 830
+    Easy [Single In Row, 1] X 18: 18
+    Easy [Single In Column, 1] X 29: 29
+    Medium [The Only Choice, 5] X 22: 110
+    Hard [Identify Pairs, 20] X 17: 340
+    Recursion1 [Trial & Error, 100] X 10: 1000
+    Recursion2 [Trial & Error, 1000] X 10: 10000
+    Recursion3 [Trial & Error, 10000] X 10: 100000
+    Recursion4 [Trial & Error, 100000] X 5: 500000
+  }
+}
+>>> Game My Game (Prove) 53
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C89D2C13A6C36B2B16C7B8K4A8931A8E1E9C53A7B4D
+  elapsed (microseconds): 4844
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 673: 673
+    Easy [Single In Row, 1] X 20: 20
+    Easy [Single In Column, 1] X 20: 20
+    Medium [The Only Choice, 5] X 13: 65
+    Hard [Identify Pairs, 20] X 10: 200
+    Recursion1 [Trial & Error, 100] X 17: 1700
+    Recursion2 [Trial & Error, 1000] X 10: 10000
+    Recursion3 [Trial & Error, 10000] X 7: 70000
+    Recursion4 [Trial & Error, 100000] X 16: 1600000
+  }
+}
+>>> Game My Game (Prove) 54
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  F7A9A37D8A5A2E11D8A3E721C9C3F4A6A2C5B7I6A5
+  elapsed (microseconds): 8584
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 1222: 1222
+    Easy [Single In Row, 1] X 34: 34
+    Easy [Single In Column, 1] X 17: 17
+    Medium [The Only Choice, 5] X 30: 150
+    Hard [Identify Pairs, 20] X 52: 1040
+    Recursion1 [Trial & Error, 100] X 18: 1800
+    Recursion2 [Trial & Error, 1000] X 16: 16000
+    Recursion3 [Trial & Error, 10000] X 14: 140000
+    Recursion4 [Trial & Error, 100000] X 47: 4700000
+  }
+}
+>>> Game My Game (Prove) 55
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C32B9E78B67H5D29D15D4B2D8A95B1B4781C5F9E
+  elapsed (microseconds): 5009
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 925: 925
+    Easy [Single In Row, 1] X 36: 36
+    Easy [Single In Column, 1] X 36: 36
+    Medium [The Only Choice, 5] X 9: 45
+    Hard [Identify Pairs, 20] X 8: 160
+    Recursion1 [Trial & Error, 100] X 12: 1200
+    Recursion2 [Trial & Error, 1000] X 12: 12000
+    Recursion3 [Trial & Error, 10000] X 9: 90000
+    Recursion4 [Trial & Error, 100000] X 19: 1900000
+  }
+}
+>>> Game My Game (Prove) 56
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  7D62B5E78E87A6A3B4B8C1A3D287B5A1B4M2B5A28D1A
+  elapsed (microseconds): 4980
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 972: 972
+    Easy [Single In Row, 1] X 35: 35
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 9: 45
+    Hard [Identify Pairs, 20] X 14: 280
+    Recursion1 [Trial & Error, 100] X 15: 1500
+    Recursion2 [Trial & Error, 1000] X 14: 14000
+    Recursion3 [Trial & Error, 10000] X 12: 120000
+    Recursion4 [Trial & Error, 100000] X 22: 2200000
+  }
+}
+>>> Game My Game (Prove) 57
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B4B2H3A726C7A1B7G9B5A4E4C956C18B6F2C5A3C6A8A
+  elapsed (microseconds): 7792
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 1175: 1175
+    Easy [Single In Row, 1] X 28: 28
+    Easy [Single In Column, 1] X 25: 25
+    Medium [The Only Choice, 5] X 40: 200
+    Hard [Identify Pairs, 20] X 14: 280
+    Recursion1 [Trial & Error, 100] X 9: 900
+    Recursion2 [Trial & Error, 1000] X 14: 14000
+    Recursion3 [Trial & Error, 10000] X 13: 130000
+    Recursion4 [Trial & Error, 100000] X 21: 2100000
+  }
+}
+>>> Game My Game (Prove) 58
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A3A4A25F6I146A2G7A8B7F61A4C869B3A2H357F9A
+  elapsed (microseconds): 6158
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 864: 864
+    Easy [Single In Row, 1] X 46: 46
+    Easy [Single In Column, 1] X 63: 63
+    Medium [The Only Choice, 5] X 32: 160
+    Hard [Identify Pairs, 20] X 13: 260
+    Recursion1 [Trial & Error, 100] X 8: 800
+    Recursion2 [Trial & Error, 1000] X 12: 12000
+    Recursion3 [Trial & Error, 10000] X 12: 120000
+    Recursion4 [Trial & Error, 100000] X 7: 700000
+  }
+}
+>>> Game My Game (Prove) 59
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B8A7A3B4A56C9A2E64A69A5D2C8C7C7A2C1B62E1D82B7C4D
+  elapsed (microseconds): 2075
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 304: 304
+    Easy [Single In Row, 1] X 26: 26
+    Easy [Single In Column, 1] X 12: 12
+    Medium [The Only Choice, 5] X 3: 15
+    Hard [Identify Pairs, 20] X 9: 180
+    Recursion1 [Trial & Error, 100] X 7: 700
+    Recursion2 [Trial & Error, 1000] X 7: 7000
+    Recursion3 [Trial & Error, 10000] X 1: 10000
+  }
+}
+>>> Game My Game (Prove) 60
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B51B9A73C4E9A7A2H4F26B5A236D1B5C98B9C2B45C4B1B
+  elapsed (microseconds): 4651
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 696: 696
+    Easy [Single In Row, 1] X 25: 25
+    Easy [Single In Column, 1] X 23: 23
+    Medium [The Only Choice, 5] X 18: 90
+    Hard [Identify Pairs, 20] X 7: 140
+    Recursion1 [Trial & Error, 100] X 10: 1000
+    Recursion2 [Trial & Error, 1000] X 10: 10000
+    Recursion3 [Trial & Error, 10000] X 6: 60000
+    Recursion4 [Trial & Error, 100000] X 4: 400000
+  }
+}
+>>> Game My Game (Prove) 61
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C3E8C1B96B3E41B24E6B3C5A2C1B84B7698A3E3A7G5B
+  elapsed (microseconds): 5179
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 764: 764
+    Easy [Single In Row, 1] X 13: 13
+    Easy [Single In Column, 1] X 8: 8
+    Medium [The Only Choice, 5] X 8: 40
+    Hard [Identify Pairs, 20] X 22: 440
+    Recursion1 [Trial & Error, 100] X 14: 1400
+    Recursion2 [Trial & Error, 1000] X 11: 11000
+    Recursion3 [Trial & Error, 10000] X 7: 70000
+    Recursion4 [Trial & Error, 100000] X 10: 1000000
+  }
+}
+>>> Game My Game (Prove) 62
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  5F12C8D7B9F7B3A5G6A7B9D2A3C4E8A6A28B53B5A7A6B
+  elapsed (microseconds): 8605
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 1490: 1490
+    Easy [Single In Row, 1] X 29: 29
+    Easy [Single In Column, 1] X 36: 36
+    Medium [The Only Choice, 5] X 30: 150
+    Hard [Identify Pairs, 20] X 29: 580
+    Recursion1 [Trial & Error, 100] X 9: 900
+    Recursion2 [Trial & Error, 1000] X 18: 18000
+    Recursion3 [Trial & Error, 10000] X 16: 160000
+    Recursion4 [Trial & Error, 100000] X 28: 2800000
+  }
+}
+>>> Game My Game (Prove) 63
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B4A89A1B582A1C2B4H1B6C463D7A2C4G7A1I5A79E62
+  elapsed (microseconds): 2912
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 499: 499
+    Easy [Single In Row, 1] X 16: 16
+    Easy [Single In Column, 1] X 11: 11
+    Medium [The Only Choice, 5] X 5: 25
+    Hard [Identify Pairs, 20] X 2: 40
+    Recursion1 [Trial & Error, 100] X 10: 1000
+    Recursion2 [Trial & Error, 1000] X 7: 7000
+    Recursion3 [Trial & Error, 10000] X 4: 40000
+    Recursion4 [Trial & Error, 100000] X 4: 400000
+  }
+}
+>>> Game My Game (Prove) 64
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A2A3495E6B9A1A4I2D5A65A9B1C8F6A9L523A5C74C
+  elapsed (microseconds): 3722
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 667: 667
+    Easy [Single In Row, 1] X 15: 15
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 10: 50
+    Hard [Identify Pairs, 20] X 11: 220
+    Recursion1 [Trial & Error, 100] X 2: 200
+    Recursion2 [Trial & Error, 1000] X 7: 7000
+    Recursion3 [Trial & Error, 10000] X 8: 80000
+    Recursion4 [Trial & Error, 100000] X 13: 1300000
+  }
+}
+>>> Game My Game (Prove) 65
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  E9C6A4A5E8A1D21A93D7D2F89B4A342E6B5C3A84E6C
+  elapsed (microseconds): 3004
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 421: 421
+    Easy [Single In Row, 1] X 39: 39
+    Easy [Single In Column, 1] X 19: 19
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 6: 120
+    Recursion1 [Trial & Error, 100] X 3: 300
+    Recursion2 [Trial & Error, 1000] X 3: 3000
+    Recursion3 [Trial & Error, 10000] X 3: 30000
+    Recursion4 [Trial & Error, 100000] X 7: 700000
+  }
+}
+>>> Game My Game (Prove) 66
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  32B915C8G9E3D4B7B961A8B2D8B4C16B8B7C2E6D6A9B
+  elapsed (microseconds): 5822
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 1121: 1121
+    Easy [Single In Row, 1] X 26: 26
+    Easy [Single In Column, 1] X 33: 33
+    Medium [The Only Choice, 5] X 19: 95
+    Hard [Identify Pairs, 20] X 10: 200
+    Recursion1 [Trial & Error, 100] X 10: 1000
+    Recursion2 [Trial & Error, 1000] X 12: 12000
+    Recursion3 [Trial & Error, 10000] X 11: 110000
+    Recursion4 [Trial & Error, 100000] X 27: 2700000
+  }
+}
+>>> Game My Game (Prove) 67
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A574I9D8A9A2E1E5C2A1C6A9C7B2C8C4A5F6C6B137A
+  elapsed (microseconds): 8177
+  value count: 23
+  steps: {
+    Easy [Single In Square, 1] X 802: 802
+    Easy [Single In Row, 1] X 59: 59
+    Easy [Single In Column, 1] X 93: 93
+    Medium [The Only Choice, 5] X 32: 160
+    Hard [Identify Pairs, 20] X 8: 160
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 14: 14000
+    Recursion3 [Trial & Error, 10000] X 11: 110000
+    Recursion4 [Trial & Error, 100000] X 9: 900000
+  }
+}
+>>> Game My Game (Prove) 68
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A3C12B1A5A2A7A37E5G34B38C4D9A21A6C5A8D6D6A1I2A
+  elapsed (microseconds): 3102
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 468: 468
+    Easy [Single In Row, 1] X 11: 11
+    Easy [Single In Column, 1] X 23: 23
+    Medium [The Only Choice, 5] X 9: 45
+    Hard [Identify Pairs, 20] X 10: 200
+    Recursion1 [Trial & Error, 100] X 8: 800
+    Recursion2 [Trial & Error, 1000] X 8: 8000
+    Recursion3 [Trial & Error, 10000] X 7: 70000
+    Recursion4 [Trial & Error, 100000] X 4: 400000
+  }
+}
+>>> Game My Game (Prove) 69
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C9A6B4D3B1C78A4A365B1C4C8C1A5E36C4A72A3C2C5B87A3F
+  elapsed (microseconds): 5380
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 900: 900
+    Easy [Single In Row, 1] X 41: 41
+    Easy [Single In Column, 1] X 32: 32
+    Medium [The Only Choice, 5] X 17: 85
+    Hard [Identify Pairs, 20] X 9: 180
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 11: 11000
+    Recursion3 [Trial & Error, 10000] X 10: 100000
+    Recursion4 [Trial & Error, 100000] X 11: 1100000
+  }
+}
+>>> Game My Game (Prove) 70
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B5C6B82H19A3H4A37C2B7A8B3B9C6E6B1A8A2B5C5D42A
+  elapsed (microseconds): 2882
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 364: 364
+    Easy [Single In Row, 1] X 21: 21
+    Easy [Single In Column, 1] X 27: 27
+    Medium [The Only Choice, 5] X 11: 55
+    Hard [Identify Pairs, 20] X 8: 160
+    Recursion1 [Trial & Error, 100] X 5: 500
+    Recursion2 [Trial & Error, 1000] X 5: 5000
+    Recursion3 [Trial & Error, 10000] X 5: 50000
+    Recursion4 [Trial & Error, 100000] X 1: 100000
+  }
+}
+>>> Game My Game (Prove) 71
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  F5C82A9B6C93C2J3B78A9D8A59B1A93A7B15A1C6A3A8A65D2
+  elapsed (microseconds): 2909
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 572: 572
+    Easy [Single In Row, 1] X 21: 21
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 9: 45
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 6: 600
+    Recursion2 [Trial & Error, 1000] X 8: 8000
+    Recursion3 [Trial & Error, 10000] X 7: 70000
+    Recursion4 [Trial & Error, 100000] X 8: 800000
+  }
+}
+>>> Game My Game (Prove) 72
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B6F1B2A8D259C1D1B2B6C4C3B4D5A8C9B2A5A3B7B8F3A6
+  elapsed (microseconds): 4783
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 718: 718
+    Easy [Single In Row, 1] X 56: 56
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 8: 160
+    Recursion1 [Trial & Error, 100] X 8: 800
+    Recursion2 [Trial & Error, 1000] X 10: 10000
+    Recursion3 [Trial & Error, 10000] X 10: 100000
+    Recursion4 [Trial & Error, 100000] X 8: 800000
+  }
+}
+>>> Game My Game (Prove) 73
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  5A4E7A37G89A57I3A5A7B1B6D234A7D8C24A1B75B3C1E
+  elapsed (microseconds): 1952
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 427: 427
+    Easy [Single In Row, 1] X 7: 7
+    Easy [Single In Column, 1] X 9: 9
+    Medium [The Only Choice, 5] X 5: 25
+    Hard [Identify Pairs, 20] X 6: 120
+    Recursion1 [Trial & Error, 100] X 7: 700
+    Recursion2 [Trial & Error, 1000] X 7: 7000
+    Recursion3 [Trial & Error, 10000] X 3: 30000
+  }
+}
+>>> Game My Game (Prove) 74
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A1B36B2C5B7D32A41B2B3C8A9A1E4B5G5B47B3A6D52J
+  elapsed (microseconds): 6226
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 826: 826
+    Easy [Single In Row, 1] X 42: 42
+    Easy [Single In Column, 1] X 44: 44
+    Medium [The Only Choice, 5] X 27: 135
+    Hard [Identify Pairs, 20] X 8: 160
+    Recursion1 [Trial & Error, 100] X 10: 1000
+    Recursion2 [Trial & Error, 1000] X 8: 8000
+    Recursion3 [Trial & Error, 10000] X 10: 100000
+    Recursion4 [Trial & Error, 100000] X 13: 1300000
+  }
+}
+>>> Game My Game (Prove) 75
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  8C125A95C6A2I7A185E7B2A5A9B4C8G6E7C95B1A6B71C
+  elapsed (microseconds): 5146
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 703: 703
+    Easy [Single In Row, 1] X 25: 25
+    Easy [Single In Column, 1] X 33: 33
+    Medium [The Only Choice, 5] X 25: 125
+    Hard [Identify Pairs, 20] X 17: 340
+    Recursion1 [Trial & Error, 100] X 10: 1000
+    Recursion2 [Trial & Error, 1000] X 9: 9000
+    Recursion3 [Trial & Error, 10000] X 7: 70000
+    Recursion4 [Trial & Error, 100000] X 5: 500000
+  }
+}
+>>> Game My Game (Prove) 76
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  58A1B7F6D9B8A5J3B3B51A2B5A9A38E3A42D2E514E7A
+  elapsed (microseconds): 3682
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 597: 597
+    Easy [Single In Row, 1] X 32: 32
+    Easy [Single In Column, 1] X 30: 30
+    Medium [The Only Choice, 5] X 15: 75
+    Hard [Identify Pairs, 20] X 5: 100
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 9: 9000
+    Recursion3 [Trial & Error, 10000] X 7: 70000
+    Recursion4 [Trial & Error, 100000] X 6: 600000
+  }
+}
+>>> Game My Game (Prove) 77
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  D1B4A4B6A5E38C9F85B6A1B2H697A2A4D6A38F4B6C38A
+  elapsed (microseconds): 2204
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 419: 419
+    Easy [Single In Row, 1] X 5: 5
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 9: 45
+    Hard [Identify Pairs, 20] X 12: 240
+    Recursion1 [Trial & Error, 100] X 7: 700
+    Recursion2 [Trial & Error, 1000] X 6: 6000
+    Recursion3 [Trial & Error, 10000] X 4: 40000
+    Recursion4 [Trial & Error, 100000] X 2: 200000
+  }
+}
+>>> Game My Game (Prove) 78
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C3A85B7E43E7C9A9G3B5F85B6C5G41A27D3B94A52B
+  elapsed (microseconds): 5743
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 982: 982
+    Easy [Single In Row, 1] X 10: 10
+    Easy [Single In Column, 1] X 36: 36
+    Medium [The Only Choice, 5] X 36: 180
+    Hard [Identify Pairs, 20] X 22: 440
+    Recursion1 [Trial & Error, 100] X 13: 1300
+    Recursion2 [Trial & Error, 1000] X 14: 14000
+    Recursion3 [Trial & Error, 10000] X 12: 120000
+    Recursion4 [Trial & Error, 100000] X 14: 1400000
+  }
+}
+>>> Game My Game (Prove) 79
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  7A3D2G8A3F9D9A8B422B4B7A9C6B13A4B5C7C1B7D5B24C
+  elapsed (microseconds): 5075
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 974: 974
+    Easy [Single In Row, 1] X 16: 16
+    Easy [Single In Column, 1] X 35: 35
+    Medium [The Only Choice, 5] X 11: 55
+    Hard [Identify Pairs, 20] X 16: 320
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 12: 12000
+    Recursion3 [Trial & Error, 10000] X 10: 100000
+    Recursion4 [Trial & Error, 100000] X 20: 2000000
+  }
+}
+>>> Game My Game (Prove) 80
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B2C71A4A1A72B6F2A4B4B31E9E3B18F935C772B1A34H9A
+  elapsed (microseconds): 5961
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 1078: 1078
+    Easy [Single In Row, 1] X 59: 59
+    Easy [Single In Column, 1] X 41: 41
+    Medium [The Only Choice, 5] X 5: 25
+    Hard [Identify Pairs, 20] X 16: 320
+    Recursion1 [Trial & Error, 100] X 14: 1400
+    Recursion2 [Trial & Error, 1000] X 16: 16000
+    Recursion3 [Trial & Error, 10000] X 16: 160000
+    Recursion4 [Trial & Error, 100000] X 17: 1700000
+  }
+}
+>>> Game My Game (Prove) 81
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  E951B3A25A9C6E7A7E2A1C7A2F6A8A5A3A8G9C1B5A5D76A
+  elapsed (microseconds): 1706
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 284: 284
+    Easy [Single In Row, 1] X 7: 7
+    Easy [Single In Column, 1] X 11: 11
+    Medium [The Only Choice, 5] X 5: 25
+    Hard [Identify Pairs, 20] X 9: 180
+    Recursion1 [Trial & Error, 100] X 4: 400
+    Recursion2 [Trial & Error, 1000] X 2: 2000
+    Recursion3 [Trial & Error, 10000] X 3: 30000
+  }
+}
+>>> Game My Game (Prove) 82
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A6A459B3D8C6B5C9D6A73D1B4C78E6D3C7A5B83A5C1F4A
+  elapsed (microseconds): 5556
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 694: 694
+    Easy [Single In Row, 1] X 25: 25
+    Easy [Single In Column, 1] X 34: 34
+    Medium [The Only Choice, 5] X 34: 170
+    Hard [Identify Pairs, 20] X 25: 500
+    Recursion1 [Trial & Error, 100] X 12: 1200
+    Recursion2 [Trial & Error, 1000] X 11: 11000
+    Recursion3 [Trial & Error, 10000] X 7: 70000
+    Recursion4 [Trial & Error, 100000] X 8: 800000
+  }
+}
+>>> Game My Game (Prove) 83
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B1A4B2A7B69C3B4B7B53B4B57A9E16L9A35D8A2C57A2G
+  elapsed (microseconds): 4487
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 506: 506
+    Easy [Single In Row, 1] X 23: 23
+    Easy [Single In Column, 1] X 40: 40
+    Medium [The Only Choice, 5] X 15: 75
+    Hard [Identify Pairs, 20] X 16: 320
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 9: 9000
+    Recursion3 [Trial & Error, 10000] X 7: 70000
+    Recursion4 [Trial & Error, 100000] X 5: 500000
+  }
+}
+>>> Game My Game (Prove) 84
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  E9D9A8B37B3C15D3A6D7A9B4A6C6B7A1A5C4A1A9A1A29A7J8
+  elapsed (microseconds): 2797
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 545: 545
+    Easy [Single In Row, 1] X 7: 7
+    Easy [Single In Column, 1] X 19: 19
+    Medium [The Only Choice, 5] X 17: 85
+    Hard [Identify Pairs, 20] X 3: 60
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 7: 7000
+    Recursion3 [Trial & Error, 10000] X 5: 50000
+    Recursion4 [Trial & Error, 100000] X 4: 400000
+  }
+}
+>>> Game My Game (Prove) 85
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C42F9A8A4A7E1C4B21A8B5D6D9D2A67D2C845H2C51A
+  elapsed (microseconds): 1842
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 216: 216
+    Easy [Single In Row, 1] X 25: 25
+    Easy [Single In Column, 1] X 4: 4
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 6: 120
+    Recursion1 [Trial & Error, 100] X 8: 800
+    Recursion2 [Trial & Error, 1000] X 4: 4000
+    Recursion3 [Trial & Error, 10000] X 1: 10000
+  }
+}
+>>> Game My Game (Prove) 86
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C3D6B4A2D6A859A4C9D5A4B7F5B7A9A8B8B6A3D6B5A1A24F5
+  elapsed (microseconds): 8668
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 1526: 1526
+    Easy [Single In Row, 1] X 64: 64
+    Easy [Single In Column, 1] X 32: 32
+    Medium [The Only Choice, 5] X 31: 155
+    Hard [Identify Pairs, 20] X 25: 500
+    Recursion1 [Trial & Error, 100] X 14: 1400
+    Recursion2 [Trial & Error, 1000] X 24: 24000
+    Recursion3 [Trial & Error, 10000] X 21: 210000
+    Recursion4 [Trial & Error, 100000] X 19: 1900000
+  }
+}
+>>> Game My Game (Prove) 87
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  E78C75D4A9B453H4A787C2A3B8A93A5C5D8A97G8E921B
+  elapsed (microseconds): 1474
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 281: 281
+    Easy [Single In Row, 1] X 7: 7
+    Easy [Single In Column, 1] X 8: 8
+    Medium [The Only Choice, 5] X 1: 5
+    Hard [Identify Pairs, 20] X 4: 80
+    Recursion1 [Trial & Error, 100] X 7: 700
+    Recursion2 [Trial & Error, 1000] X 4: 4000
+    Recursion3 [Trial & Error, 10000] X 2: 20000
+    Recursion4 [Trial & Error, 100000] X 1: 100000
+  }
+}
+>>> Game My Game (Prove) 88
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B9B4A5D69H2C1B1B58C4A9C1A7E2C85H4C196B37C8A
+  elapsed (microseconds): 7783
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 1201: 1201
+    Easy [Single In Row, 1] X 24: 24
+    Easy [Single In Column, 1] X 26: 26
+    Medium [The Only Choice, 5] X 35: 175
+    Hard [Identify Pairs, 20] X 19: 380
+    Recursion1 [Trial & Error, 100] X 11: 1100
+    Recursion2 [Trial & Error, 1000] X 15: 15000
+    Recursion3 [Trial & Error, 10000] X 18: 180000
+    Recursion4 [Trial & Error, 100000] X 16: 1600000
+  }
+}
+>>> Game My Game (Prove) 89
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B3B62C92A15B8C3D9B58A1B691E5B48C3G8F15C34A16A3C
+  elapsed (microseconds): 7084
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 1385: 1385
+    Easy [Single In Row, 1] X 37: 37
+    Easy [Single In Column, 1] X 27: 27
+    Medium [The Only Choice, 5] X 27: 135
+    Hard [Identify Pairs, 20] X 18: 360
+    Recursion1 [Trial & Error, 100] X 8: 800
+    Recursion2 [Trial & Error, 1000] X 17: 17000
+    Recursion3 [Trial & Error, 10000] X 15: 150000
+    Recursion4 [Trial & Error, 100000] X 26: 2600000
+  }
+}
+>>> Game My Game (Prove) 90
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  G6C65A92I5E184D1E88A24A3A1A1A863A5D5A9C332C5A8A
+  elapsed (microseconds): 6902
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 1079: 1079
+    Easy [Single In Row, 1] X 43: 43
+    Easy [Single In Column, 1] X 25: 25
+    Medium [The Only Choice, 5] X 20: 100
+    Hard [Identify Pairs, 20] X 28: 560
+    Recursion1 [Trial & Error, 100] X 7: 700
+    Recursion2 [Trial & Error, 1000] X 12: 12000
+    Recursion3 [Trial & Error, 10000] X 16: 160000
+    Recursion4 [Trial & Error, 100000] X 17: 1700000
+  }
+}
+>>> Game My Game (Prove) 91
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A3A6C5B9B8A4F7B68B9B5A4D21A6G4A2E275A424A1C7B87C2B
+  elapsed (microseconds): 15222
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 3116: 3116
+    Easy [Single In Row, 1] X 83: 83
+    Easy [Single In Column, 1] X 82: 82
+    Medium [The Only Choice, 5] X 54: 270
+    Hard [Identify Pairs, 20] X 39: 780
+    Recursion1 [Trial & Error, 100] X 13: 1300
+    Recursion2 [Trial & Error, 1000] X 34: 34000
+    Recursion3 [Trial & Error, 10000] X 46: 460000
+    Recursion4 [Trial & Error, 100000] X 55: 5500000
+  }
+}
+>>> Game My Game (Prove) 92
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  E79B31H7E62B62B3A5C57B9B5B6B27C3A1B62C8D1C4B7A
+  elapsed (microseconds): 7474
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 1255: 1255
+    Easy [Single In Row, 1] X 49: 49
+    Easy [Single In Column, 1] X 24: 24
+    Medium [The Only Choice, 5] X 25: 125
+    Hard [Identify Pairs, 20] X 16: 320
+    Recursion1 [Trial & Error, 100] X 14: 1400
+    Recursion2 [Trial & Error, 1000] X 16: 16000
+    Recursion3 [Trial & Error, 10000] X 16: 160000
+    Recursion4 [Trial & Error, 100000] X 22: 2200000
+  }
+}
+>>> Game My Game (Prove) 93
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B32D62A74B9B8J8D47I416B78A2J841B7A37C39A84
+  elapsed (microseconds): 6340
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 1029: 1029
+    Easy [Single In Row, 1] X 51: 51
+    Easy [Single In Column, 1] X 13: 13
+    Medium [The Only Choice, 5] X 31: 155
+    Hard [Identify Pairs, 20] X 20: 400
+    Recursion1 [Trial & Error, 100] X 12: 1200
+    Recursion2 [Trial & Error, 1000] X 15: 15000
+    Recursion3 [Trial & Error, 10000] X 11: 110000
+    Recursion4 [Trial & Error, 100000] X 15: 1500000
+  }
+}
+>>> Game My Game (Prove) 94
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  H21B3B497C4A25A3463A21H82G9B16F7A7A9A6A1D5C9B
+  elapsed (microseconds): 9537
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 1264: 1264
+    Easy [Single In Row, 1] X 51: 51
+    Easy [Single In Column, 1] X 31: 31
+    Medium [The Only Choice, 5] X 27: 135
+    Hard [Identify Pairs, 20] X 17: 340
+    Recursion1 [Trial & Error, 100] X 20: 2000
+    Recursion2 [Trial & Error, 1000] X 15: 15000
+    Recursion3 [Trial & Error, 10000] X 14: 140000
+    Recursion4 [Trial & Error, 100000] X 40: 4000000
+  }
+}
+>>> Game My Game (Prove) 95
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C76D7D5D9F4A79B8B3B65B9A853A9C76A6D18B21F3B1D7
+  elapsed (microseconds): 5052
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 734: 734
+    Easy [Single In Row, 1] X 41: 41
+    Easy [Single In Column, 1] X 9: 9
+    Medium [The Only Choice, 5] X 9: 45
+    Hard [Identify Pairs, 20] X 14: 280
+    Recursion1 [Trial & Error, 100] X 15: 1500
+    Recursion2 [Trial & Error, 1000] X 13: 13000
+    Recursion3 [Trial & Error, 10000] X 9: 90000
+    Recursion4 [Trial & Error, 100000] X 11: 1100000
+  }
+}
+>>> Game My Game (Prove) 96
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A8D7B4A5A1A23B2C356F8D4A1C7I6A9I19A6A5A6A84A2C
+  elapsed (microseconds): 12981
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 1541: 1541
+    Easy [Single In Row, 1] X 115: 115
+    Easy [Single In Column, 1] X 76: 76
+    Medium [The Only Choice, 5] X 25: 125
+    Hard [Identify Pairs, 20] X 64: 1280
+    Recursion1 [Trial & Error, 100] X 21: 2100
+    Recursion2 [Trial & Error, 1000] X 19: 19000
+    Recursion3 [Trial & Error, 10000] X 19: 190000
+    Recursion4 [Trial & Error, 100000] X 59: 5900000
+  }
+}
+>>> Game My Game (Prove) 97
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  8D64E39E2F66B2B5D3A897D5B1B2A9F41C4B2E126A9
+  elapsed (microseconds): 3526
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 605: 605
+    Easy [Single In Row, 1] X 18: 18
+    Easy [Single In Column, 1] X 2: 2
+    Medium [The Only Choice, 5] X 15: 75
+    Hard [Identify Pairs, 20] X 6: 120
+    Recursion1 [Trial & Error, 100] X 13: 1300
+    Recursion2 [Trial & Error, 1000] X 7: 7000
+    Recursion3 [Trial & Error, 10000] X 7: 70000
+    Recursion4 [Trial & Error, 100000] X 14: 1400000
+  }
+}
+>>> Game My Game (Prove) 98
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B7A9E5A8D768A2B1D39A2D4B3B91B8D269P48B1C5A
+  elapsed (microseconds): 6169
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 712: 712
+    Easy [Single In Row, 1] X 25: 25
+    Easy [Single In Column, 1] X 24: 24
+    Medium [The Only Choice, 5] X 30: 150
+    Hard [Identify Pairs, 20] X 15: 300
+    Recursion1 [Trial & Error, 100] X 21: 2100
+    Recursion2 [Trial & Error, 1000] X 15: 15000
+    Recursion3 [Trial & Error, 10000] X 12: 120000
+    Recursion4 [Trial & Error, 100000] X 32: 3200000
+  }
+}
+>>> Game My Game (Prove) 99
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  1E5A9A2D76B8C9E4C9A5D52C2B4B6C78A4D5A32A8F3E
+  elapsed (microseconds): 10494
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 1408: 1408
+    Easy [Single In Row, 1] X 54: 54
+    Easy [Single In Column, 1] X 35: 35
+    Medium [The Only Choice, 5] X 65: 325
+    Hard [Identify Pairs, 20] X 28: 560
+    Recursion1 [Trial & Error, 100] X 18: 1800
+    Recursion2 [Trial & Error, 1000] X 17: 17000
+    Recursion3 [Trial & Error, 10000] X 19: 190000
+    Recursion4 [Trial & Error, 100000] X 37: 3700000
+  }
+}
+>>> Game My Game (Prove) 100
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A6E3B1B478A54A5E1A2B9A6G2F781A52G8B51824C9H
+  elapsed (microseconds): 10785
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 1502: 1502
+    Easy [Single In Row, 1] X 58: 58
+    Easy [Single In Column, 1] X 38: 38
+    Medium [The Only Choice, 5] X 54: 270
+    Hard [Identify Pairs, 20] X 25: 500
+    Recursion1 [Trial & Error, 100] X 12: 1200
+    Recursion2 [Trial & Error, 1000] X 15: 15000
+    Recursion3 [Trial & Error, 10000] X 13: 130000
+    Recursion4 [Trial & Error, 100000] X 28: 2800000
+  }
+}
+>>> Game My Game (Prove) 101
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B1A4D8B2K7A6B48D5B9C6C8B9B1B4B3I6A746A8B129A
+  elapsed (microseconds): 5315
+  value count: 24
+  steps: {
+    Easy [Single In Square, 1] X 801: 801
+    Easy [Single In Row, 1] X 15: 15
+    Easy [Single In Column, 1] X 30: 30
+    Medium [The Only Choice, 5] X 18: 90
+    Hard [Identify Pairs, 20] X 9: 180
+    Recursion1 [Trial & Error, 100] X 14: 1400
+    Recursion2 [Trial & Error, 1000] X 17: 17000
+    Recursion3 [Trial & Error, 10000] X 13: 130000
+    Recursion4 [Trial & Error, 100000] X 12: 1200000
+  }
+}
+>>> Game My Game (Prove) 102
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  6B34B92A34E1C8B3D7C91B6B7D2B9C87B6A9E2A4A7I4A8
+  elapsed (microseconds): 10432
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 1531: 1531
+    Easy [Single In Row, 1] X 61: 61
+    Easy [Single In Column, 1] X 55: 55
+    Medium [The Only Choice, 5] X 51: 255
+    Hard [Identify Pairs, 20] X 19: 380
+    Recursion1 [Trial & Error, 100] X 12: 1200
+    Recursion2 [Trial & Error, 1000] X 8: 8000
+    Recursion3 [Trial & Error, 10000] X 9: 90000
+    Recursion4 [Trial & Error, 100000] X 42: 4200000
+  }
+}
+>>> Game My Game (Prove) 103
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  A1E4A6C9A1D4A7C2B35A8A69B53E48F37A893C139B57L
+  elapsed (microseconds): 12838
+  value count: 27
+  steps: {
+    Easy [Single In Square, 1] X 1313: 1313
+    Easy [Single In Row, 1] X 86: 86
+    Easy [Single In Column, 1] X 56: 56
+    Medium [The Only Choice, 5] X 54: 270
+    Hard [Identify Pairs, 20] X 29: 580
+    Recursion1 [Trial & Error, 100] X 25: 2500
+    Recursion2 [Trial & Error, 1000] X 20: 20000
+    Recursion3 [Trial & Error, 10000] X 20: 200000
+    Recursion4 [Trial & Error, 100000] X 38: 3800000
+  }
+}
+>>> Game My Game (Prove) 104
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B62E5C9F7A8A95A2D783B8A53C29B8D117A3C8C9A7A3K
+  elapsed (microseconds): 11891
+  value count: 26
+  steps: {
+    Easy [Single In Square, 1] X 2230: 2230
+    Easy [Single In Row, 1] X 73: 73
+    Easy [Single In Column, 1] X 32: 32
+    Medium [The Only Choice, 5] X 18: 90
+    Hard [Identify Pairs, 20] X 39: 780
+    Recursion1 [Trial & Error, 100] X 16: 1600
+    Recursion2 [Trial & Error, 1000] X 19: 19000
+    Recursion3 [Trial & Error, 10000] X 26: 260000
+    Recursion4 [Trial & Error, 100000] X 68: 6800000
+  }
+}
+>>> Game My Game (Prove) 105
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B68B3B7D6A94A3A9A7A8B6A7B4C7E53B1A85J41E45B1B57A9B
+  elapsed (microseconds): 4680
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 936: 936
+    Easy [Single In Row, 1] X 27: 27
+    Easy [Single In Column, 1] X 26: 26
+    Medium [The Only Choice, 5] X 12: 60
+    Hard [Identify Pairs, 20] X 14: 280
+    Recursion1 [Trial & Error, 100] X 9: 900
+    Recursion2 [Trial & Error, 1000] X 10: 10000
+    Recursion3 [Trial & Error, 10000] X 8: 80000
+    Recursion4 [Trial & Error, 100000] X 13: 1300000
+  }
+}
+>>> Game My Game (Prove) 106
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B38A29B96F2B1D5A1C295B49F8C18D3A9A75A1A2B3B7D5D3A
+  elapsed (microseconds): 4480
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 675: 675
+    Easy [Single In Row, 1] X 20: 20
+    Easy [Single In Column, 1] X 8: 8
+    Medium [The Only Choice, 5] X 14: 70
+    Hard [Identify Pairs, 20] X 8: 160
+    Recursion1 [Trial & Error, 100] X 18: 1800
+    Recursion2 [Trial & Error, 1000] X 12: 12000
+    Recursion3 [Trial & Error, 10000] X 11: 110000
+    Recursion4 [Trial & Error, 100000] X 17: 1700000
+  }
+}
+>>> Game My Game (Prove) 107
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  B8A9A5C1G5B64A1B6D5A17D6B5D9A28B7A28A6G2B9C6C7B
+  elapsed (microseconds): 12318
+  value count: 25
+  steps: {
+    Easy [Single In Square, 1] X 1806: 1806
+    Easy [Single In Row, 1] X 128: 128
+    Easy [Single In Column, 1] X 31: 31
+    Medium [The Only Choice, 5] X 48: 240
+    Hard [Identify Pairs, 20] X 47: 940
+    Recursion1 [Trial & Error, 100] X 15: 1500
+    Recursion2 [Trial & Error, 1000] X 19: 19000
+    Recursion3 [Trial & Error, 10000] X 25: 250000
+    Recursion4 [Trial & Error, 100000] X 46: 4600000
+  }
+}
+>>> Game My Game (Prove) 108
+Sudoku Result {
+  action: Prove
+  status: Succeeded
+  board:  C5B9D47A638A56B83A4B3D4D6C8B94A8D265E9F7B3B3A5A6B
+  elapsed (microseconds): 4058
+  value count: 28
+  steps: {
+    Easy [Single In Square, 1] X 746: 746
+    Easy [Single In Row, 1] X 23: 23
+    Easy [Single In Column, 1] X 2: 2
+    Medium [The Only Choice, 5] X 16: 80
+    Hard [Identify Pairs, 20] X 16: 320
+    Recursion1 [Trial & Error, 100] X 7: 700
+    Recursion2 [Trial & Error, 1000] X 9: 9000
+    Recursion3 [Trial & Error, 10000] X 8: 80000
+    Recursion4 [Trial & Error, 100000] X 4: 400000
+  }
+}
+Elapsed (milliseconds): 12600
 -------------------------------------
 Running Sudoku Board Generator Benchmark...
-DarkEvil (2843): C8A3A9B9F6B8A1A4B2A34B9C64A9B8D7E14E6F85D51C4A
-         2843,2836,2843,2836,2843,2836,2841,2836,2840,2301,2305,1637,1643,967,974,602,616,476,491,124,150
-DarkEvil (2843): C8A3A9B9F6B8A1A4B2A34B9C64A9B8D7E1F6E485D51C4A
-         2843,2836,2843,2836,2843,2836,2841,2836,2840,2301,2305,1637,1643,967,974,602,616,476,491,124,150
-DarkEvil (2843): C8A3A9B9F6B8A1A4B2A34B9C64A9B8D7E14E6F85D51C4A
-         2843,2836,2843,2836,2843,2836,2841,2836,2840,2301,2305,1637,1643,967,974,602,616,476,491,124,150
-Status [2.07736] {
-  All: total = 2, <20 = 0, timeouts = 0
-  Evil: total = 1, complexity average 1935, value count average 33
-  DarkEvil: total = 1, complexity average 2843, value count average 25
-}
-DarkEvil (2039): C9B8279C1A4C47A5C1A35D6A4M9B57C4F2B6A4A6C8C9
-         2039,2031,2039,2031,2039,2031,2037,2031,2036,1630,1637,1202,1211,1016,1032,586,612,347,372,118,147
-DarkEvil (2039): C9B8279C1E47A5C1A35D644M9B57C4F2B6A4A6C8C9
-         2039,2031,2039,2031,2039,2031,2037,2031,2036,1630,1637,1202,1211,1016,1032,586,612,347,372,118,147
-DarkEvil (2039): F8279C1E47A5C1A35D644M9B57C4F2A96A4A6C8C9
-         2039,2031,2039,2031,2039,2031,2037,2031,2036,1630,1637,1202,1211,1016,1032,586,612,347,372,118,147
-Status [3.58994] {
-  All: total = 3, <20 = 0, timeouts = 0
-  Evil: total = 1, complexity average 1935, value count average 33
-  DarkEvil: total = 2, complexity average 2441, value count average 25
-}
-DarkEvil (2107): C83D9D5A8A3A6B2A75D2C46C7A9C97C1B8A92E12D8A7A65F
-         2107,2106,2105,2104,2099,2098,2093,2093,2093,2093,2093,2093,2107,2093,2102,1982,1985,1390,1399,999,1011,512,527,232,262,118,147
-DarkEvil (2106): A5A83D9D5A8A3A6B2A75D2C46C7A9C97C1B8A92E12D8A7A65F
-         2106,2105,2104,2099,2098,2093,2093,2093,2093,2093,2093,2107,2093,2102,1982,1985,1390,1399,999,1011,512,527,232,262,118,147
-DarkEvil (2106): C83D9D5A8A386B2A75D2C46C7A9C97C1B8A92E12D8A7A65F
-         2106,2105,2104,2099,2098,2093,2093,2093,2093,2093,2093,2107,2093,2102,1982,1985,1390,1399,999,1011,512,527,232,262,118,147
-Status [4.89405] {
-  All: total = 4, <20 = 0, timeouts = 0
-  Evil: total = 1, complexity average 1935, value count average 33
-  DarkEvil: total = 3, complexity average 2329, value count average 25.6667
-}
-Status [5.47061] {
+Status [0.762087] {
   All: total = 5, <20 = 0, timeouts = 0
-  Evil: total = 2, complexity average 1937, value count average 32
-  DarkEvil: total = 3, complexity average 2329, value count average 25.6667
-}
-Status [5.47062] {
-  All: total = 5, <20 = 0, timeouts = 0
-  Evil: total = 2, complexity average 1937, value count average 32
-  DarkEvil: total = 3, complexity average 2329, value count average 25.6667
+  Hard: total = 3, complexity average 398, value count average 36.3333
+  VeryHard: total = 1, complexity average 914, value count average 32
+  Evil: total = 1, complexity average 1885, value count average 37
 }
 Done!
 The program '/Users/nissimn/private/des/cpp/bin/app_test' has exited with code 0 (0x00000000).

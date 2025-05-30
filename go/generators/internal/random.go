@@ -1,4 +1,4 @@
-package generators
+package internal
 
 import (
 	"math/rand"
@@ -23,18 +23,27 @@ func (r *Random) Seed() int64 {
 	return r.seed
 }
 
-/*
-func (r *random) percentProbability(p int) bool {
-	return r.r.Intn(100) < p
+func (r *Random) Intn(n int) int {
+	return r.r.Intn(n)
 }
-*/
+
+func (r *Random) NextInClosedRange(min, max int) int {
+	if min >= max {
+		panic("min must be less than max")
+	}
+	return r.Intn(max-min+1) + min
+}
+
+func (r *Random) PercentProbability(p int) bool {
+	return r.Intn(100) < p
+}
 
 func RandPick[S ~[]T, T any](r *Random, slice S) (T, bool) {
 	if len(slice) == 0 {
 		var zero T
 		return zero, false
 	}
-	index := r.r.Intn(len(slice))
+	index := r.Intn(len(slice))
 	return slice[index], true
 }
 

@@ -7,17 +7,18 @@ import (
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/boards/indexes"
 	"github.com/nissimnatanov/des/go/boards/values"
+	"github.com/nissimnatanov/des/go/generators/internal"
 )
 
-func GenerateSolution(r *Random) *boards.Solution {
+func GenerateSolution(r *internal.Random) *boards.Solution {
 	if r == nil {
-		r = NewRandom()
+		r = internal.NewRandom()
 	}
 	return solutionGenerator{rand: r}.generate(solutionSquareOrder)
 }
 
 type solutionGenerator struct {
-	rand *Random
+	rand *internal.Random
 }
 
 func (g solutionGenerator) setSquareValuesReadOnly(board *boards.Game, square int, values values.Values) {
@@ -48,9 +49,9 @@ func (g solutionGenerator) tryFillSeq(board *boards.Game, seq indexes.Sequence) 
 
 		for index, allowed := range board.AllowedValuesIn(seq) {
 			allowedValues := allowed.Values()
-			v, valid = RandPick(g.rand, allowedValues)
+			v, valid = internal.RandPick(g.rand, allowedValues)
 			if valid {
-				board.Set(index, v)
+				board.SetReadOnly(index, v)
 			}
 			if !valid {
 				break
@@ -89,7 +90,7 @@ func (g solutionGenerator) generate(sqOrder []int) *boards.Solution {
 	// Populate the first three squares 0, 4 (middle) and 8 (last). Since there is no intersection
 	// between these squares, we can fill them with any permutation of the values.
 	for soi := range 3 {
-		RandShuffle(g.rand, allValues)
+		internal.RandShuffle(g.rand, allValues)
 		sq := sqOrder[soi]
 		g.setSquareValuesReadOnly(board, sq, allValues)
 	}

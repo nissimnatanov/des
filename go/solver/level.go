@@ -45,34 +45,35 @@ type LevelComplexityBar int64
 
 const (
 	LevelEasyBar     LevelComplexityBar = 125
-	LevelMediumBar   LevelComplexityBar = 250
-	LevelHardBar     LevelComplexityBar = 500
-	LevelVeryHardBar LevelComplexityBar = 1000
+	LevelMediumBar   LevelComplexityBar = 350
+	LevelHardBar     LevelComplexityBar = 1000
+	LevelVeryHardBar LevelComplexityBar = 3000
 
-	// usually at least one recursive step is needed
-	LevelEvilBar LevelComplexityBar = 5000
+	// many recursive steps are needed
+	LevelEvilBar LevelComplexityBar = 10000
 	// aligned with the second recursion step complexity
-	LevelDarkEvilBar LevelComplexityBar = 20000
-	// have not seen yet a puzzle with complexity above this level (at least one third recursion or way
-	// too many second and/or first recursions)
+	LevelDarkEvilBar LevelComplexityBar = 40000
+	// have not seen yet a puzzle with complexity above this level (at least one
+	// third-level recursion or way too many second and/or first recursions)
 	LevelNightmareBar LevelComplexityBar = 100000
 )
 
 // LevelFromComplexity returns the level of the Sudoku puzzle based on its complexity
-func LevelFromComplexity(complexity int64) Level {
-	if complexity <= int64(LevelEasyBar) {
+func LevelFromComplexity(complexity StepComplexity) Level {
+	cb := LevelComplexityBar(complexity)
+	if cb <= LevelEasyBar {
 		return LevelEasy
-	} else if complexity <= int64(LevelMediumBar) {
+	} else if cb <= LevelMediumBar {
 		return LevelMedium
-	} else if complexity <= int64(LevelHardBar) {
+	} else if cb <= LevelHardBar {
 		return LevelHard
-	} else if complexity <= int64(LevelVeryHardBar) {
+	} else if cb <= LevelVeryHardBar {
 		return LevelVeryHard
-	} else if complexity <= int64(LevelEvilBar) {
+	} else if cb <= LevelEvilBar {
 		return LevelEvil
-	} else if complexity <= int64(LevelDarkEvilBar) {
+	} else if cb <= LevelDarkEvilBar {
 		return LevelDarkEvil
-	} else if complexity <= int64(LevelNightmareBar) {
+	} else if cb <= LevelNightmareBar {
 		return LevelNightmare
 	} else {
 		return LevelBlackHole

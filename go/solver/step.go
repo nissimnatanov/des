@@ -43,7 +43,7 @@ func (s *StepStats) AddStep(step Step, complexity StepComplexity, count int) {
 
 	s.Count += int64(count)
 	s.Complexity += complexity * StepComplexity(count)
-	s.Level = LevelFromComplexity(int64(s.Complexity))
+	s.Level = LevelFromComplexity(s.Complexity)
 	if !boards.GetIntegrityChecks() {
 		return
 	}
@@ -74,7 +74,7 @@ func (s *StepStats) Merge(other *StepStats) {
 	}
 	s.Count += other.Count
 	s.Complexity += other.Complexity
-	s.Level = LevelFromComplexity(int64(s.Complexity))
+	s.Level = LevelFromComplexity(s.Complexity)
 	if !boards.GetIntegrityChecks() || len(other.Steps) == 0 {
 		return
 	}

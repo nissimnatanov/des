@@ -72,6 +72,10 @@ func (b *Game) AllowedValuesIn(seq indexes.Sequence) func(yield func(int, values
 	}
 }
 
+func (b *Game) EmptyCells() indexes.BitSet81 {
+	return b.emptyCells
+}
+
 // calcRelatedValues includes the value of the cell itself, if not empty
 // and the values of all related cells (row, column, square).
 func (b *Game) calcRelatedValues(index int) values.Set {

@@ -2,11 +2,13 @@ package solver_test
 
 import (
 	"encoding/json"
+	"slices"
 	"testing"
 
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/solver"
 	"gotest.tools/v3/assert"
+	"gotest.tools/v3/assert/cmp"
 )
 
 func TestSolveSanity(t *testing.T) {
@@ -25,8 +27,9 @@ func testSanity(t *testing.T, action solver.Action) {
 	boards.SetIntegrityChecks(true)
 
 	ctx := t.Context()
+	allBoards := slices.Concat(benchBoards, otherBoards)
 
-	for _, sample := range sampleBoards {
+	for _, sample := range allBoards {
 		t.Run(sample.name, func(t *testing.T) {
 			b, err := boards.Deserialize(sample.board)
 			assert.NilError(t, err)
@@ -40,19 +43,18 @@ func testSanity(t *testing.T, action solver.Action) {
 			assert.NilError(t, res.Error)
 
 			assert.Equal(t, res.Status, solver.StatusSucceeded)
-			if action == solver.ActionSolve {
-				assert.Assert(t, res.Steps.Level >= solver.LevelDarkEvil)
-			}
 			assert.Equal(t, res.Solutions.Size(), 1)
 			sol := res.Solutions.At(0)
 
 			solStr := boards.Serialize(sol)
-			assert.Equal(t, solStr, sample.solution)
+			assert.Check(t, cmp.Equal(solStr, sample.solution))
 
 			resJSON, err := json.MarshalIndent(res, "", "  ")
 			assert.NilError(t, err)
 			t.Log(string(resJSON))
-			// t.Fail()
+			if sample.failToLog {
+				t.Fail()
+			}
 		})
 	}
 }
@@ -128,7 +130,7 @@ func BenchmarkProveFirstOnly(b *testing.B) {
 func BenchmarkProveAll(b *testing.B) {
 	benchRun(b, &solver.Options{
 		Action: solver.ActionProve,
-	}, len(sampleBoards))
+	}, len(benchBoards))
 }
 
 // start: with hint01 and bitset improvements:
@@ -168,7 +170,7 @@ func BenchmarkSolveFirstOnly(b *testing.B) {
 func BenchmarkSolveAll(b *testing.B) {
 	benchRun(b, &solver.Options{
 		Action: solver.ActionSolve,
-	}, len(sampleBoards))
+	}, len(benchBoards))
 }
 
 func BenchmarkSolveFastFirstOnly(b *testing.B) {
@@ -180,14 +182,14 @@ func BenchmarkSolveFastFirstOnly(b *testing.B) {
 func BenchmarkSolveFastAll(b *testing.B) {
 	benchRun(b, &solver.Options{
 		Action: solver.ActionSolveFast,
-	}, len(sampleBoards))
+	}, len(benchBoards))
 }
 
 func benchRun(b *testing.B, opts *solver.Options, numBoards int) {
 	ctx := b.Context()
 
 	var parsed []*boards.Game
-	for _, sample := range sampleBoards {
+	for _, sample := range benchBoards {
 		bd, err := boards.Deserialize(sample.board)
 		assert.NilError(b, err)
 		parsed = append(parsed, bd)

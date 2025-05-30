@@ -201,7 +201,7 @@ bool SudokuBoardGeneratorState::shouldContinue(Random &r)
         return true;
     }
 
-    if (board()->getFreeCellCount() > 32)
+    if (board()->getFreeCellCount() < 32)
     {
         // Too early even for simple games.
         return true;
