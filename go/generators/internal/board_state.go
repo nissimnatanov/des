@@ -21,18 +21,25 @@ type BoardState struct {
 	candidates indexes.BitSet81
 }
 
+type boardSource interface {
+	Clone(mode boards.Mode) *boards.Game
+}
+
 // newBoardState creates a new BoardState for the given board.
-func newBoardState(ctx context.Context, state *State, board *boards.Game) *BoardState {
-	res := state.solver.Run(ctx, board)
+func newBoardState(ctx context.Context, state *State, srcBoard boardSource) *BoardState {
+	editBoard := srcBoard.Clone(boards.Edit)
+	// we could prob create fake result for solutions, but it does not matter much
+	res := state.solver.Run(ctx, editBoard)
 	if res.Status != solver.StatusSucceeded {
 		panic(fmt.Sprintf("failed to solve the board: %s", res.Error))
 	}
+	progress := shouldContinue(state, editBoard, res)
 	bs := &BoardState{
-		board:      board,
+		board:      editBoard,
 		state:      state,
 		res:        res,
-		progress:   shouldContinue(state, board, res),
-		candidates: board.EmptyCells().Complement(),
+		progress:   progress,
+		candidates: editBoard.EmptyCells().Complement(),
 	}
 	bs.checkIntegrity()
 	return bs
@@ -120,6 +127,13 @@ func shouldContinue(state *State, board *boards.Game, res *solver.Result) Progre
 	return AtLevelStop
 }
 
+type RemoveArgs struct {
+	FreeAtLeast      int
+	BatchMinToRemove int
+	BatchMaxToRemove int
+	BatchMaxTries    int
+}
+
 func (bs *BoardState) Remove(ctx context.Context, args RemoveArgs) *BoardState {
 	if bs.progress == AtLevelStop || bs.progress == AboveLevel {
 		// we already overflowed the level, no point in removing anything
@@ -130,12 +144,14 @@ func (bs *BoardState) Remove(ctx context.Context, args RemoveArgs) *BoardState {
 	next := bs
 	removedOnce := false
 	for next.board.FreeCellCount() < args.FreeAtLeast {
-		nextRemoved := next.tryRemove(ctx, &args)
-		if nextRemoved == nil {
-			break
+		{
+			nextRemoved := next.tryRemove(ctx, &args)
+			if nextRemoved == nil {
+				break
+			}
+			removedOnce = true
+			next = nextRemoved
 		}
-		removedOnce = true
-		next = nextRemoved
 		// make sure we do not overflow the level
 		switch next.progress {
 		case TooEarly, BelowLevel, AtLevelKeepGoing:
@@ -188,12 +204,14 @@ func (bs *BoardState) RemoveOneByOne(ctx context.Context) *BoardState {
 	removedOnce := false
 	next := bs
 	for ci := range candidates {
-		next2 := next.tryRemoveCandidates(ctx, candidates[ci:ci+1])
-		if next2 == nil {
-			continue
+		{
+			nextRemoved := next.tryRemoveCandidates(ctx, candidates[ci:ci+1])
+			if nextRemoved == nil {
+				continue
+			}
+			removedOnce = true
+			next = nextRemoved
 		}
-		next = next2
-		removedOnce = true
 		// tryRemoveOne does not overflow the level
 		switch next.progress {
 		case TooEarly, BelowLevel, AtLevelKeepGoing:
@@ -221,7 +239,7 @@ func (bs *BoardState) RemoveOneByOne(ctx context.Context) *BoardState {
 }
 
 func (bs *BoardState) tryRemove(ctx context.Context, args *RemoveArgs) *BoardState {
-	if args.MinToRemove < 1 || args.MaxToRemove < args.MinToRemove {
+	if args.BatchMinToRemove < 1 || args.BatchMaxToRemove < args.BatchMinToRemove {
 		panic("minToRemove and maxToRemove are out of range")
 	}
 	defer bs.checkIntegrity()
@@ -229,7 +247,7 @@ func (bs *BoardState) tryRemove(ctx context.Context, args *RemoveArgs) *BoardSta
 
 	next := bs
 	removedOnce := false
-	for range args.MaxRetries {
+	for range args.BatchMaxTries {
 		allowedToRemove := solver.MaxFreeCellsForValidBoard - next.board.FreeCellCount()
 		if allowedToRemove == 0 {
 			break
@@ -240,16 +258,18 @@ func (bs *BoardState) tryRemove(ctx context.Context, args *RemoveArgs) *BoardSta
 		}
 
 		RandShuffle(r, candidates)
-		currentBatch := r.NextInClosedRange(args.MinToRemove, args.MaxToRemove)
+		currentBatch := r.NextInClosedRange(args.BatchMinToRemove, args.BatchMaxToRemove)
 		currentBatch = min(currentBatch, len(candidates))
 		currentBatch = min(currentBatch, allowedToRemove)
 
-		nextRemoved := next.tryRemoveCandidates(ctx, candidates[:currentBatch])
-		if nextRemoved == nil {
-			continue // try again
+		{
+			nextRemoved := next.tryRemoveCandidates(ctx, candidates[:currentBatch])
+			if nextRemoved == nil {
+				continue // try again
+			}
+			removedOnce = true
+			next = nextRemoved
 		}
-		next = nextRemoved
-		removedOnce = true
 		switch next.progress {
 		case TooEarly, BelowLevel, AtLevelKeepGoing, AtLevelStop:
 			// we removed, all good, caller will call again
@@ -291,18 +311,16 @@ func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int)
 	}
 
 	res := bs.state.prover.Run(ctx, bs.board)
-	var nextBoard *boards.Game
+	var next *BoardState
 	if res.Status == solver.StatusSucceeded {
 		// clone the new board
-		nextBoard = bs.board.Clone(boards.Edit)
+		next = newBoardState(ctx, bs.state, bs.board)
 	}
 	// always restore the board to its original state
 	for _, index := range candidates {
 		bs.board.SetReadOnly(index, bs.state.solution.Get(index))
 	}
-	var next *BoardState
-	if nextBoard != nil {
-		next = newBoardState(ctx, bs.state, nextBoard)
+	if next != nil {
 		// if we overflowed the desired level, consider it a failure as well
 		if next.progress == AboveLevel {
 			next = nil

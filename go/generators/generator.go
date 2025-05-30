@@ -2,6 +2,7 @@ package generators
 
 import (
 	"context"
+	"time"
 
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/generators/internal"
@@ -18,10 +19,17 @@ type Generator struct {
 	r *internal.Random
 }
 
-// TODO: adjust the bar
-const fastGenerationCap = solver.LevelBlackHole
+const fastGenerationCap = solver.LevelEvil
 
-func (g *Generator) Generate(ctx context.Context, level solver.Level, sol *boards.Solution) *solver.Result {
+type Options struct {
+	Solution *boards.Solution
+}
+
+func (g *Generator) Generate(ctx context.Context, level solver.Level, opts *Options) *solver.Result {
+	var sol *boards.Solution
+	if opts != nil {
+		sol = opts.Solution
+	}
 	if sol == nil {
 		sol = GenerateSolution(g.r)
 	}
@@ -48,46 +56,73 @@ func (g *Generator) Enhance(ctx context.Context, board *boards.Game, level solve
 	return g.generateSlow(ctx, bs)
 }*/
 
-// generate (for lower levels)
+// generateFast for lower levels
 func (g *Generator) generateFast(ctx context.Context, state *internal.State) *solver.Result {
-	start := state.InitialBoardState(ctx)
+	initState := state.InitialBoardState(ctx)
+	tries := 0
+	start := time.Now()
+	var stages [4]GameStageStats
+
 	for ctx.Err() == nil {
-		bs := start.Remove(ctx, internal.RemoveArgs{
-			FreeAtLeast: 32,
-			MinToRemove: 3,
-			MaxToRemove: 8,
-			MaxRetries:  15,
-		})
-		if bs == nil {
+		tries++
+		res, stage := g.tryGenerateFastOnce(ctx, initState)
+		for s := range stage + 1 {
+			stages[s].Total++
+		}
+		if res == nil {
+			stages[stage].Failed++
 			continue
 		}
-		if bs.Progress() == internal.AtLevelStop {
-			return bs.Result()
-		}
-
-		// remove the next bulk
-		bs = bs.Remove(ctx, internal.RemoveArgs{
-			FreeAtLeast: 48,
-			MinToRemove: 1,
-			MaxToRemove: 3,
-			MaxRetries:  25,
-		})
-		if bs == nil {
-			continue
-		}
-		if bs.Progress() == internal.AtLevelStop {
-			return bs.Result()
-		}
-
-		// we have not reached the desired level yet, from this point remove one by one
-		bs = bs.RemoveOneByOne(ctx)
-		if bs == nil {
-			continue
-		}
-		if bs.Progress() == internal.AtLevelKeepGoing || bs.Progress() == internal.AtLevelStop {
-			return bs.Result()
-		}
+		stages[stage].Succeeded++
+		elapsed := time.Since(start)
+		Stats.reportOneGeneration(elapsed, int64(tries), res.Steps.Complexity, stages[:])
+		return res
 	}
 
 	return nil
+}
+
+func (g *Generator) tryGenerateFastOnce(ctx context.Context, initState *internal.BoardState) (*solver.Result, int) {
+	stage := 0
+	bs := initState.Remove(ctx, internal.RemoveArgs{
+		FreeAtLeast:      45,
+		BatchMinToRemove: 10,
+		BatchMaxToRemove: 15,
+		// first pass is usually needs to retry only once in hundreds of runs
+		BatchMaxTries: 3,
+	})
+	if bs == nil {
+		return nil, stage
+	}
+
+	if bs.Progress() == internal.AtLevelStop {
+		return bs.Result(), stage
+	}
+	stage++
+	// remove the next bulk
+	bs = bs.Remove(ctx, internal.RemoveArgs{
+		FreeAtLeast:      55,
+		BatchMinToRemove: 3,
+		BatchMaxToRemove: 5,
+		BatchMaxTries:    30,
+	})
+	if bs == nil {
+		return nil, stage
+	}
+	if bs.Progress() == internal.AtLevelStop {
+		return bs.Result(), stage
+	}
+
+	stage++
+	// we have not reached the desired level yet, from this point remove one by one
+	bs = bs.RemoveOneByOne(ctx)
+	if bs == nil {
+		return nil, stage
+	}
+	if bs.Progress() == internal.AtLevelKeepGoing || bs.Progress() == internal.AtLevelStop {
+		return bs.Result(), stage
+	}
+
+	stage++
+	return nil, stage
 }

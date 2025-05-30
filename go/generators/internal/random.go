@@ -28,10 +28,14 @@ func (r *Random) Intn(n int) int {
 }
 
 func (r *Random) NextInClosedRange(min, max int) int {
-	if min >= max {
-		panic("min must be less than max")
+	switch {
+	case min < max:
+		return r.Intn(max-min+1) + min
+	case min == max:
+		return min
+	default:
+		panic("min must be less than or equal to max")
 	}
-	return r.Intn(max-min+1) + min
 }
 
 func (r *Random) PercentProbability(p int) bool {

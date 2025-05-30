@@ -1,39 +1,11 @@
 package generators
 
 import (
-	"fmt"
-	"math"
 	"sync"
 	"time"
+
+	"github.com/nissimnatanov/des/go/solver"
 )
-
-// SolutionStats holds a snapshot of the solution generation statistics.
-type SolutionStats struct {
-	Count   int64
-	Retries int64
-	Elapsed time.Duration
-}
-
-func (s SolutionStats) AverageElapsed() time.Duration {
-	if s.Count == 0 {
-		return 0
-	}
-	return s.Elapsed / time.Duration(s.Count)
-}
-
-func (s SolutionStats) AverageRetries() float64 {
-	if s.Count == 0 {
-		return 0
-	}
-	return math.Round(float64(s.Retries)*10/float64(s.Count)) / 10
-}
-
-func (s SolutionStats) String() string {
-	return fmt.Sprintf("Solutions: %d, Average Elapsed: %s, Average Retries: %v",
-		s.Count,
-		s.AverageElapsed(),
-		s.AverageRetries())
-}
 
 var Stats stats
 
@@ -42,14 +14,14 @@ type stats struct {
 	rw sync.RWMutex
 
 	solution SolutionStats
+	game     GameStats
 }
 
 func (s *stats) Reset() {
 	s.rw.Lock()
 	defer s.rw.Unlock()
-	s.solution.Count = 0
-	s.solution.Retries = 0
-	s.solution.Elapsed = 0
+	s.solution = SolutionStats{}
+	s.game = GameStats{}
 }
 
 func (s *stats) Solution() SolutionStats {
@@ -58,10 +30,20 @@ func (s *stats) Solution() SolutionStats {
 	return s.solution
 }
 
+func (s *stats) Game() GameStats {
+	s.rw.RLock()
+	defer s.rw.RUnlock()
+	return s.game.clone()
+}
+
 func (s *stats) reportOneSolution(elapsed time.Duration, retries int64) {
 	s.rw.Lock()
 	defer s.rw.Unlock()
-	s.solution.Count++
-	s.solution.Elapsed += elapsed
-	s.solution.Retries += retries
+	s.solution.reportOne(elapsed, retries)
+}
+
+func (s *stats) reportOneGeneration(elapsed time.Duration, retries int64, complexity solver.StepComplexity, stages []GameStageStats) {
+	s.rw.Lock()
+	defer s.rw.Unlock()
+	s.game.reportOne(elapsed, retries, complexity, stages)
 }

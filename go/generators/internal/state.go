@@ -65,19 +65,11 @@ func NewEnhanceBoardState(ctx context.Context, level solver.Level, r *Random, bo
 		panic("cannot fine-tune unproven board")
 	}
 	args.Solution = res.Solutions.At(0)
-	board = board.Clone(boards.Edit)
 	s := NewState(args)
 	bs := newBoardState(ctx, s, board)
 	return s, bs
 }
 
 func (s *State) InitialBoardState(ctx context.Context) *BoardState {
-	return newBoardState(ctx, s, s.solution.Clone(boards.Edit))
-}
-
-type RemoveArgs struct {
-	FreeAtLeast int
-	MinToRemove int
-	MaxToRemove int
-	MaxRetries  int
+	return newBoardState(ctx, s, s.solution)
 }

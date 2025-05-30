@@ -62,11 +62,15 @@ func (b *Solution) String() string {
 	return sb.String()
 }
 
+func (b *Solution) CloneInto(mode Mode, board *Game) {
+	board.init(mode)
+	board.copyValues(&b.base)
+	board.recalculateAllStats()
+}
+
 func (sol *Solution) Clone(mode Mode) *Game {
 	newBoard := &Game{}
-	newBoard.init(mode)
-	newBoard.copyValues(&sol.base)
-	newBoard.recalculateAllStats()
+	sol.CloneInto(mode, newBoard)
 	return newBoard
 }
 

@@ -25,13 +25,32 @@ func TestGeneratorFast(t *testing.T) {
 	}
 }
 
+// Initial state:
+// * 1749	    653157 ns/op	  260671 B/op	    1535 allocs/op
+// * Generations: 1749, ~Elapsed: 554.192µs, ~Retries: 1, ~Complexity: 117.87
+// * Solutions: 1749, ~Elapsed: 97.204µs, ~Retries: 10.2
+
 func BenchmarkEasy(b *testing.B) {
 	runBenchmark(b, solver.LevelEasy)
 }
 
+// Initial state:
+// * 519	   2266841 ns/op	  779299 B/op	    3339 allocs/op
+// * Generations: 519, ~Elapsed: 2.168733ms, ~Retries: 2.45, ~Complexity: 574.43
+// * Solutions: 519, ~Elapsed: 95.971µs, ~Retries: 9.6
+
 func BenchmarkHard(b *testing.B) {
 	runBenchmark(b, solver.LevelHard)
 }
+
+func BenchmarkVerHard(b *testing.B) {
+	runBenchmark(b, solver.LevelVeryHard)
+}
+
+// Initial state:
+// * 10	 106926608 ns/op	36740413 B/op	  149229 allocs/op
+// * Generations: 10, ~Elapsed: 106.817354ms, ~Retries: 94.4, ~Complexity: 4396.20
+// * Solutions: 10, ~Elapsed: 103.583µs, ~Retries: 9
 
 func BenchmarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelEvil)
@@ -50,6 +69,7 @@ func BenchmarkBlackHole(b *testing.B) {
 }
 
 func runBenchmark(b *testing.B, level solver.Level) {
+	generators.Stats.Reset()
 	ctx := b.Context()
 	g := generators.New()
 	for b.Loop() {
@@ -61,4 +81,6 @@ func runBenchmark(b *testing.B, level solver.Level) {
 			b.Log("generated", res.Steps.Level, ":", boards.Serialize(res.Input), &res.Steps)
 		}
 	}
+	b.Log(generators.Stats.Game().String())
+	b.Log(generators.Stats.Solution().String())
 }

@@ -22,8 +22,10 @@ const MaxFreeCellsForValidBoard = boards.Size - boards.MinValidBoardSize
 // algorithm first and that would detect values.
 const maxRecursionDepthLimit = 127
 
+// Each Solver can be used on a single thread only.
 type Solver struct {
-	opts Options
+	opts       Options
+	algorithms []Algorithm
 }
 
 // TODO: itemize the options
@@ -31,9 +33,11 @@ func New(opts *Options) *Solver {
 	if opts == nil {
 		opts = &Options{}
 	}
+	algorithms := GetAlgorithms(opts.Action)
 
 	return &Solver{
-		opts: *opts,
+		opts:       *opts,
+		algorithms: algorithms,
 	}
 }
 
@@ -56,7 +60,7 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
 			// stop once two solutions are found
 			Solutions: &Solutions{},
 		},
-		algorithms: GetAlgorithms(s.opts.Action),
+		algorithms: s.algorithms,
 	}
 
 	start := time.Now()

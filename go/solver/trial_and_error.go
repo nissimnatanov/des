@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/nissimnatanov/des/go/boards"
+	"github.com/nissimnatanov/des/go/internal/cache"
 )
 
 const trialAndErrorStepName = Step("Trial and Error")
@@ -17,26 +18,28 @@ type indexWithAllowedSize struct {
 // trialAndError is a recursive algorithm, please always run it after the
 // theOnlyChoice algo (never as standalone)
 type trialAndError struct {
-	indexesCache cache[[]indexWithAllowedSize]
-	testBoard    cache[*boards.Game]
+	indexesCache   *cache.Cache[[]indexWithAllowedSize]
+	testBoardCache *cache.Cache[*boards.Game]
 }
 
 func newTrialAndError() *trialAndError {
 	return &trialAndError{
-		indexesCache: cache[[]indexWithAllowedSize]{
-			factory: func() []indexWithAllowedSize {
+		indexesCache: cache.New(cache.Args[[]indexWithAllowedSize]{
+			Factory: func() []indexWithAllowedSize {
 				return make([]indexWithAllowedSize, 0, MaxFreeCellsForValidBoard)
 			},
-			reset: func(v []indexWithAllowedSize) []indexWithAllowedSize {
+			Reset: func(v []indexWithAllowedSize) []indexWithAllowedSize {
 				// reset the slice to be empty but keep the capacity
 				return v[:0]
 			},
-		},
-		testBoard: cache[*boards.Game]{
-			factory: func() *boards.Game {
+			MaxSize: 12,
+		}),
+		testBoardCache: cache.New(cache.Args[*boards.Game]{
+			Factory: func() *boards.Game {
 				return boards.New()
 			},
-		},
+			MaxSize: 12,
+		}),
 	}
 }
 
@@ -51,8 +54,8 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 
 	b := state.Board()
 	// these slice is reset on each get
-	indexes := a.indexesCache.get()
-	defer a.indexesCache.put(indexes)
+	indexes := a.indexesCache.Get()
+	defer a.indexesCache.Put(indexes)
 	// Number of allowed values is more important than the value count but only up to
 	// 3 allowed values, after which the trial-and-error becomes much less effective.
 	// The allowedSizeMultiplier below was chosen by testing various values and measuring
@@ -105,8 +108,8 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	})
 
 	// create testBoard once and reuse it
-	testBoard := a.testBoard.get()
-	defer a.testBoard.put(testBoard)
+	testBoard := a.testBoardCache.Get()
+	defer a.testBoardCache.Put(testBoard)
 
 	var disallowedAtLeastOne bool
 	for _, tei := range indexes {
@@ -178,10 +181,15 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			// proof or accurate level requested, we must keep going with other options on the same
 			// cell to prove that the found solution is the only one on that cell or to reduce the
 			// 'value order bias' from the level score
-			foundBoards = append(foundBoards, testBoard.Clone(boards.Immutable))
+			foundBoard := a.testBoardCache.Get()
+			testBoard.CloneInto(boards.Immutable, foundBoard)
+			foundBoards = append(foundBoards, foundBoard)
 			if len(foundBoards) > 1 {
 				// if we found more than one board, we can stop
 				// and report that we have two solutions
+				for _, fb := range foundBoards {
+					a.testBoardCache.Put(fb)
+				}
 				return StatusMoreThanOneSolution
 			}
 		}
@@ -193,6 +201,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 				// Also, in a Solve mode, we are not asked to prove the solution, we can return early
 				// to keep leveling accurate.
 				copyFromTestBoard(foundBoards[0], b)
+				a.testBoardCache.Put(foundBoards[0])
 				return StatusSucceeded
 			}
 			// If proof is requested, and we have at least one inconclusive test value, we have to
