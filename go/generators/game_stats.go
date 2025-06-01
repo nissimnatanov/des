@@ -2,11 +2,37 @@ package generators
 
 import (
 	"fmt"
-	"slices"
 	"time"
-
-	"github.com/nissimnatanov/des/go/solver"
 )
+
+// fastStageCount includes the last stage that is always a failure stage when fast
+// generation fails
+const fastStageCount = 4
+const slowStageCount = 10 // TODO
+
+type GamePerStageStats [slowStageCount + 1]GameStageStats
+
+func (stages *GamePerStageStats) report(stage int, success bool) {
+	if stage < 0 || stage >= len(stages) {
+		panic("stage out of range")
+	}
+	for s := range stage + 1 {
+		stages[s].Total++
+	}
+	if success {
+		stages[stage].Succeeded++
+	} else {
+		stages[stage].Failed++
+	}
+}
+
+func (stages *GamePerStageStats) merge(other GamePerStageStats) {
+	for i := range stages {
+		stages[i].Total += other[i].Total
+		stages[i].Succeeded += other[i].Succeeded
+		stages[i].Failed += other[i].Failed
+	}
+}
 
 type GameStageStats struct {
 	Total     int
@@ -18,14 +44,11 @@ type GameStats struct {
 	Count      int64
 	Retries    int64
 	Elapsed    time.Duration
-	Complexity int64
-	StageStats []GameStageStats
+	StageStats GamePerStageStats
 }
 
 func (gs GameStats) clone() GameStats {
-	c := gs
-	c.StageStats = slices.Clone(gs.StageStats)
-	return c
+	return gs
 }
 
 func (gs GameStats) AverageElapsed() time.Duration {
@@ -41,30 +64,14 @@ func (gs GameStats) AverageRetries() float64 {
 	return float64(gs.Retries) / float64(gs.Count)
 }
 
-func (gs GameStats) AverageComplexity() float64 {
-	if gs.Count == 0 {
-		return 0
-	}
-	return float64(gs.Complexity) / float64(gs.Count)
-}
-
 func (gs GameStats) String() string {
-	return fmt.Sprintf("Generations: %d, ~Elapsed: %s, ~Retries: %.3f, ~Complexity: %.3f, Stages: %v",
-		gs.Count, gs.AverageElapsed(), gs.AverageRetries(), gs.AverageComplexity(), gs.StageStats)
+	return fmt.Sprintf("Generations: %d, ~Elapsed: %s, ~Retries: %.3f, Stages: %v",
+		gs.Count, gs.AverageElapsed(), gs.AverageRetries(), gs.StageStats)
 }
 
-func (gs *GameStats) reportOne(elapsed time.Duration, retries int64, complexity solver.StepComplexity, stageStags []GameStageStats) {
+func (gs *GameStats) reportOne(elapsed time.Duration, retries int64, stageStats GamePerStageStats) {
 	gs.Count++
 	gs.Elapsed += elapsed
 	gs.Retries += retries
-	gs.Complexity += int64(complexity)
-	for i, stage := range stageStags {
-		if i == len(gs.StageStats) {
-			gs.StageStats = append(gs.StageStats, stage)
-		} else {
-			gs.StageStats[i].Total += stage.Total
-			gs.StageStats[i].Succeeded += stage.Succeeded
-			gs.StageStats[i].Failed += stage.Failed
-		}
-	}
+	gs.StageStats.merge(stageStats)
 }

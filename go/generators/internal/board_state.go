@@ -11,13 +11,16 @@ import (
 )
 
 type BoardState struct {
-	board    *boards.Game
-	state    *State
-	res      *solver.Result
+	board *boards.Game
+	state *SolutionState
+	res   *solver.Result
+
+	desiredLevelRange LevelRange
+	// progress is relative to the desired level range
 	progress Progress
 
 	// candidates are the board indices with values that can be potentially removed
-	// to reach the desired level
+	// to reach the desired level range
 	candidates indexes.BitSet81
 }
 
@@ -26,20 +29,21 @@ type boardSource interface {
 }
 
 // newBoardState creates a new BoardState for the given board.
-func newBoardState(ctx context.Context, state *State, srcBoard boardSource) *BoardState {
+func newBoardState(ctx context.Context, state *SolutionState, levelRange LevelRange, srcBoard boardSource) *BoardState {
 	editBoard := srcBoard.Clone(boards.Edit)
 	// we could prob create fake result for solutions, but it does not matter much
 	res := state.solver.Run(ctx, editBoard)
 	if res.Status != solver.StatusSucceeded {
 		panic(fmt.Sprintf("failed to solve the board: %s", res.Error))
 	}
-	progress := shouldContinue(state, editBoard, res)
+	progress := levelRange.shouldContinue(state.rand, editBoard, res)
 	bs := &BoardState{
-		board:      editBoard,
-		state:      state,
-		res:        res,
-		progress:   progress,
-		candidates: editBoard.EmptyCells().Complement(),
+		board:             editBoard,
+		state:             state,
+		res:               res,
+		desiredLevelRange: levelRange,
+		progress:          progress,
+		candidates:        editBoard.EmptyCells().Complement(),
 	}
 	bs.checkIntegrity()
 	return bs
@@ -59,12 +63,8 @@ func (bs *BoardState) checkIntegrity() {
 	}
 }
 
-func (bs *BoardState) Complexity(ctx context.Context) solver.StepComplexity {
+func (bs *BoardState) Complexity() solver.StepComplexity {
 	return bs.res.Steps.Complexity
-}
-
-func (bs *BoardState) Level(ctx context.Context) solver.Level {
-	return bs.res.Steps.Level
 }
 
 func (bs *BoardState) Result() *solver.Result {
@@ -75,6 +75,14 @@ func (bs *BoardState) Progress() Progress {
 	return bs.progress
 }
 
+func (bs *BoardState) BoardLevel() solver.Level {
+	return bs.res.Steps.Level
+}
+
+func (bs *BoardState) DesiredLevelRange() LevelRange {
+	return bs.desiredLevelRange
+}
+
 func (bs *BoardState) BoardEquivalentTo(other *BoardState) bool {
 	return boards.Equivalent(bs.board, other.board)
 }
@@ -83,59 +91,15 @@ func (bs *BoardState) Candidates() indexes.BitSet81 {
 	return bs.candidates
 }
 
-func shouldContinueAtLevel(desiredLevel solver.Level, r *Random) bool {
-	switch desiredLevel {
-	case solver.LevelEasy:
-		// For easy games - keep trying (otherwise, game can be too easy).
-		return r.PercentProbability(95)
-	case solver.LevelMedium:
-		// For medium games - keep trying a bit less.
-		return r.PercentProbability(75)
-	case solver.LevelHard:
-		// For hard games - continue in half of the cases..
-		return r.PercentProbability(50)
-	case solver.LevelVeryHard:
-		// For very hard games - make it even harder, but stop sometimes.
-		return r.PercentProbability(75)
-	default:
-		// For harder games, keep going until overflows...
-		return true
-	}
-}
-
-func shouldContinue(state *State, board *boards.Game, res *solver.Result) Progress {
-	if board.FreeCellCount() < 32 {
-		// too early even for easy games.
-		return TooEarly
-	}
-
-	if res.Steps.Level < state.level {
-		return BelowLevel
-	}
-
-	if res.Steps.Level > state.level {
-		// Overflow, stop.
-		return AboveLevel
-	}
-
-	if shouldContinueAtLevel(state.level, state.rand) {
-		// Keep going, we are at the desired level.
-		return AtLevelKeepGoing
-	}
-
-	// We are at the desired level, but do not want to continue.
-	return AtLevelStop
-}
-
 type RemoveArgs struct {
-	FreeAtLeast      int
+	FreeCells        int
 	BatchMinToRemove int
 	BatchMaxToRemove int
 	BatchMaxTries    int
 }
 
 func (bs *BoardState) Remove(ctx context.Context, args RemoveArgs) *BoardState {
-	if bs.progress == AtLevelStop || bs.progress == AboveLevel {
+	if bs.progress == InRangeStop || bs.progress == AboveMaxLevel {
 		// we already overflowed the level, no point in removing anything
 		panic("do not use Remove if already reached the desired level or overflowed it")
 	}
@@ -143,7 +107,7 @@ func (bs *BoardState) Remove(ctx context.Context, args RemoveArgs) *BoardState {
 
 	next := bs
 	removedOnce := false
-	for next.board.FreeCellCount() < args.FreeAtLeast {
+	for next.board.FreeCellCount() < args.FreeCells {
 		{
 			nextRemoved := next.tryRemove(ctx, &args)
 			if nextRemoved == nil {
@@ -154,13 +118,13 @@ func (bs *BoardState) Remove(ctx context.Context, args RemoveArgs) *BoardState {
 		}
 		// make sure we do not overflow the level
 		switch next.progress {
-		case TooEarly, BelowLevel, AtLevelKeepGoing:
+		case TooEarly, BelowMinLevel, InRangeKeepGoing:
 			// keep removing while we reach the desired level or FreeAtLeast threshold
 			continue
-		case AtLevelStop:
+		case InRangeStop:
 			// we reached the desired level, stop removing even if we have not reached the FreeAtLeast
 			return next
-		case AboveLevel:
+		case AboveMaxLevel:
 			panic("tryRemove should not overflow the level")
 		default:
 			panic(fmt.Sprintf("unexpected progress value after tryRemove: %d", next.progress))
@@ -168,10 +132,10 @@ func (bs *BoardState) Remove(ctx context.Context, args RemoveArgs) *BoardState {
 	}
 	if !removedOnce {
 		// even if we did not remove anything, we may have reached the desired level
-		if next.progress == AtLevelKeepGoing {
+		if next.progress == InRangeKeepGoing {
 			// we reached the desired level, but did not remove anything
 			// let the caller know it is time to stop
-			next.progress = AtLevelStop
+			next.progress = InRangeStop
 			return next
 		}
 		return nil
@@ -183,23 +147,28 @@ func (bs *BoardState) Remove(ctx context.Context, args RemoveArgs) *BoardState {
 // RemoveOneByOne tries to remove indexes one by one, until the board reaches the desired level
 // or the number of free cells is less than MaxFreeCellsForValidBoard.
 func (bs *BoardState) RemoveOneByOne(ctx context.Context) *BoardState {
-	if bs.progress == AtLevelStop || bs.progress == AboveLevel {
+	if bs.progress == InRangeStop || bs.progress == AboveMaxLevel {
 		// we already overflowed the level, no point in removing anything
 		panic("do not use RemoveOneByOne if already reached the desired level or overflowed it")
 	}
-	defer bs.checkIntegrity()
 
 	// Remove the remained indexes one by one, until we reach the desired level.
-	r := bs.state.rand
 	candidates := slices.Collect(bs.candidates.Indexes)
 	if len(candidates) == 0 {
-		if bs.progress == AtLevelKeepGoing {
-			bs.progress = AtLevelStop
+		if bs.progress == InRangeKeepGoing {
+			bs.progress = InRangeStop
 			return bs
 		}
 		return nil
 	}
 
+	return bs.RemoveCandidatesOneByOne(ctx, candidates)
+}
+
+func (bs *BoardState) RemoveCandidatesOneByOne(ctx context.Context, candidates []int) *BoardState {
+	defer bs.checkIntegrity()
+
+	r := bs.state.rand
 	RandShuffle(r, candidates)
 	removedOnce := false
 	next := bs
@@ -214,20 +183,20 @@ func (bs *BoardState) RemoveOneByOne(ctx context.Context) *BoardState {
 		}
 		// tryRemoveOne does not overflow the level
 		switch next.progress {
-		case TooEarly, BelowLevel, AtLevelKeepGoing:
+		case TooEarly, BelowMinLevel, InRangeKeepGoing:
 			// keep removing more
-		case AtLevelStop:
+		case InRangeStop:
 			// we are done
 			return next
-		case AboveLevel:
+		case AboveMaxLevel:
 			panic("tryRemoveOne should not overflow the level")
 		default:
 			panic(fmt.Sprintf("unexpected progress value after tryRemoveOne: %d", next.progress))
 		}
 	}
 	// if we tried all the candidates and reached the level, we can stop
-	if next.progress == AtLevelKeepGoing {
-		next.progress = AtLevelStop
+	if next.progress == InRangeKeepGoing {
+		next.progress = InRangeStop
 		return next
 	}
 	if !removedOnce {
@@ -271,10 +240,10 @@ func (bs *BoardState) tryRemove(ctx context.Context, args *RemoveArgs) *BoardSta
 			next = nextRemoved
 		}
 		switch next.progress {
-		case TooEarly, BelowLevel, AtLevelKeepGoing, AtLevelStop:
+		case TooEarly, BelowMinLevel, InRangeKeepGoing, InRangeStop:
 			// we removed, all good, caller will call again
 			return next
-		case AboveLevel:
+		case AboveMaxLevel:
 			panic("tryRemoveBatch should not overflow")
 		default:
 			panic(fmt.Sprintf("unexpected progress value after tryRemoveBatch: %d", next.progress))
@@ -314,7 +283,7 @@ func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int)
 	var next *BoardState
 	if res.Status == solver.StatusSucceeded {
 		// clone the new board
-		next = newBoardState(ctx, bs.state, bs.board)
+		next = newBoardState(ctx, bs.state, bs.desiredLevelRange, bs.board)
 	}
 	// always restore the board to its original state
 	for _, index := range candidates {
@@ -322,7 +291,7 @@ func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int)
 	}
 	if next != nil {
 		// if we overflowed the desired level, consider it a failure as well
-		if next.progress == AboveLevel {
+		if next.progress == AboveMaxLevel {
 			next = nil
 		}
 	}
@@ -342,4 +311,16 @@ func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int)
 	}
 
 	return next
+}
+
+func (bs *BoardState) ChangeDesiredLevelRange(lr LevelRange) *BoardState {
+	clone := *bs
+	if bs.desiredLevelRange == lr {
+		// no need to clone, we are already at the desired level
+		return &clone
+	}
+	// reevaluate the progress based on the new level
+	clone.desiredLevelRange = lr
+	clone.progress = lr.shouldContinue(bs.state.rand, bs.board, bs.res)
+	return &clone
 }

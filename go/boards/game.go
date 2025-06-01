@@ -149,6 +149,12 @@ func (b *Game) Set(index int, v values.Value) {
 	b.setInternal(index, v, false)
 }
 
+func (b *Game) Reset(indexes ...int) {
+	for _, index := range indexes {
+		b.setInternal(index, 0, false)
+	}
+}
+
 func (b *Game) SetReadOnly(index int, v values.Value) {
 	b.setInternal(index, v, true)
 }

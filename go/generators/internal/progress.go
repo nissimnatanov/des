@@ -7,10 +7,10 @@ type Progress int
 const (
 	ProgressUnknown Progress = iota
 	TooEarly
-	BelowLevel
-	AtLevelKeepGoing
-	AtLevelStop
-	AboveLevel
+	BelowMinLevel
+	InRangeKeepGoing
+	InRangeStop
+	AboveMaxLevel
 )
 
 func (p Progress) String() string {
@@ -19,14 +19,14 @@ func (p Progress) String() string {
 		return "Unknown"
 	case TooEarly:
 		return "TooEarly"
-	case BelowLevel:
-		return "BelowLevel"
-	case AtLevelKeepGoing:
-		return "AtLevelKeepGoing"
-	case AtLevelStop:
-		return "AtLevelStop"
-	case AboveLevel:
-		return "AboveLevel"
+	case BelowMinLevel:
+		return "BelowMinLevel"
+	case InRangeKeepGoing:
+		return "InRangeKeepGoing"
+	case InRangeStop:
+		return "InRangeStop"
+	case AboveMaxLevel:
+		return "AboveMaxLevel"
 	default:
 		return fmt.Sprintf("UnknownProgress(%d)", p)
 	}

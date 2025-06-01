@@ -11,5 +11,6 @@ func GenerateSolutionWithCustomOrder(r *internal.Random, sqOrder []int) *boards.
 	if r == nil {
 		r = internal.NewRandom()
 	}
-	return solutionGenerator{rand: r}.generate(sqOrder)
+	g := solutionGenerator{rand: r}
+	return g.generate(sqOrder)
 }

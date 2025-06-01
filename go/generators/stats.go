@@ -3,8 +3,6 @@ package generators
 import (
 	"sync"
 	"time"
-
-	"github.com/nissimnatanov/des/go/solver"
 )
 
 var Stats stats
@@ -42,8 +40,8 @@ func (s *stats) reportOneSolution(elapsed time.Duration, retries int64) {
 	s.solution.reportOne(elapsed, retries)
 }
 
-func (s *stats) reportOneGeneration(elapsed time.Duration, retries int64, complexity solver.StepComplexity, stages []GameStageStats) {
+func (s *stats) reportOneGeneration(elapsed time.Duration, retries int64, stageStats GamePerStageStats) {
 	s.rw.Lock()
 	defer s.rw.Unlock()
-	s.game.reportOne(elapsed, retries, complexity, stages)
+	s.game.reportOne(elapsed, retries, stageStats)
 }

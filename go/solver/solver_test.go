@@ -11,6 +11,17 @@ import (
 	"gotest.tools/v3/assert/cmp"
 )
 
+func TestMoreThanOneSolution(t *testing.T) {
+	boards.SetIntegrityChecks(true)
+	prover := solver.New(&solver.Options{Action: solver.ActionProve})
+	ctx := t.Context()
+	board, err := boards.Deserialize("27B4A1A9B4O6A8D51A9B6D4D1B61B6D5B7A2D5C13C")
+	assert.NilError(t, err)
+
+	res := prover.Run(ctx, board)
+	assert.Equal(t, res.Status, solver.StatusMoreThanOneSolution)
+}
+
 func TestSolveSanity(t *testing.T) {
 	testSanity(t, solver.ActionSolve)
 }

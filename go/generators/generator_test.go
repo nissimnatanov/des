@@ -7,6 +7,7 @@ import (
 	"github.com/nissimnatanov/des/go/generators"
 	"github.com/nissimnatanov/des/go/solver"
 	"gotest.tools/v3/assert"
+	"gotest.tools/v3/assert/cmp"
 )
 
 func TestGeneratorFast(t *testing.T) {
@@ -16,10 +17,13 @@ func TestGeneratorFast(t *testing.T) {
 		t.Run(level.String(), func(t *testing.T) {
 			for range loop {
 				g := generators.New()
-				res := g.Generate(ctx, level, nil)
-				assert.Assert(t, res != nil)
-				assert.Equal(t, res.Status, solver.StatusSucceeded)
-				assert.Check(t, res.Steps.Level >= level, "expected at least level %s, got %s", level, res.Steps.Level)
+				rs := g.Generate(ctx, &generators.Options{MinLevel: level, MaxLevel: level})
+				assert.Check(t, cmp.Len(rs, 1), "expected exactly one result for level %s, got %d", level, len(rs))
+				for _, res := range rs {
+					assert.Assert(t, res != nil)
+					assert.Equal(t, res.Status, solver.StatusSucceeded)
+					assert.Check(t, res.Steps.Level == level, "expected at least level %s, got %s", level, res.Steps.Level)
+				}
 			}
 		})
 	}
@@ -30,8 +34,8 @@ func TestGeneratorFast(t *testing.T) {
 // * Generations: 1749, ~Elapsed: 554.192µs, ~Retries: 1, ~Complexity: 117.87
 // * Solutions: 1749, ~Elapsed: 97.204µs, ~Retries: 10.2
 
-func BenchmarkEasy(b *testing.B) {
-	runBenchmark(b, solver.LevelEasy)
+func BenchmarkEasyOrMedium(b *testing.B) {
+	runBenchmark(b, solver.LevelEasy, solver.LevelMedium)
 }
 
 // Initial state:
@@ -39,12 +43,8 @@ func BenchmarkEasy(b *testing.B) {
 // * Generations: 519, ~Elapsed: 2.168733ms, ~Retries: 2.45, ~Complexity: 574.43
 // * Solutions: 519, ~Elapsed: 95.971µs, ~Retries: 9.6
 
-func BenchmarkHard(b *testing.B) {
-	runBenchmark(b, solver.LevelHard)
-}
-
-func BenchmarkVerHard(b *testing.B) {
-	runBenchmark(b, solver.LevelVeryHard)
+func BenchmarkHardOrVeryHard(b *testing.B) {
+	runBenchmark(b, solver.LevelHard, solver.LevelVeryHard)
 }
 
 // Initial state:
@@ -52,33 +52,30 @@ func BenchmarkVerHard(b *testing.B) {
 // * Generations: 10, ~Elapsed: 106.817354ms, ~Retries: 94.4, ~Complexity: 4396.20
 // * Solutions: 10, ~Elapsed: 103.583µs, ~Retries: 9
 
-func BenchmarkEvil(b *testing.B) {
-	runBenchmark(b, solver.LevelEvil)
+func BenchmarkEviOrDarkEvil(b *testing.B) {
+	runBenchmark(b, solver.LevelEvil, solver.LevelDarkEvil)
 }
 
-func BenchmarkDarkEvil(b *testing.B) {
-	runBenchmark(b, solver.LevelDarkEvil)
+func BenchmarkNightmareOrBlackHole(b *testing.B) {
+	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole)
 }
 
-func BenchmarkNightmare(b *testing.B) {
-	runBenchmark(b, solver.LevelNightmare)
-}
-
-func BenchmarkBlackHole(b *testing.B) {
-	runBenchmark(b, solver.LevelBlackHole)
-}
-
-func runBenchmark(b *testing.B, level solver.Level) {
+func runBenchmark(b *testing.B, min, max solver.Level) {
 	generators.Stats.Reset()
 	ctx := b.Context()
 	g := generators.New()
 	for b.Loop() {
-		res := g.Generate(ctx, level, nil)
-		if res.Status != solver.StatusSucceeded {
-			b.Fatalf("failed to generate board: %s", res.Error)
+		res := g.Generate(ctx, &generators.Options{MinLevel: min, MaxLevel: max})
+		if len(res) == 0 {
+			b.Fatalf("failed to generate any result")
 		}
-		if res.Steps.Level >= solver.LevelNightmare {
-			b.Log("generated", res.Steps.Level, ":", boards.Serialize(res.Input), &res.Steps)
+		for ri, res := range res {
+			if res.Status != solver.StatusSucceeded {
+				b.Fatalf("failed to generate board at result %d: %s", ri, res.Error)
+			}
+			if res.Steps.Level >= solver.LevelNightmare {
+				b.Logf("generated[%s][%d]: %s. %s", res.Steps.Level, ri, boards.Serialize(res.Input), &res.Steps)
+			}
 		}
 	}
 	b.Log(generators.Stats.Game().String())

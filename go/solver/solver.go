@@ -3,7 +3,10 @@ package solver
 import (
 	"context"
 	"fmt"
+	"os"
 	"runtime/debug"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/nissimnatanov/des/go/boards"
@@ -134,6 +137,35 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
 		// if we got two solutions yet proof was requested, we must guarantee a different status
 		r.result.complete(StatusMoreThanOneSolution)
 	}
+	if r.result.Steps.Level >= LevelNightmare && r.action == ActionSolve {
+		serialized := boards.Serialize(r.result.Input)
+		registered := false
+		const nightmareSerialized = "nightmare.serialized"
+		const nightmareLog = "nightmare.log"
+		b, err := os.ReadFile(nightmareSerialized)
+		if err == nil {
+			lines := strings.Split(string(b), "\n")
+			registered = slices.Contains(lines, serialized)
+		}
+		if !registered {
+			ns, err := os.OpenFile(nightmareSerialized, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+			if err == nil {
+				_, err = fmt.Fprintln(ns, serialized)
+				ns.Close()
+			}
+
+			nl, err := os.OpenFile(nightmareLog, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+			if err == nil {
+				_, err = fmt.Fprintf(nl,
+					"Solver reached level %s with complexity %d: %s\n%s\n",
+					r.result.Steps.Level,
+					r.result.Steps.Complexity,
+					boards.Serialize(r.result.Input),
+					r.result.Input.String())
+				nl.Close()
+			}
+		}
+	}
 
 	// if run panics, we want to return both the error and the partial result
 	return &r.result
@@ -203,14 +235,11 @@ func (r *runner) run(ctx context.Context) {
 	}
 
 	// algos do not report solutions
-	r.result.Solutions.Add(boards.NewSolution(r.Board()))
-	// we got exactly one solution, and we are done
+	sol := boards.NewSolution(r.Board())
+	r.result.Solutions.Add(sol)
 	if boards.GetIntegrityChecks() {
-		for si := range r.result.Solutions.Size() {
-			sol := r.result.Solutions.At(si)
-			if !boards.ContainsAll(sol, r.result.Input) {
-				panic("solution does not match the board to be solved")
-			}
+		if !boards.ContainsAll(sol, r.result.Input) {
+			panic("solution does not match the board to be solved")
 		}
 	}
 	if r.result.Solutions.Size() > 1 {

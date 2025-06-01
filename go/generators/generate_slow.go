@@ -2,13 +2,149 @@ package generators
 
 import (
 	"context"
+	"slices"
+	"time"
 
+	"github.com/nissimnatanov/des/go/boards/indexes"
 	"github.com/nissimnatanov/des/go/generators/internal"
 	"github.com/nissimnatanov/des/go/solver"
 )
 
-func (g *Generator) generateSlow(ctx context.Context, state *internal.State) *solver.Result {
-	panic("slow generation is not implemented yet")
+type slowStage struct {
+	CandidateCount int
+	FreeCells      int
+}
+
+var slowStages = []slowStage{
+	// no FreeCells in the first slow stage, it is governed by the fast generation
+	{CandidateCount: 4},
+	{CandidateCount: 8, FreeCells: 50},
+	{CandidateCount: 16, FreeCells: 55},
+	{CandidateCount: 16, FreeCells: 60},
+	{CandidateCount: 16, FreeCells: solver.MaxFreeCellsForValidBoard},
+}
+
+func (g *Generator) generateSlow(ctx context.Context, initState *internal.BoardState, count int) []*solver.Result {
+	tries := 0
+	start := time.Now()
+
+	var candidates, finalCandidates internal.SortedBoardStates
+	var stageStats GamePerStageStats
+
+	requestedLevelRange := initState.DesiredLevelRange()
+	fastGenRange := internal.LevelRange{
+		Min: min(fastGenerationCap, requestedLevelRange.Min),
+		Max: requestedLevelRange.Max,
+	}
+
+	for ctx.Err() == nil {
+		candidates.Reset()
+		tries++
+
+		// use the fast generator to fill in the first bulk of candidate boards, allow it to overflow
+		fastInitState := initState.ChangeDesiredLevelRange(fastGenRange)
+		for candidates.Size() < slowStages[0].CandidateCount && ctx.Err() == nil {
+			res, stage := g.tryGenerateFastOnce(ctx, fastInitState)
+			if res == nil {
+				stageStats.report(stage, false)
+				continue
+			}
+			if res.Candidates() == indexes.MinBitSet81 {
+				if res.Progress() <= internal.BelowMinLevel {
+					// we won't be able to enhance this board, skip it
+					continue
+				}
+				finalCandidates.Add(res)
+			}
+			candidates.Add(res)
+		}
+		// re-level the candidates to the desired level range
+		candidates.ChangeDesiredLevelRange(requestedLevelRange)
+
+		// last stage at the fast generation is always a failure stage, we convert it
+		stage := fastStageCount
+		ssi := 1
+		// enhance the candidates to the desired level
+	slowStageLoop:
+		for ssi < len(slowStages) && ctx.Err() == nil {
+			newFinal, newCandidates := g.generateSlowStage(ctx, &candidates, slowStages[ssi])
+			if len(newFinal) == 0 && len(newCandidates) == 0 {
+				break slowStageLoop
+			}
+			finalCandidates.AddAll(newFinal)
+			if finalCandidates.Size() > 0 && (count <= 0 || finalCandidates.Size() >= count) {
+				// stop once we have at least one if count was requested
+				break slowStageLoop
+			}
+			candidates = *internal.NewSortedBoardStates(newCandidates...)
+			ssi++
+			stage++
+		}
+
+		if finalCandidates.Size() == 0 {
+			// if we went through all stages and did not find any candidates,
+			// try again
+			stageStats.report(stage, false)
+			continue
+		}
+
+		elapsed := time.Since(start)
+		Stats.reportOneGeneration(elapsed, int64(tries), stageStats)
+		return finalCandidates.Results()
+	}
+
+	return nil
+}
+
+func (g *Generator) generateSlowStage(
+	ctx context.Context,
+	candidates *internal.SortedBoardStates,
+	stage slowStage,
+) (finalCandidates, newCandidates []*internal.BoardState) {
+	// refine the candidates to the desired level
+	for bs := range candidates.Boards {
+		indexCandidates := slices.Collect(bs.Candidates().Indexes)
+		if len(indexCandidates) == 0 {
+			// this board can no longer be enhanced
+			if bs.Progress() >= internal.InRangeKeepGoing {
+				finalCandidates = append(finalCandidates, bs)
+			}
+			// throw this candidate away, it is below the desired level
+			continue
+		}
+		if len(indexCandidates) == 1 {
+			// last candidate, forking is useless - just try to remove it
+			bs = bs.RemoveCandidatesOneByOne(ctx, indexCandidates)
+			if bs != nil {
+				if bs.Progress() == internal.InRangeKeepGoing || bs.Progress() == internal.InRangeStop {
+					finalCandidates = append(finalCandidates, bs)
+				}
+			}
+			continue
+		}
+		// can refine more, try random first
+		bsRemoved := bs.Remove(ctx, internal.RemoveArgs{
+			FreeCells:        stage.FreeCells,
+			BatchMinToRemove: 1,
+			BatchMaxToRemove: 2,
+			BatchMaxTries:    min(10, len(indexCandidates)),
+		})
+		if bsRemoved == nil {
+			bsRemoved = bs.RemoveCandidatesOneByOne(ctx, indexCandidates)
+		}
+		if bsRemoved == nil {
+			break
+		}
+		bs = bsRemoved
+		if bs.Progress() == internal.InRangeStop {
+			// we have reached the desired level, add to final candidates
+			finalCandidates = append(finalCandidates, bs)
+		} else {
+			// we have not reached the desired level, add to new candidates
+			newCandidates = append(newCandidates, bs)
+		}
+	}
+	return
 }
 
 /*

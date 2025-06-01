@@ -6,7 +6,10 @@ import (
 )
 
 func NewRandom() *Random {
-	seed := time.Now().UnixNano()
+	return NewRandomWithSeed(time.Now().UnixNano())
+}
+
+func NewRandomWithSeed(seed int64) *Random {
 	r := &Random{
 		r:    rand.New(rand.NewSource(seed)),
 		seed: seed,
