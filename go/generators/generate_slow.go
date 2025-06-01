@@ -24,59 +24,76 @@ var slowStages = []slowStage{
 	{CandidateCount: 16, FreeCells: solver.MaxFreeCellsForValidBoard},
 }
 
+func hasEnoughFinalCandidates(finalCandidates *internal.SortedBoardStates, requestedCount int) bool {
+	if requestedCount <= 0 {
+		return finalCandidates.Size() > 0
+	}
+	return finalCandidates.Size() >= requestedCount
+}
+
 func (g *Generator) generateSlow(ctx context.Context, initState *internal.BoardState, count int) []*solver.Result {
 	tries := 0
-	start := time.Now()
 
-	var candidates, finalCandidates internal.SortedBoardStates
+	candidates := internal.NewSortedBoardStates()
+	finalCandidates := internal.NewSortedBoardStates()
 	var stageStats GamePerStageStats
 
 	requestedLevelRange := initState.DesiredLevelRange()
 	fastGenRange := internal.LevelRange{
-		Min: min(fastGenerationCap, requestedLevelRange.Min),
+		Min: min(solver.LevelMedium, requestedLevelRange.Min),
 		Max: requestedLevelRange.Max,
 	}
 
+generationLoop:
 	for ctx.Err() == nil {
+		start := time.Now()
 		candidates.Reset()
 		tries++
 
 		// use the fast generator to fill in the first bulk of candidate boards, allow it to overflow
-		fastInitState := initState.ChangeDesiredLevelRange(fastGenRange)
+		fastInitState := initState.WithDesiredLevelRange(fastGenRange)
 		for candidates.Size() < slowStages[0].CandidateCount && ctx.Err() == nil {
 			res, stage := g.tryGenerateFastOnce(ctx, fastInitState)
 			if res == nil {
 				stageStats.report(stage, false)
 				continue
 			}
-			if res.Candidates() == indexes.MinBitSet81 {
-				if res.Progress() <= internal.BelowMinLevel {
-					// we won't be able to enhance this board, skip it
-					continue
-				}
-				finalCandidates.Add(res)
+			res = res.WithDesiredLevelRange(requestedLevelRange)
+			if res.Candidates() != indexes.MinBitSet81 {
+				// we can try removing more
+				candidates.Add(res)
+				continue
 			}
-			candidates.Add(res)
+
+			// we won't be able to enhance this board
+			if res.Progress() <= internal.BelowMinLevel {
+				continue
+			}
+			finalCandidates.Add(res)
+			if hasEnoughFinalCandidates(finalCandidates, count) {
+				stageStats.report(stage, true)
+				Stats.reportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
+				break generationLoop
+			}
 		}
-		// re-level the candidates to the desired level range
-		candidates.ChangeDesiredLevelRange(requestedLevelRange)
 
 		// last stage at the fast generation is always a failure stage, we convert it
 		stage := fastStageCount
 		ssi := 1
 		// enhance the candidates to the desired level
-	slowStageLoop:
 		for ssi < len(slowStages) && ctx.Err() == nil {
-			newFinal, newCandidates := g.generateSlowStage(ctx, &candidates, slowStages[ssi])
+			newFinal, newCandidates := g.generateSlowStage(ctx, candidates, slowStages[ssi])
 			if len(newFinal) == 0 && len(newCandidates) == 0 {
-				break slowStageLoop
+				break
 			}
 			finalCandidates.AddAll(newFinal)
-			if finalCandidates.Size() > 0 && (count <= 0 || finalCandidates.Size() >= count) {
+			if hasEnoughFinalCandidates(finalCandidates, count) {
 				// stop once we have at least one if count was requested
-				break slowStageLoop
+				stageStats.report(stage, true)
+				Stats.reportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
+				break generationLoop
 			}
-			candidates = *internal.NewSortedBoardStates(newCandidates...)
+			candidates = internal.NewSortedBoardStates(newCandidates...)
 			ssi++
 			stage++
 		}
@@ -88,12 +105,11 @@ func (g *Generator) generateSlow(ctx context.Context, initState *internal.BoardS
 			continue
 		}
 
-		elapsed := time.Since(start)
-		Stats.reportOneGeneration(elapsed, int64(tries), stageStats)
-		return finalCandidates.Results()
+		Stats.reportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
 	}
 
-	return nil
+	// return the results so far, even if ctx canceled in the middle
+	return finalCandidates.Results()
 }
 
 func (g *Generator) generateSlowStage(

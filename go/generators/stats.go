@@ -40,8 +40,8 @@ func (s *stats) reportOneSolution(elapsed time.Duration, retries int64) {
 	s.solution.reportOne(elapsed, retries)
 }
 
-func (s *stats) reportOneGeneration(elapsed time.Duration, retries int64, stageStats GamePerStageStats) {
+func (s *stats) reportGeneration(count int, elapsed time.Duration, retries int64, stageStats GamePerStageStats) {
 	s.rw.Lock()
 	defer s.rw.Unlock()
-	s.game.reportOne(elapsed, retries, stageStats)
+	s.game.reportCount(count, elapsed, retries, stageStats)
 }

@@ -69,8 +69,8 @@ func (gs GameStats) String() string {
 		gs.Count, gs.AverageElapsed(), gs.AverageRetries(), gs.StageStats)
 }
 
-func (gs *GameStats) reportOne(elapsed time.Duration, retries int64, stageStats GamePerStageStats) {
-	gs.Count++
+func (gs *GameStats) reportCount(count int, elapsed time.Duration, retries int64, stageStats GamePerStageStats) {
+	gs.Count += int64(count)
 	gs.Elapsed += elapsed
 	gs.Retries += retries
 	gs.StageStats.merge(stageStats)

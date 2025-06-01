@@ -38,12 +38,6 @@ func (sbs *SortedBoardStates) Boards(yield func(*BoardState) bool) {
 	}
 }
 
-func (sbs *SortedBoardStates) ChangeDesiredLevelRange(lr LevelRange) {
-	for i := range sbs.sorted {
-		sbs.sorted[i] = sbs.sorted[i].ChangeDesiredLevelRange(lr)
-	}
-}
-
 // Add adds a new board to the sorted list if it is not a duplicate.
 func (sbs *SortedBoardStates) Add(newBoard *BoardState) bool {
 	insertIndex := len(sbs.sorted)

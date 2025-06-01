@@ -313,7 +313,7 @@ func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int)
 	return next
 }
 
-func (bs *BoardState) ChangeDesiredLevelRange(lr LevelRange) *BoardState {
+func (bs *BoardState) WithDesiredLevelRange(lr LevelRange) *BoardState {
 	clone := *bs
 	if bs.desiredLevelRange == lr {
 		// no need to clone, we are already at the desired level

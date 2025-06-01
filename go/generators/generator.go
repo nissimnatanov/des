@@ -95,7 +95,7 @@ func (g *Generator) generateFast(ctx context.Context, initState *internal.BoardS
 			continue
 		}
 		elapsed := time.Since(start)
-		Stats.reportOneGeneration(elapsed, int64(tries), stageStats)
+		Stats.reportGeneration(1, elapsed, int64(tries), stageStats)
 		return bs
 	}
 
