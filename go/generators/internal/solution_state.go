@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/nissimnatanov/des/go/boards"
+	"github.com/nissimnatanov/des/go/internal/random"
 	"github.com/nissimnatanov/des/go/solver"
 )
 
@@ -11,21 +12,21 @@ import (
 // base solution to use, then optional random number generator, solver, and prover.
 type SolutionState struct {
 	solution *boards.Solution
-	rand     *Random
+	rand     *random.Random
 	solver   *solver.Solver
 	prover   *solver.Solver
 }
 
 type SolutionStateArgs struct {
 	Solution *boards.Solution
-	Rand     *Random
+	Rand     *random.Random
 	Solver   *solver.Solver
 	Prover   *solver.Solver
 }
 
 func NewSolutionState(args SolutionStateArgs) *SolutionState {
 	if args.Rand == nil {
-		args.Rand = NewRandom()
+		args.Rand = random.New()
 	}
 	if args.Solution == nil {
 		// to avoid circular dependencies, force caller to provide a solution
@@ -47,7 +48,7 @@ func NewSolutionState(args SolutionStateArgs) *SolutionState {
 	}
 }
 
-func NewEnhanceBoardState(ctx context.Context, minLevel, maxLevel solver.Level, r *Random, board *boards.Game) (*SolutionState, *BoardState) {
+func NewEnhanceBoardState(ctx context.Context, minLevel, maxLevel solver.Level, r *random.Random, board *boards.Game) (*SolutionState, *BoardState) {
 	args := SolutionStateArgs{
 		Rand:   r,
 		Solver: solver.New(&solver.Options{Action: solver.ActionSolve}),

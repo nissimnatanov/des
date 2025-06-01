@@ -1,12 +1,13 @@
-package generators_test
+package solution_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/nissimnatanov/des/go/boards"
-	"github.com/nissimnatanov/des/go/generators"
 	"github.com/nissimnatanov/des/go/generators/internal"
+	"github.com/nissimnatanov/des/go/generators/solution"
+	"github.com/nissimnatanov/des/go/internal/random"
 	"gotest.tools/v3/assert"
 )
 
@@ -26,18 +27,18 @@ func TestSolutionFindFastestOrder(t *testing.T) {
 	var fastestRetriesTime time.Duration
 
 	const inLoop = 100
-	var rSeq = internal.NewRandom()
+	var rSeq = random.New()
 
 	for range 20 {
 		// Reset the stats before running the benchmark
-		generators.Stats.Reset()
+		internal.Stats.Reset()
 
 		for range inLoop {
-			var r = internal.NewRandom()
-			solution := generators.GenerateSolutionWithCustomOrder(r, order[:])
+			var r = random.New()
+			solution := solution.GenerateSolutionWithCustomOrder(r, order[:])
 			assert.Assert(t, solution != nil, "Generated solution is nil")
 		}
-		stats := generators.Stats.Solution()
+		stats := internal.Stats.Solution()
 		if fastestTime == -1 || stats.Elapsed < fastestTime {
 			fastestTime = stats.Elapsed
 			fastestTimeOrder = order
@@ -48,7 +49,7 @@ func TestSolutionFindFastestOrder(t *testing.T) {
 			fastestRetriesOrder = order
 			fastestRetriesTime = stats.Elapsed
 		}
-		internal.RandShuffle(rSeq, order[3:])
+		random.Shuffle(rSeq, order[3:])
 	}
 	t.Logf("Fastest time order: %v, with time: %v, retries: %v",
 		fastestTimeOrder, fastestTime/time.Duration(inLoop), fastestTimeRetries)
@@ -71,25 +72,25 @@ func BenchmarkGenerateSolution(b *testing.B) {
 	prev := boards.SetIntegrityChecks(false)
 	defer boards.SetIntegrityChecks(prev)
 	// Reset the stats before running the benchmark
-	generators.Stats.Reset()
-	var r = internal.NewRandom()
+	internal.Stats.Reset()
+	var r = random.New()
 
 	for b.Loop() {
-		solution := generators.GenerateSolution(r)
+		solution := solution.Generate(r)
 		assert.Assert(b, solution != nil, "Generated solution is nil")
 	}
 
-	b.Log(generators.Stats.Solution().String())
+	b.Log(internal.Stats.Solution().String())
 }
 
 func TestGenerateSolution(t *testing.T) {
 	boards.SetIntegrityChecks(true)
-	var r = internal.NewRandom()
+	internal.Stats.Reset()
+	var r = random.New()
 	for i := range 100 {
 		_ = i
-		solution := generators.GenerateSolution(r)
+		solution := solution.Generate(r)
 		assert.Assert(t, solution != nil, "Generated solution is nil")
 	}
-	t.Log(generators.Stats.Solution().String())
-	t.Fail()
+	t.Log(internal.Stats.Solution().String())
 }

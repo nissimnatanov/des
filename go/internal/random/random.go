@@ -1,15 +1,15 @@
-package internal
+package random
 
 import (
 	"math/rand"
 	"time"
 )
 
-func NewRandom() *Random {
-	return NewRandomWithSeed(time.Now().UnixNano())
+func New() *Random {
+	return WithSeed(time.Now().UnixNano())
 }
 
-func NewRandomWithSeed(seed int64) *Random {
+func WithSeed(seed int64) *Random {
 	r := &Random{
 		r:    rand.New(rand.NewSource(seed)),
 		seed: seed,
@@ -45,7 +45,7 @@ func (r *Random) PercentProbability(p int) bool {
 	return r.Intn(100) < p
 }
 
-func RandPick[S ~[]T, T any](r *Random, slice S) (T, bool) {
+func Pick[S ~[]T, T any](r *Random, slice S) (T, bool) {
 	if len(slice) == 0 {
 		var zero T
 		return zero, false
@@ -54,7 +54,7 @@ func RandPick[S ~[]T, T any](r *Random, slice S) (T, bool) {
 	return slice[index], true
 }
 
-func RandShuffle[S ~[]T, T any](r *Random, s S) {
+func Shuffle[S ~[]T, T any](r *Random, s S) {
 	if len(s) == 0 {
 		return
 	}

@@ -1,4 +1,4 @@
-package generators
+package solution
 
 import (
 	"slices"
@@ -8,18 +8,20 @@ import (
 	"github.com/nissimnatanov/des/go/boards/indexes"
 	"github.com/nissimnatanov/des/go/boards/values"
 	"github.com/nissimnatanov/des/go/generators/internal"
+	"github.com/nissimnatanov/des/go/internal/random"
 )
 
-func GenerateSolution(r *internal.Random) *boards.Solution {
+// Generate a new solution for the Sudoku board.
+func Generate(r *random.Random) *boards.Solution {
 	if r == nil {
-		r = internal.NewRandom()
+		r = random.New()
 	}
 	g := solutionGenerator{rand: r}
 	return g.generate(solutionSquareOrder)
 }
 
 type solutionGenerator struct {
-	rand *internal.Random
+	rand *random.Random
 }
 
 func (g *solutionGenerator) setSquareValues(board *boards.Game, square int, values values.Values) {
@@ -71,7 +73,7 @@ func (g *solutionGenerator) tryFillSequenceRec(board *boards.Game, seq indexes.S
 	av := board.AllowedValues(seq[depth])
 	var values [9]values.Value
 	nv := copy(values[:], av.Values())
-	internal.RandShuffle(g.rand, values[:nv])
+	random.Shuffle(g.rand, values[:nv])
 	for _, v := range values[:nv] {
 		board.SetReadOnly(seq[depth], v)
 		if g.tryFillSequenceRec(board, seq, depth+1, nextSquares) {
@@ -85,7 +87,7 @@ func (g *solutionGenerator) tryFillSequenceRec(board *boards.Game, seq indexes.S
 func (g *solutionGenerator) tryFillSequenceRandom(board *boards.Game, seq indexes.Sequence) bool {
 	for index, allowed := range board.AllowedValuesIn(seq) {
 		allowedValues := allowed.Values()
-		v, valid := internal.RandPick(g.rand, allowedValues)
+		v, valid := random.Pick(g.rand, allowedValues)
 		if !valid {
 			// allowed values are empty, we cannot fill the reminder of this square
 			board.Reset(seq...)
@@ -114,7 +116,7 @@ func (g *solutionGenerator) generate(nextSquares []int) *boards.Solution {
 	// Populate the first three squares 0, 4 (middle) and 8 (last). Since there is no intersection
 	// between these squares, we can fill them with any permutation of the values.
 	for soi := range 3 {
-		internal.RandShuffle(g.rand, allValues)
+		random.Shuffle(g.rand, allValues)
 		sq := nextSquares[soi]
 		g.setSquareValues(board, sq, allValues)
 	}
@@ -153,7 +155,7 @@ retryLoop:
 	sol := boards.NewSolution(board)
 	// capture the stats
 	elapsed := time.Since(start)
-	Stats.reportOneSolution(elapsed, retries)
+	internal.Stats.ReportOneSolution(elapsed, retries)
 	return sol
 }
 

@@ -31,8 +31,7 @@ func TestEmptyBoard(t *testing.T) {
 	assert.Assert(t, boards.Equivalent(b, b))
 	assert.Assert(t, boards.EquivalentReadOnly(b, b))
 
-	// each Z => 27 empty cells (3*27 = 81)
-	assert.Equal(t, "ZZZ", boards.Serialize(b))
+	assert.Equal(t, "ZZZC", boards.Serialize(b))
 
 	// negative assertions
 	assert.Assert(t, cmp.Panics(func() { b.IsValidCell(81) }))

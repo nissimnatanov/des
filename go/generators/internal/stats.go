@@ -1,4 +1,4 @@
-package generators
+package internal
 
 import (
 	"sync"
@@ -34,13 +34,13 @@ func (s *stats) Game() GameStats {
 	return s.game.clone()
 }
 
-func (s *stats) reportOneSolution(elapsed time.Duration, retries int64) {
+func (s *stats) ReportOneSolution(elapsed time.Duration, retries int64) {
 	s.rw.Lock()
 	defer s.rw.Unlock()
 	s.solution.reportOne(elapsed, retries)
 }
 
-func (s *stats) reportGeneration(count int, elapsed time.Duration, retries int64, stageStats GamePerStageStats) {
+func (s *stats) ReportGeneration(count int, elapsed time.Duration, retries int64, stageStats GamePerStageStats) {
 	s.rw.Lock()
 	defer s.rw.Unlock()
 	s.game.reportCount(count, elapsed, retries, stageStats)

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"github.com/nissimnatanov/des/go/boards"
+	"github.com/nissimnatanov/des/go/internal/random"
 	"github.com/nissimnatanov/des/go/solver"
 )
 
@@ -31,7 +32,7 @@ func (lr LevelRange) WithDefaults() LevelRange {
 	return lr
 }
 
-func (lr LevelRange) shouldContinue(r *Random, board *boards.Game, res *solver.Result) Progress {
+func (lr LevelRange) shouldContinue(r *random.Random, board *boards.Game, res *solver.Result) Progress {
 	if board.FreeCellCount() < 32 {
 		// too early even for easy games.
 		return TooEarly
@@ -55,7 +56,7 @@ func (lr LevelRange) shouldContinue(r *Random, board *boards.Game, res *solver.R
 	return InRangeStop
 }
 
-func shouldContinueAtLevel(desiredLevel solver.Level, r *Random) bool {
+func shouldContinueAtLevel(desiredLevel solver.Level, r *random.Random) bool {
 	switch desiredLevel {
 	case solver.LevelEasy:
 		// For easy games - keep trying (otherwise, game can be too easy).

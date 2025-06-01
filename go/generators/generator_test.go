@@ -5,6 +5,7 @@ import (
 
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/generators"
+	"github.com/nissimnatanov/des/go/generators/internal"
 	"github.com/nissimnatanov/des/go/solver"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/assert/cmp"
@@ -13,7 +14,7 @@ import (
 func TestGeneratorFast(t *testing.T) {
 	const loop = 10
 	ctx := t.Context()
-	for level := solver.LevelEasy; level <= generators.FastGenerationCap; level++ {
+	for level := solver.LevelEasy; level <= internal.FastGenerationCap; level++ {
 		t.Run(level.String(), func(t *testing.T) {
 			for range loop {
 				g := generators.New(&generators.Options{MinLevel: level, MaxLevel: level})
@@ -56,7 +57,7 @@ func BenchmarkNightmareOrBlackHole(b *testing.B) {
 }
 
 func runBenchmark(b *testing.B, min, max solver.Level, count int) {
-	generators.Stats.Reset()
+	internal.Stats.Reset()
 	ctx := b.Context()
 	g := generators.New(&generators.Options{MinLevel: min, MaxLevel: max, Count: count})
 	defer func() {
@@ -81,7 +82,7 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 			}
 		}
 	}
-	b.Log(generators.Stats.Game().String())
+	b.Log(internal.Stats.Game().String())
 	// solution stats look good, no longer needed here
 	// b.Log(generators.Stats.Solution().String())
 }

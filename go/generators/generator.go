@@ -6,6 +6,8 @@ import (
 
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/generators/internal"
+	"github.com/nissimnatanov/des/go/generators/solution"
+	"github.com/nissimnatanov/des/go/internal/random"
 	"github.com/nissimnatanov/des/go/solver"
 )
 
@@ -13,9 +15,11 @@ func New(opts *Options) *Generator {
 	if opts == nil {
 		opts = &Options{}
 	}
-	r := opts.Rand
-	if r == nil {
-		r = internal.NewRandom()
+	var r *random.Random
+	if opts.RandSeed == 0 {
+		r = random.New()
+	} else {
+		r = random.WithSeed(opts.RandSeed)
 	}
 	lr := internal.LevelRange{
 		Min: opts.MinLevel,
@@ -28,7 +32,9 @@ func New(opts *Options) *Generator {
 	}
 	solProvider := opts.SolutionProvider
 	if solProvider == nil {
-		panic("SolutionProvider is required, please provide a function that returns a boards.Solution")
+		solProvider = func() *boards.Solution {
+			return solution.Generate(r)
+		}
 	}
 
 	g := &Generator{
@@ -41,7 +47,7 @@ func New(opts *Options) *Generator {
 }
 
 type Generator struct {
-	r     *internal.Random
+	r     *random.Random
 	lr    internal.LevelRange
 	count int
 
@@ -54,10 +60,8 @@ func (g *Generator) Seed() int64 {
 	return g.r.Seed()
 }
 
-const fastGenerationCap = solver.LevelVeryHard
-
 type Options struct {
-	Rand     *internal.Random // optional, if not set, defaults to internal.NewRandom()
+	RandSeed int64 // optional, if 0, a new random seed will be generated
 	MinLevel solver.Level
 	// MaxLevel is optional, if not set it defaults to FromLevel.
 	MaxLevel solver.Level
@@ -67,7 +71,7 @@ type Options struct {
 	// for the slow ones.
 	Count int
 
-	// currently required, TODO: make it optional
+	// optional
 	SolutionProvider func() *boards.Solution
 }
 
@@ -77,7 +81,7 @@ func (g *Generator) Generate(ctx context.Context) []*solver.Result {
 		Rand:     g.r,
 	})
 	initState := state.InitialBoardState(ctx, g.lr)
-	if g.lr.Max > fastGenerationCap {
+	if g.lr.Max > internal.FastGenerationCap {
 		return g.generateSlow(ctx, initState, g.count)
 	}
 
@@ -97,7 +101,7 @@ func (g *Generator) Generate(ctx context.Context) []*solver.Result {
 // Enhance tries removing values from the existing board until it reaches the desired level.
 func (g *Generator) Enhance(ctx context.Context, board *boards.Game, level solver.Level) *solver.Result {
 	bs := internal.NewEnhanceBoardState(ctx, level, g.r, board)
-	if level <= fastGenerationCap {
+	if level <= internal.FastGenerationCap {
 		return g.generateFast(ctx, bs)
 	}
 
@@ -108,16 +112,16 @@ func (g *Generator) Enhance(ctx context.Context, board *boards.Game, level solve
 func (g *Generator) generateFast(ctx context.Context, initState *internal.BoardState) *internal.BoardState {
 	tries := 0
 	start := time.Now()
-	var stageStats GamePerStageStats
+	var stageStats internal.GamePerStageStats
 	for ctx.Err() == nil {
 		tries++
 		bs, stage := g.tryGenerateFastOnce(ctx, initState)
-		stageStats.report(stage, bs != nil)
+		stageStats.Report(stage, bs != nil)
 		if bs == nil {
 			continue
 		}
 		elapsed := time.Since(start)
-		Stats.reportGeneration(1, elapsed, int64(tries), stageStats)
+		internal.Stats.ReportGeneration(1, elapsed, int64(tries), stageStats)
 		return bs
 	}
 
@@ -166,7 +170,7 @@ func (g *Generator) tryGenerateFastOnce(ctx context.Context, initState *internal
 	}
 
 	stage++
-	if stage+1 != fastStageCount {
+	if stage+1 != internal.FastStageCount {
 		panic("fast generation should end up with fastStageCount stages")
 	}
 	return nil, stage

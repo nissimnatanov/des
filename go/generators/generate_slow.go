@@ -38,7 +38,7 @@ func (g *Generator) generateSlow(ctx context.Context, initState *internal.BoardS
 
 	candidates := internal.NewSortedBoardStates()
 	finalCandidates := internal.NewSortedBoardStates()
-	var stageStats GamePerStageStats
+	var stageStats internal.GamePerStageStats
 
 	requestedLevelRange := initState.DesiredLevelRange()
 	// Start with basic boards in a easy range, so we can generate and sort a lot of
@@ -59,7 +59,7 @@ generationLoop:
 		for candidates.Size() < slowStages[0].CandidateCount && ctx.Err() == nil {
 			res, stage := g.tryGenerateFastOnce(ctx, fastInitState)
 			if res == nil {
-				stageStats.report(stage, false)
+				stageStats.Report(stage, false)
 				continue
 			}
 			res = res.WithDesiredLevelRange(requestedLevelRange)
@@ -75,14 +75,14 @@ generationLoop:
 			}
 			finalCandidates.Add(res)
 			if hasEnoughFinalCandidates(finalCandidates, count) {
-				stageStats.report(stage, true)
-				Stats.reportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
+				stageStats.Report(stage, true)
+				internal.Stats.ReportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
 				break generationLoop
 			}
 		}
 
 		// last stage at the fast generation is always a failure stage, we convert it
-		stage := fastStageCount
+		stage := internal.FastStageCount
 		ssi := 1
 		// enhance the candidates to the desired level
 		for ssi < len(slowStages) && ctx.Err() == nil {
@@ -93,8 +93,8 @@ generationLoop:
 			finalCandidates.AddAll(newFinal)
 			if hasEnoughFinalCandidates(finalCandidates, count) {
 				// stop once we have at least one if count was requested
-				stageStats.report(stage, true)
-				Stats.reportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
+				stageStats.Report(stage, true)
+				internal.Stats.ReportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
 				break generationLoop
 			}
 			candidates = newCandidates
@@ -105,11 +105,11 @@ generationLoop:
 		if finalCandidates.Size() == 0 {
 			// if we went through all stages and did not find any candidates,
 			// try again
-			stageStats.report(stage, false)
+			stageStats.Report(stage, false)
 			continue
 		}
 
-		Stats.reportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
+		internal.Stats.ReportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
 	}
 
 	// return the results so far, even if ctx canceled in the middle

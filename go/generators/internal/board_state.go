@@ -7,6 +7,7 @@ import (
 
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/boards/indexes"
+	"github.com/nissimnatanov/des/go/internal/random"
 	"github.com/nissimnatanov/des/go/solver"
 )
 
@@ -169,7 +170,7 @@ func (bs *BoardState) RemoveCandidatesOneByOne(ctx context.Context, candidates [
 	defer bs.checkIntegrity()
 
 	r := bs.state.rand
-	RandShuffle(r, candidates)
+	random.Shuffle(r, candidates)
 	removedOnce := false
 	next := bs
 	for ci := range candidates {
@@ -226,7 +227,7 @@ func (bs *BoardState) tryRemove(ctx context.Context, args *RemoveArgs) *BoardSta
 			break
 		}
 
-		RandShuffle(r, candidates)
+		random.Shuffle(r, candidates)
 		currentBatch := r.NextInClosedRange(args.BatchMinToRemove, args.BatchMaxToRemove)
 		currentBatch = min(currentBatch, len(candidates))
 		currentBatch = min(currentBatch, allowedToRemove)

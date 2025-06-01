@@ -1,18 +1,13 @@
-package generators
+package internal
 
 import (
 	"fmt"
 	"time"
 )
 
-// fastStageCount includes the last stage that is always a failure stage when fast
-// generation fails
-const fastStageCount = 4
-const slowStageCount = 10 // TODO
+type GamePerStageStats [SlowStageCount + 1]GameStageStats
 
-type GamePerStageStats [slowStageCount + 1]GameStageStats
-
-func (stages *GamePerStageStats) report(stage int, success bool) {
+func (stages *GamePerStageStats) Report(stage int, success bool) {
 	if stage < 0 || stage >= len(stages) {
 		panic("stage out of range")
 	}
