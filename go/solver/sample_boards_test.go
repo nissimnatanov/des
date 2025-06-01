@@ -1,10 +1,15 @@
 package solver_test
 
+import "github.com/nissimnatanov/des/go/solver"
+
 type testBoard struct {
-	name      string
-	board     string
-	solution  string
-	failToLog bool
+	name     string
+	board    string
+	solution string
+	// leave default for StatusSucceeded
+	expected      solver.Status
+	expectedLevel solver.Level
+	failToLog     bool
 }
 
 var benchBoards = []testBoard{

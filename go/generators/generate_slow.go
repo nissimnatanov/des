@@ -12,16 +12,18 @@ import (
 
 type slowStage struct {
 	CandidateCount int
+	ForkCount      int // how many candidates to fork from each
 	FreeCells      int
 }
 
 var slowStages = []slowStage{
-	// no FreeCells in the first slow stage, it is governed by the fast generation
+	// FreeCells and ForkCount are not used in the first slow stage,
+	// it is governed by the fast generation
 	{CandidateCount: 4},
-	{CandidateCount: 8, FreeCells: 50},
-	{CandidateCount: 16, FreeCells: 55},
-	{CandidateCount: 16, FreeCells: 60},
-	{CandidateCount: 16, FreeCells: solver.MaxFreeCellsForValidBoard},
+	{CandidateCount: 8, FreeCells: 50, ForkCount: 5},
+	{CandidateCount: 16, FreeCells: 55, ForkCount: 5},
+	{CandidateCount: 16, FreeCells: 60, ForkCount: 5},
+	{CandidateCount: 16, FreeCells: solver.MaxFreeCellsForValidBoard, ForkCount: 1},
 }
 
 func hasEnoughFinalCandidates(finalCandidates *internal.SortedBoardStates, requestedCount int) bool {
@@ -39,9 +41,11 @@ func (g *Generator) generateSlow(ctx context.Context, initState *internal.BoardS
 	var stageStats GamePerStageStats
 
 	requestedLevelRange := initState.DesiredLevelRange()
+	// Start with basic boards in a easy range, so we can generate and sort a lot of
+	// candidates. If we start with harder boards, the generation becomes slower.
 	fastGenRange := internal.LevelRange{
-		Min: min(solver.LevelMedium, requestedLevelRange.Min),
-		Max: requestedLevelRange.Max,
+		Min: solver.LevelEasy,
+		Max: solver.LevelEasy,
 	}
 
 generationLoop:
@@ -83,7 +87,7 @@ generationLoop:
 		// enhance the candidates to the desired level
 		for ssi < len(slowStages) && ctx.Err() == nil {
 			newFinal, newCandidates := g.generateSlowStage(ctx, candidates, slowStages[ssi])
-			if len(newFinal) == 0 && len(newCandidates) == 0 {
+			if newFinal.Size() == 0 && newCandidates.Size() == 0 {
 				break
 			}
 			finalCandidates.AddAll(newFinal)
@@ -93,7 +97,7 @@ generationLoop:
 				Stats.reportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
 				break generationLoop
 			}
-			candidates = internal.NewSortedBoardStates(newCandidates...)
+			candidates = newCandidates
 			ssi++
 			stage++
 		}
@@ -116,50 +120,56 @@ func (g *Generator) generateSlowStage(
 	ctx context.Context,
 	candidates *internal.SortedBoardStates,
 	stage slowStage,
-) (finalCandidates, newCandidates []*internal.BoardState) {
+) (finalCandidates, newCandidates *internal.SortedBoardStates) {
+	finalCandidates = internal.NewSortedBoardStates()
+	newCandidates = internal.NewSortedBoardStates()
 	// refine the candidates to the desired level
 	for bs := range candidates.Boards {
 		indexCandidates := slices.Collect(bs.Candidates().Indexes)
-		if len(indexCandidates) == 0 {
+		switch len(indexCandidates) {
+		case 0:
 			// this board can no longer be enhanced
 			if bs.Progress() >= internal.InRangeKeepGoing {
-				finalCandidates = append(finalCandidates, bs)
+				finalCandidates.Add(bs)
 			}
 			// throw this candidate away, it is below the desired level
 			continue
-		}
-		if len(indexCandidates) == 1 {
+		case 1:
 			// last candidate, forking is useless - just try to remove it
 			bs = bs.RemoveCandidatesOneByOne(ctx, indexCandidates)
 			if bs != nil {
 				if bs.Progress() == internal.InRangeKeepGoing || bs.Progress() == internal.InRangeStop {
-					finalCandidates = append(finalCandidates, bs)
+					finalCandidates.Add(bs)
 				}
 			}
 			continue
 		}
-		// can refine more, try random first
-		bsRemoved := bs.Remove(ctx, internal.RemoveArgs{
-			FreeCells:        stage.FreeCells,
-			BatchMinToRemove: 1,
-			BatchMaxToRemove: 2,
-			BatchMaxTries:    min(10, len(indexCandidates)),
-		})
-		if bsRemoved == nil {
-			bsRemoved = bs.RemoveCandidatesOneByOne(ctx, indexCandidates)
-		}
-		if bsRemoved == nil {
-			break
-		}
-		bs = bsRemoved
-		if bs.Progress() == internal.InRangeStop {
-			// we have reached the desired level, add to final candidates
-			finalCandidates = append(finalCandidates, bs)
-		} else {
-			// we have not reached the desired level, add to new candidates
-			newCandidates = append(newCandidates, bs)
+		forkCount := stage.ForkCount
+		for range forkCount {
+			// can refine more, try random first
+			bsForked := bs.Remove(ctx, internal.RemoveArgs{
+				FreeCells:        stage.FreeCells,
+				BatchMinToRemove: 1,
+				BatchMaxToRemove: 2,
+				BatchMaxTries:    min(10, len(indexCandidates)),
+			})
+			if bsForked == nil {
+				bsForked = bs.RemoveCandidatesOneByOne(ctx, indexCandidates)
+			}
+			if bsForked == nil {
+				break
+			}
+			if bsForked.Progress() == internal.InRangeStop {
+				// we have reached the desired level, add to final candidates
+				finalCandidates.Add(bs)
+			} else {
+				// we have not reached the desired level, add to new candidates
+				newCandidates.Add(bsForked)
+			}
 		}
 	}
+	// trim to the desired count
+	newCandidates.TrimSize(stage.CandidateCount)
 	return
 }
 

@@ -9,20 +9,55 @@ import (
 	"github.com/nissimnatanov/des/go/solver"
 )
 
-func New() *Generator {
-	return &Generator{
-		r: internal.NewRandom(),
+func New(opts *Options) *Generator {
+	if opts == nil {
+		opts = &Options{}
 	}
+	r := opts.Rand
+	if r == nil {
+		r = internal.NewRandom()
+	}
+	lr := internal.LevelRange{
+		Min: opts.MinLevel,
+		Max: opts.MaxLevel,
+	}
+	lr = lr.WithDefaults()
+	count := opts.Count
+	if count < 0 {
+		count = 0 // all available boards, at least one
+	}
+	solProvider := opts.SolutionProvider
+	if solProvider == nil {
+		panic("SolutionProvider is required, please provide a function that returns a boards.Solution")
+	}
+
+	g := &Generator{
+		r:           r,
+		lr:          lr,
+		count:       count,
+		solProvider: solProvider,
+	}
+	return g
 }
 
 type Generator struct {
-	r *internal.Random
+	r     *internal.Random
+	lr    internal.LevelRange
+	count int
+
+	solProvider func() *boards.Solution
+	// if set, it will be used to enhance the board
+	// enhanceBoard *boards.Game
+}
+
+func (g *Generator) Seed() int64 {
+	return g.r.Seed()
 }
 
 const fastGenerationCap = solver.LevelVeryHard
 
 type Options struct {
-	Solution *boards.Solution
+	Rand     *internal.Random // optional, if not set, defaults to internal.NewRandom()
 	MinLevel solver.Level
 	// MaxLevel is optional, if not set it defaults to FromLevel.
 	MaxLevel solver.Level
@@ -31,44 +66,31 @@ type Options struct {
 	// If not set, it defaults to 1 for fast-to-generate boards and an arbitrary number
 	// for the slow ones.
 	Count int
+
+	// currently required, TODO: make it optional
+	SolutionProvider func() *boards.Solution
 }
 
-func (g *Generator) Generate(ctx context.Context, opts *Options) []*solver.Result {
-	if opts == nil {
-		opts = &Options{}
-	} else {
-		optsTmp := *opts
-		opts = &optsTmp
-	}
-
-	if opts.Solution == nil {
-		opts.Solution = GenerateSolution(g.r)
-	}
-	lr := internal.LevelRange{
-		Min: opts.MinLevel,
-		Max: opts.MaxLevel,
-	}
-	lr = lr.WithDefaults()
-
+func (g *Generator) Generate(ctx context.Context) []*solver.Result {
 	state := internal.NewSolutionState(internal.SolutionStateArgs{
-		Solution: opts.Solution,
+		Solution: g.solProvider(),
 		Rand:     g.r,
 	})
-	initState := state.InitialBoardState(ctx, internal.LevelRange{Min: opts.MinLevel, Max: opts.MaxLevel})
-	if opts.MaxLevel > fastGenerationCap {
-		return g.generateSlow(ctx, initState, opts.Count)
+	initState := state.InitialBoardState(ctx, g.lr)
+	if g.lr.Max > fastGenerationCap {
+		return g.generateSlow(ctx, initState, g.count)
 	}
 
-	if opts.Count == 0 {
-		opts.Count = 1 // default to 1 for fast generation
+	count := g.count
+	if count == 0 {
+		count = 1 // default to 1 for fast generation
 	}
-	results := make([]*solver.Result, 0, opts.Count)
-	for len(results) < opts.Count && ctx.Err() == nil {
+	results := make([]*solver.Result, 0, count)
+	for len(results) < count && ctx.Err() == nil {
 		bs := g.generateFast(ctx, initState)
 		results = append(results, bs.Result())
 	}
 	return results
-
 }
 
 /*

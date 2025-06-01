@@ -16,8 +16,8 @@ func TestGeneratorFast(t *testing.T) {
 	for level := solver.LevelEasy; level <= generators.FastGenerationCap; level++ {
 		t.Run(level.String(), func(t *testing.T) {
 			for range loop {
-				g := generators.New()
-				rs := g.Generate(ctx, &generators.Options{MinLevel: level, MaxLevel: level})
+				g := generators.New(&generators.Options{MinLevel: level, MaxLevel: level})
+				rs := g.Generate(ctx)
 				assert.Check(t, cmp.Len(rs, 1), "expected exactly one result for level %s, got %d", level, len(rs))
 				for _, res := range rs {
 					assert.Assert(t, res != nil)
@@ -35,16 +35,11 @@ func TestGeneratorFast(t *testing.T) {
 // * Solutions: 1749, ~Elapsed: 97.204µs, ~Retries: 10.2
 
 func BenchmarkEasyOrMedium(b *testing.B) {
-	runBenchmark(b, solver.LevelEasy, solver.LevelMedium)
+	runBenchmark(b, solver.LevelEasy, solver.LevelMedium, 100)
 }
 
-// Initial state:
-// * 519	   2266841 ns/op	  779299 B/op	    3339 allocs/op
-// * Generations: 519, ~Elapsed: 2.168733ms, ~Retries: 2.45, ~Complexity: 574.43
-// * Solutions: 519, ~Elapsed: 95.971µs, ~Retries: 9.6
-
 func BenchmarkHardOrVeryHard(b *testing.B) {
-	runBenchmark(b, solver.LevelHard, solver.LevelVeryHard)
+	runBenchmark(b, solver.LevelHard, solver.LevelVeryHard, 20)
 }
 
 // Initial state:
@@ -53,19 +48,27 @@ func BenchmarkHardOrVeryHard(b *testing.B) {
 // * Solutions: 10, ~Elapsed: 103.583µs, ~Retries: 9
 
 func BenchmarkEviOrDarkEvil(b *testing.B) {
-	runBenchmark(b, solver.LevelEvil, solver.LevelDarkEvil)
+	runBenchmark(b, solver.LevelEvil, solver.LevelDarkEvil, 10)
 }
 
 func BenchmarkNightmareOrBlackHole(b *testing.B) {
-	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole)
+	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole, 1)
 }
 
-func runBenchmark(b *testing.B, min, max solver.Level) {
+func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 	generators.Stats.Reset()
 	ctx := b.Context()
-	g := generators.New()
+	g := generators.New(&generators.Options{MinLevel: min, MaxLevel: max, Count: count})
+	defer func() {
+		// TODO: we can move recover to the generator itself
+		msg := recover()
+		if msg == nil {
+			return
+		}
+		b.Fatalf("generator panicked with Seed: %d: %v", g.Seed(), msg)
+	}()
 	for b.Loop() {
-		res := g.Generate(ctx, &generators.Options{MinLevel: min, MaxLevel: max})
+		res := g.Generate(ctx)
 		if len(res) == 0 {
 			b.Fatalf("failed to generate any result")
 		}
@@ -79,5 +82,6 @@ func runBenchmark(b *testing.B, min, max solver.Level) {
 		}
 	}
 	b.Log(generators.Stats.Game().String())
-	b.Log(generators.Stats.Solution().String())
+	// solution stats look good, no longer needed here
+	// b.Log(generators.Stats.Solution().String())
 }

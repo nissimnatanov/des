@@ -30,6 +30,13 @@ func (sbs *SortedBoardStates) Size() int {
 	return len(sbs.sorted)
 }
 
+func (sbs *SortedBoardStates) TrimSize(limit int) {
+	if len(sbs.sorted) < limit {
+		return
+	}
+	sbs.sorted = slices.Delete(sbs.sorted, limit, len(sbs.sorted))
+}
+
 func (sbs *SortedBoardStates) Boards(yield func(*BoardState) bool) {
 	for _, bs := range sbs.sorted {
 		if !yield(bs) {
@@ -58,9 +65,9 @@ func (sbs *SortedBoardStates) Add(newBoard *BoardState) bool {
 	return true
 }
 
-func (sbs *SortedBoardStates) AddAll(boards []*BoardState) {
+func (sbs *SortedBoardStates) AddAll(boards *SortedBoardStates) {
 	// TODO: can optimize by sorting the input boards and deduping them
-	for _, board := range boards {
+	for _, board := range boards.sorted {
 		if !sbs.Add(board) {
 			continue
 		}

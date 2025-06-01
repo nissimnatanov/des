@@ -12,35 +12,43 @@ import (
 )
 
 func TestMoreThanOneSolution(t *testing.T) {
-	boards.SetIntegrityChecks(true)
-	prover := solver.New(&solver.Options{Action: solver.ActionProve})
-	ctx := t.Context()
-	board, err := boards.Deserialize("27B4A1A9B4O6A8D51A9B6D4D1B61B6D5B7A2D5C13C")
-	assert.NilError(t, err)
+	testBoard := testBoard{
+		name:     "More than one solution",
+		board:    "27B4A1A9B4O6A8D51A9B6D4D1B61B6D5B7A2D5C13C",
+		expected: solver.StatusMoreThanOneSolution,
+	}
+	testSanity(t, solver.ActionProve, testBoard)
+}
 
-	res := prover.Run(ctx, board)
-	assert.Equal(t, res.Status, solver.StatusMoreThanOneSolution)
+func TestNoSolution(t *testing.T) {
+	testBoard := testBoard{
+		name:          "first go nightmare",
+		board:         "E7E315B9A2C8A3E9C13D3A97H8597B438H1B82D7B",
+		expected:      solver.StatusSucceeded,
+		expectedLevel: solver.LevelNightmare,
+		solution:      "4_8_9_3_6_75_2_1_7_6_3152_4_98_21_5_4_89_36_7_6_4_8_97_5_2_131_5_2_8_36_974_3_9_7_2_1_4_6_85971_6_4385_2_5_3_6_7_2_8_14_9_824_5_9_1_73_6_",
+	}
+	testSanity(t, solver.ActionProve, testBoard)
+	testSanity(t, solver.ActionSolve, testBoard)
 }
 
 func TestSolveSanity(t *testing.T) {
-	testSanity(t, solver.ActionSolve)
+	testSanity(t, solver.ActionSolve, slices.Concat(benchBoards, otherBoards)...)
 }
 
 func TestProveSanity(t *testing.T) {
-	testSanity(t, solver.ActionProve)
+	testSanity(t, solver.ActionProve, slices.Concat(benchBoards, otherBoards)...)
 }
 
 func TestSolveFastSanity(t *testing.T) {
-	testSanity(t, solver.ActionSolveFast)
+	testSanity(t, solver.ActionSolveFast, slices.Concat(benchBoards, otherBoards)...)
 }
 
-func testSanity(t *testing.T, action solver.Action) {
+func testSanity(t *testing.T, action solver.Action, testBoards ...testBoard) {
 	boards.SetIntegrityChecks(true)
 
 	ctx := t.Context()
-	allBoards := slices.Concat(benchBoards, otherBoards)
-
-	for _, sample := range allBoards {
+	for _, sample := range testBoards {
 		t.Run(sample.name, func(t *testing.T) {
 			b, err := boards.Deserialize(sample.board)
 			assert.NilError(t, err)
@@ -53,17 +61,27 @@ func testSanity(t *testing.T, action solver.Action) {
 			res := s.Run(ctx, b)
 			assert.NilError(t, res.Error)
 
-			assert.Equal(t, res.Status, solver.StatusSucceeded)
-			assert.Equal(t, res.Solutions.Size(), 1)
-			sol := res.Solutions.At(0)
+			expected := solver.StatusSucceeded
+			if sample.expected != solver.StatusUnknown {
+				expected = sample.expected
+			}
+			assert.Equal(t, res.Status, expected)
+			if expected == solver.StatusSucceeded {
+				if action == solver.ActionSolve &&
+					sample.expectedLevel != solver.LevelUnknown {
+					assert.Check(t, cmp.Equal(res.Steps.Level, sample.expectedLevel))
+				}
+				assert.Equal(t, res.Solutions.Size(), 1)
+				sol := res.Solutions.At(0)
 
-			solStr := boards.Serialize(sol)
-			assert.Check(t, cmp.Equal(solStr, sample.solution))
+				solStr := boards.Serialize(sol)
+				assert.Check(t, cmp.Equal(solStr, sample.solution))
+			}
 
-			resJSON, err := json.MarshalIndent(res, "", "  ")
-			assert.NilError(t, err)
-			t.Log(string(resJSON))
 			if sample.failToLog {
+				resJSON, err := json.MarshalIndent(res, "", "  ")
+				assert.NilError(t, err)
+				t.Log(string(resJSON))
 				t.Fail()
 			}
 		})
