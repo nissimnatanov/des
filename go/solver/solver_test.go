@@ -172,9 +172,9 @@ func testSanity(t *testing.T, action solver.Action, testBoards ...testBoard) {
 // Bitset improvements:
 // - first only		529	   2130160 ns/op	   26082 B/op	      72 allocs/op
 // - all			322	   3593113 ns/op	   77953 B/op	     237 allocs/op
-// Improve the only choice in sequence:
-// - first only		733	   1611048 ns/op	    3922 B/op	      31 allocs/op
-// - all			441	   2747717 ns/op	   13515 B/op	     107 allocs/op
+// Improve the only choice in sequence and trial-and-error:
+// - first only		727	   1604511 ns/op	    4027 B/op	      31 allocs/op
+// - all			428	   2713680 ns/op	   13934 B/op	     107 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -218,9 +218,11 @@ func BenchmarkProveAll(b *testing.B) {
 // Always Prove on Solve to avoid deep recursion on boards with many solutions:
 // - first only		80	  14702170 ns/op	   25258 B/op	      74 allocs/op
 // - all			19	  58728298 ns/op	   76536 B/op	     250 allocs/op
-// Improve the only choice in sequence:
-// - first only		100	  11208376 ns/op	   25104 B/op	      73 allocs/op
-// - all			26	  44789688 ns/op	   75907 B/op	     246 allocs/op
+// Improve the only choice in sequence and trial-and-error:
+// - first only		103	  11330074 ns/op	   13963 B/op	      60 allocs/op
+// - all			25	  44282987 ns/op	   44591 B/op	     207 allocs/op
+// - fast first		1480  813083 ns/op	        3860 B/op	      26 allocs/op
+// - fast all		861	  1375158 ns/op	  	   13368 B/op	      89 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{

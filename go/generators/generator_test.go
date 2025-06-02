@@ -53,6 +53,10 @@ func TestGeneratorRangeWithSlowMax(t *testing.T) {
 // * 18	  57867785 ns/op	 7639343 B/op	   50437 allocs/op
 // * Generations: 1800, ~Elapsed: 577.917µs, ~Retries: 1.000,
 //   Stages: [{1800 452 0} {1348 1048 0} {300 300 0}]
+// Improve the only choice in sequence and trial-and-error:
+// * 26	  44879917 ns/op	13663641 B/op	   68303 allocs/op
+// * Generations: 2600, ~Elapsed: 448.108µs, ~Retries: 1.000,
+//   Stages: [{2600 645 0} {1955 1575 0} {380 380 0}]
 
 func BenchmarkEasyOrMedium(b *testing.B) {
 	runBenchmark(b, solver.LevelEasy, solver.LevelMedium, 100)
@@ -62,6 +66,10 @@ func BenchmarkEasyOrMedium(b *testing.B) {
 // * 22	  59968347 ns/op	 6069760 B/op	   41416 allocs/op
 // * Generations: 220, ~Elapsed: 5.992518ms, ~Retries: 2.205,
 //   Stages: [{220 0 0} {220 42 0} {178 178 6}]
+// Improve the only choice in sequence and trial-and-error:
+// * 27	  49116306 ns/op	13561052 B/op	   63190 allocs/op
+// * Generations: 270, ~Elapsed: 4.90605ms, ~Retries: 2.367,
+//   Stages: [{270 0 0} {270 52 3} {218 218 6}]
 
 func BenchmarkHardOrVeryHard(b *testing.B) {
 	runBenchmark(b, solver.LevelHard, solver.LevelVeryHard, 10)
@@ -75,6 +83,10 @@ func BenchmarkHardOrVeryHard(b *testing.B) {
 // * 1	12233012125 ns/op	1107809424 B/op	 7944966 allocs/op
 // * Generations: 200, ~Elapsed: 122.328782ms, ~Retries: 1.230,
 //   Stages: [{200 0 0} {200 6 0} {194 36 0} {158 158 0}]
+// Improve the only choice in sequence and trial-and-error:
+// * 1	13336058416 ns/op	3186469904 B/op	15343577 allocs/op
+// * Generations: 200, ~Elapsed: 133.359486ms, ~Retries: 1.600,
+//   Stages: [{210 0 0} {210 8 0} {202 26 0} {176 176 0}]
 
 func BenchmarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelEvil, solver.LevelEvil, 100)
@@ -88,6 +100,10 @@ func BenchmarkEvil(b *testing.B) {
 // * 1	16119979791 ns/op	1435290304 B/op	10328974 allocs/op
 // * Generations: 20, ~Elapsed: 1.611989s, ~Retries: 15.900,
 //   Stages: [{20 0 0} {20 0 0} {20 4 0} {16 16 0}]
+// Improve the only choice in sequence and trial-and-error:
+// * 1	14836185834 ns/op	3555023984 B/op	17091575 allocs/op
+// * Generations: 20, ~Elapsed: 1.483607195s, ~Retries: 17.800,
+//   Stages: [{20 0 0} {20 2 0} {18 0 0} {18 18 0}]
 
 func BenchmarkDarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelDarkEvil, solver.LevelDarkEvil, 10)

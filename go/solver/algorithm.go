@@ -33,7 +33,7 @@ func GetAlgorithms(action Action) []Algorithm {
 			// human to see the only missing value in a sequence (row/column/box)
 			singleInSequence{},
 			theOnlyAllowedValueInCell{},
-			&theOnlyChoiceInSequence{},
+			theOnlyChoiceInSequence{},
 			identifyPairs{},
 			identifyTriplets{},
 			&squareToRowColumnConstraints{},
@@ -47,7 +47,7 @@ func GetAlgorithms(action Action) []Algorithm {
 			// with 0 or 1 allowed value in O(1). It also covers what singleInSequence
 			// would find, so no need to include this algo here.
 			theOnlyAllowedValueInCell{},
-			&theOnlyChoiceInSequence{},
+			theOnlyChoiceInSequence{},
 			&squareToRowColumnConstraints{},
 			// recursion is faster than the identify pairs & triplets, and the row-col-2-square
 			// algos - these algos are unfortunately too slow to beat the plain recursion

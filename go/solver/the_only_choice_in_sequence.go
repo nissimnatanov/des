@@ -11,11 +11,11 @@ import (
 type theOnlyChoiceInSequence struct {
 }
 
-func (a *theOnlyChoiceInSequence) String() string {
+func (a theOnlyChoiceInSequence) String() string {
 	return "The Only Choice in Sequence"
 }
 
-func (a *theOnlyChoiceInSequence) Run(ctx context.Context, state AlgorithmState) Status {
+func (a theOnlyChoiceInSequence) Run(ctx context.Context, state AlgorithmState) Status {
 	status := StatusUnknown
 	b := state.Board()
 	seqStatus := a.runSeqKind(state, b.RowValues, indexes.RowSequence)
@@ -33,7 +33,7 @@ func (a *theOnlyChoiceInSequence) Run(ctx context.Context, state AlgorithmState)
 	return status
 }
 
-func (a *theOnlyChoiceInSequence) runSeqKind(
+func (a theOnlyChoiceInSequence) runSeqKind(
 	state AlgorithmState,
 	seqValues func(seq int) values.Set,
 	seq func(seq int) indexes.Sequence,
@@ -51,7 +51,7 @@ func (a *theOnlyChoiceInSequence) runSeqKind(
 	return StatusUnknown
 }
 
-func (a *theOnlyChoiceInSequence) runSeq(
+func (a theOnlyChoiceInSequence) runSeq(
 	state AlgorithmState,
 	missingValues values.Set,
 	seq indexes.Sequence,

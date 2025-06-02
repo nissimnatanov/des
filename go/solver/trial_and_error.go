@@ -18,27 +18,16 @@ type indexWithAllowedSize struct {
 // trialAndError is a recursive algorithm, please always run it after the
 // theOnlyChoice algo (never as standalone)
 type trialAndError struct {
-	indexesCache   *cache.Cache[[]indexWithAllowedSize]
 	testBoardCache *cache.Cache[*boards.Game]
 }
 
 func newTrialAndError() *trialAndError {
 	return &trialAndError{
-		indexesCache: cache.New(cache.Args[[]indexWithAllowedSize]{
-			Factory: func() []indexWithAllowedSize {
-				return make([]indexWithAllowedSize, 0, MaxFreeCellsForValidBoard)
-			},
-			Reset: func(v []indexWithAllowedSize) []indexWithAllowedSize {
-				// reset the slice to be empty but keep the capacity
-				return v[:0]
-			},
-			MaxSize: 12,
-		}),
 		testBoardCache: cache.New(cache.Args[*boards.Game]{
 			Factory: func() *boards.Game {
 				return boards.New()
 			},
-			MaxSize: 12,
+			MaxSize: 50,
 		}),
 	}
 }
@@ -54,8 +43,9 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 
 	b := state.Board()
 	// these slice is reset on each get
-	indexes := a.indexesCache.Get()
-	defer a.indexesCache.Put(indexes)
+	// force stack alloc
+	var indexesArr [MaxFreeCellsForValidBoard]indexWithAllowedSize
+	indexes := indexesArr[:0]
 	// Number of allowed values is more important than the value count but only up to
 	// 3 allowed values, after which the trial-and-error becomes much less effective.
 	// The allowedSizeMultiplier below was chosen by testing various values and measuring
@@ -119,7 +109,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 		}
 		index := tei.index
 		testValues := b.AllowedValues(index).Values()
-		var foundBoards []*boards.Game
+		var foundBoard *boards.Game
 		var foundUnknown bool
 		var foundDisallowed int
 		for tvi, testValue := range testValues {
@@ -181,27 +171,23 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			// proof or accurate level requested, we must keep going with other options on the same
 			// cell to prove that the found solution is the only one on that cell or to reduce the
 			// 'value order bias' from the level score
-			foundBoard := a.testBoardCache.Get()
-			testBoard.CloneInto(boards.Immutable, foundBoard)
-			foundBoards = append(foundBoards, foundBoard)
-			if len(foundBoards) > 1 {
-				// if we found more than one board, we can stop
-				// and report that we have two solutions
-				for _, fb := range foundBoards {
-					a.testBoardCache.Put(fb)
-				}
+			if foundBoard != nil {
+				a.testBoardCache.Put(foundBoard)
 				return StatusMoreThanOneSolution
 			}
+
+			foundBoard = a.testBoardCache.Get()
+			defer a.testBoardCache.Put(foundBoard)
+			testBoard.CloneInto(boards.Immutable, foundBoard)
 		}
 		// found boards can be either empty or have one board in it, we just checked above for >1
-		if len(foundBoards) == 1 {
+		if foundBoard != nil {
 			if !foundUnknown || !state.Action().ProofRequested() {
 				// if all test values except one were disallowed, and that lucky one lead to a solution,
 				// then, we can conclude that this is the only solution.
 				// Also, in a Solve mode, we are not asked to prove the solution, we can return early
 				// to keep leveling accurate.
-				copyFromTestBoard(foundBoards[0], b)
-				a.testBoardCache.Put(foundBoards[0])
+				copyFromTestBoard(foundBoard, b)
 				return StatusSucceeded
 			}
 			// If proof is requested, and we have at least one inconclusive test value, we have to
