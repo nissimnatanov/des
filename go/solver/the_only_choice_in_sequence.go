@@ -8,13 +8,7 @@ import (
 	"github.com/nissimnatanov/des/go/boards/values"
 )
 
-type indexWithAllowed struct {
-	index   int
-	allowed values.Set
-}
-
 type theOnlyChoiceInSequence struct {
-	indexWithAllowedCache [indexes.BoardSequenceSize]indexWithAllowed
 }
 
 func (a *theOnlyChoiceInSequence) String() string {
@@ -63,47 +57,43 @@ func (a *theOnlyChoiceInSequence) runSeq(
 	seq indexes.Sequence,
 ) Status {
 	b := state.Board()
-	freeCells := a.indexWithAllowedCache[:0]
-	for index, allowed := range b.AllowedValuesIn(seq) {
-		freeCells = append(freeCells, indexWithAllowed{
-			index:   index,
-			allowed: allowed,
-		})
+	var uniqueValues values.Set
+	for _, allowed := range b.AllowedValuesIn(seq) {
+		newUniqueValues := values.Intersect(missingValues, allowed)
+		missingValues = missingValues.Without(allowed)
+
+		// values that were unique but appear in the current cell are no
+		// longer unique
+		uniqueValues = uniqueValues.Without(allowed)
+		// if this cell covers new values from the remained missing values,
+		// let's add them back to the unique values
+		uniqueValues = uniqueValues.With(newUniqueValues)
 	}
 
-	// check if the missing values have a free cell in the sequence that allow them
-	var found int
-missingValueLoop:
-	for _, missingValue := range missingValues.Values() {
-		foundIndex := -1
-		for fi := range freeCells {
-			if !freeCells[fi].allowed.Contains(missingValue) {
-				continue
-			}
+	if !missingValues.IsEmpty() {
+		// we have values that are not covered anywhere
+		return StatusNoSolution
+	}
+	if uniqueValues.IsEmpty() {
+		// we do not have any unique values in the sequence
+		return StatusUnknown
+	}
 
-			if foundIndex == -1 {
-				// first host
-				foundIndex = freeCells[fi].index
-			} else {
-				// second one, move to the next missing value
-				continue missingValueLoop
-			}
-		}
-		if foundIndex == -1 || !b.IsEmpty(foundIndex) {
-			// either no host cell in sequence or same cell is forced to have two missing values,
-			// fail the solution in both cases
+	// we have at least one unique value in the sequence, lets find its cell
+	for index, allowed := range b.AllowedValuesIn(seq) {
+		uniqueInCell := values.Intersect(uniqueValues, allowed)
+		switch uniqueInCell.Size() {
+		case 0:
+			// wrong cell, keep going
+			continue
+		case 1:
+			b.Set(index, uniqueInCell.First())
+		default:
+			// we cannot put two unique values in the same cell
 			return StatusNoSolution
 		}
-
-		b.Set(foundIndex, missingValue)
-		found++
 	}
 
-	if found > 0 {
-		// we found at least one value to settle
-		state.AddStep(Step(a.String()), StepComplexityMedium, found)
-		return StatusSucceeded
-	}
-
-	return StatusUnknown
+	state.AddStep(Step(a.String()), StepComplexityMedium, uniqueValues.Size())
+	return StatusSucceeded
 }

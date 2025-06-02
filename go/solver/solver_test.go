@@ -89,39 +89,67 @@ func testSanity(t *testing.T, action solver.Action, testBoards ...testBoard) {
 // use int8:
 // cache nested runner:
 // reset only related mask:
-// 				 	2	 501356520 ns/op	10721440 B/op	   39630 allocs/op
+//
+//	2	 501356520 ns/op	10721440 B/op	   39630 allocs/op
+//
 // max recursion = 10:
-// 					12	  99804208 ns/op	13643776 B/op	   55795 allocs/op
+//
+//	12	  99804208 ns/op	13643776 B/op	   55795 allocs/op
+//
 // max recursion = 14:
-// 					10	 105331192 ns/op	18319923 B/op	   75798 allocs/op
+//
+//	10	 105331192 ns/op	18319923 B/op	   75798 allocs/op
+//
 // values first in base board
 // the only choice find all instead of return on the first:
 // intro identify pairs:
-// 					30	  37168156 ns/op	 3566422 B/op	   14393 allocs/op
+//
+//	30	  37168156 ns/op	 3566422 B/op	   14393 allocs/op
+//
 // same, change solve to prove:
-// 					19	  61008452 ns/op	 5671026 B/op	   23082 allocs/op
+//
+//	19	  61008452 ns/op	 5671026 B/op	   23082 allocs/op
+//
 // trial and error allowed+index and board cache:
-// 					20	  57833294 ns/op	  530829 B/op	   17364 allocs/op
+//
+//	20	  57833294 ns/op	  530829 B/op	   17364 allocs/op
+//
 // trial and error only sort by allowed size, ignore combined value, and use slices.SortFunc:
-// 					44	  27610850 ns/op	   20978 B/op	      58 allocs/op
+//
+//	44	  27610850 ns/op	   20978 B/op	      58 allocs/op
+//
 // replace value counts with free cell count only:
 // allowed value cache is always valid, remove row/col/square count caches:
-// 					48	  24858786 ns/op	   19217 B/op	      58 allocs/op
+//
+//	48	  24858786 ns/op	   19217 B/op	      58 allocs/op
+//
 // make Board and Solution structs instead of interfaces for performance (allows inlining):
-// 					70	  16535683 ns/op	   22024 B/op	      64 allocs/op
+//
+//	70	  16535683 ns/op	   22024 B/op	      64 allocs/op
+//
 // identify all related pairs (not just first one):
 // identify triplets:
-// 					72	  15989164 ns/op	   22040 B/op	      64 allocs/op
+//
+//	72	  15989164 ns/op	   22040 B/op	      64 allocs/op
+//
 // single in sequence, recursion fixes, disable identify pairs and triplets in Prove:
-// 					208	   5643597 ns/op	   37840 B/op	      99 allocs/op
+//
+//	208	   5643597 ns/op	   37840 B/op	      99 allocs/op
+//
 // with hint01 and bitset improvements:
-// 					222	   5334709 ns/op	   37840 B/op	      99 allocs/op
+//
+//	222	   5334709 ns/op	   37840 B/op	      99 allocs/op
+//
 // continue recursion on disallowed values only:
 // optimizations, bug fixes
 // minor improvements in allowed:
-// 					231	   5075807 ns/op	   37984 B/op	     100 allocs/op
+//
+//	231	   5075807 ns/op	   37984 B/op	     100 allocs/op
+//
 // reintroduce row/col/square value caches:
-// 					236	   5013428 ns/op	   40480 B/op	     100 allocs/op
+//
+//	236	   5013428 ns/op	   40480 B/op	     100 allocs/op
+//
 // update bench to solve all sample boards, not just the first one:
 // - first only		232	   5047332 ns/op	   40481 B/op	     100 allocs/op
 // - all			170	   6956962 ns/op	  113776 B/op	     326 allocs/op
@@ -144,6 +172,9 @@ func testSanity(t *testing.T, action solver.Action, testBoards ...testBoard) {
 // Bitset improvements:
 // - first only		529	   2130160 ns/op	   26082 B/op	      72 allocs/op
 // - all			322	   3593113 ns/op	   77953 B/op	     237 allocs/op
+// Improve the only choice in sequence:
+// - first only		733	   1611048 ns/op	    3922 B/op	      31 allocs/op
+// - all			441	   2747717 ns/op	   13515 B/op	     107 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -187,6 +218,9 @@ func BenchmarkProveAll(b *testing.B) {
 // Always Prove on Solve to avoid deep recursion on boards with many solutions:
 // - first only		80	  14702170 ns/op	   25258 B/op	      74 allocs/op
 // - all			19	  58728298 ns/op	   76536 B/op	     250 allocs/op
+// Improve the only choice in sequence:
+// - first only		100	  11208376 ns/op	   25104 B/op	      73 allocs/op
+// - all			26	  44789688 ns/op	   75907 B/op	     246 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
