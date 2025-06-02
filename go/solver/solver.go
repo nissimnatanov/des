@@ -3,10 +3,7 @@ package solver
 import (
 	"context"
 	"fmt"
-	"os"
 	"runtime/debug"
-	"slices"
-	"strings"
 	"time"
 
 	"github.com/nissimnatanov/des/go/boards"
@@ -48,13 +45,27 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
 		panic("solver.Run called with nil board")
 	}
 
+	if s.opts.Action == ActionSolve {
+		// ActionSolve uses layered recursion to calculate the level,
+		// if the board has more than one solution Solve can take
+		// really long time to run. Hence, we do not allow level calculation
+		// on an unproven board.
+		proveOpts := s.opts
+		proveOpts.Action = ActionProve
+		res := New(&proveOpts).Run(ctx, b)
+		if res.Status != StatusSucceeded {
+			res.Action = ActionSolve
+			return res
+		}
+	}
+
 	r := &runner{
-		action:                s.opts.Action,
 		currentRecursionDepth: 0,
 		result: Result{
 			Status: StatusUnknown,
 			// capture the original board AS IS, solver does not modify the Input
-			Input: b,
+			Input:  b,
+			Action: s.opts.Action,
 			// before we modify the input board, we must clone it into Play mode
 			Play: b.Clone(boards.Play),
 
@@ -132,46 +143,17 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
 		r.start(ctx)
 	}()
 
-	if r.result.Solutions.Size() > 1 && r.action.ProofRequested() && r.result.Status == StatusSucceeded {
+	if r.result.Solutions.Size() > 1 && r.Action().ProofRequested() && r.result.Status == StatusSucceeded {
 		// if we got two solutions yet proof was requested, we must guarantee a different status
 		r.result.complete(StatusMoreThanOneSolution)
 	}
-	if r.result.Steps.Level >= LevelNightmare && r.action == ActionSolve {
-		serialized := boards.Serialize(r.result.Input)
-		registered := false
-		const nightmareSerialized = "nightmare.serialized"
-		const nightmareLog = "nightmare.log"
-		b, err := os.ReadFile(nightmareSerialized)
-		if err == nil {
-			lines := strings.Split(string(b), "\n")
-			registered = slices.Contains(lines, serialized)
-		}
-		if !registered {
-			ns, err := os.OpenFile(nightmareSerialized, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-			if err == nil {
-				_, err = fmt.Fprintln(ns, serialized)
-				ns.Close()
-			}
-
-			nl, err := os.OpenFile(nightmareLog, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-			if err == nil {
-				_, err = fmt.Fprintf(nl,
-					"Solver reached level %s with complexity %d: %s\n%s\n",
-					r.result.Steps.Level,
-					r.result.Steps.Complexity,
-					boards.Serialize(r.result.Input),
-					r.result.Input.String())
-				nl.Close()
-			}
-		}
-	}
+	logResult(&r.result)
 
 	// if run panics, we want to return both the error and the partial result
 	return &r.result
 }
 
 type runner struct {
-	action                Action
 	currentRecursionDepth int8
 	maxRecursionDepth     int8
 	result                Result
@@ -182,7 +164,7 @@ type runner struct {
 }
 
 func (r *runner) start(ctx context.Context) {
-	if !r.action.LevelRequested() || r.maxRecursionDepth < 2 {
+	if !r.Action().LevelRequested() || r.maxRecursionDepth < 2 {
 		r.run(ctx)
 		return
 	}
@@ -286,7 +268,7 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 			}
 			if status == StatusSucceeded &&
 				r.Board().FreeCellCount() == freeBefore &&
-				!r.action.LevelRequested() &&
+				!r.Action().LevelRequested() &&
 				r.Board().Hint01() < 0 {
 				// If we do not need an accurate level, it is proven to be faster if we
 				// try harder algorithms if the current one was only able to eliminate some
@@ -313,8 +295,9 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 }
 
 func (r *runner) Action() Action {
-	return r.action
+	return r.result.Action
 }
+
 func (r *runner) Board() *boards.Game {
 	return r.result.Play
 }
@@ -333,7 +316,7 @@ func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) *Result {
 	// merge the sub-steps into the parent result
 
 	// before we return, let's check the mode
-	if !r.action.LevelRequested() {
+	if !r.Action().LevelRequested() {
 		// fast solvers do nto care about levels and can use very deep recursion
 		// for efficiency, hence it does not matter how deep we are
 		result.Steps.AddStep(trialAndErrorStepName, StepComplexityRecursion1, 1)
@@ -383,13 +366,13 @@ func (r *runner) recursiveRunNested(ctx context.Context, b *boards.Game) *Result
 	nested := r.nestedCache
 	if nested == nil {
 		nested = &runner{
-			action:                r.action,
 			currentRecursionDepth: r.currentRecursionDepth + 1,
 			maxRecursionDepth:     r.maxRecursionDepth,
 			algorithms:            r.algorithms,
 
 			// result includes ref to the shared solutions
 			result: Result{
+				Action:    r.Action(),
 				Play:      b,
 				Status:    StatusUnknown,
 				Solutions: r.result.Solutions,

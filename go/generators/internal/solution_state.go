@@ -63,10 +63,10 @@ func NewEnhanceBoardState(ctx context.Context, minLevel, maxLevel solver.Level, 
 		Max: maxLevel,
 	}
 	lr = lr.WithDefaults()
-	bs := newBoardState(ctx, s, lr, board)
+	bs, _ := newBoardState(ctx, s, lr, board)
 	return s, bs
 }
 
 func (s *SolutionState) InitialBoardState(ctx context.Context, levelRange LevelRange) *BoardState {
-	return newBoardState(ctx, s, levelRange, s.solution)
+	return newSolutionBoardState(ctx, s, levelRange, s.solution)
 }

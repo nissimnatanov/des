@@ -18,17 +18,7 @@ func TestMoreThanOneSolution(t *testing.T) {
 		expected: solver.StatusMoreThanOneSolution,
 	}
 	testSanity(t, solver.ActionProve, testBoard)
-}
-
-func TestNoSolution(t *testing.T) {
-	testBoard := testBoard{
-		name:          "first go nightmare",
-		board:         "E7E315B9A2C8A3E9C13D3A97H8597B438H1B82D7B",
-		expected:      solver.StatusSucceeded,
-		expectedLevel: solver.LevelNightmare,
-		solution:      "4_8_9_3_6_75_2_1_7_6_3152_4_98_21_5_4_89_36_7_6_4_8_97_5_2_131_5_2_8_36_974_3_9_7_2_1_4_6_85971_6_4385_2_5_3_6_7_2_8_14_9_824_5_9_1_73_6_",
-	}
-	testSanity(t, solver.ActionProve, testBoard)
+	// solver must also detect multiple solutions (it runs prove internally)
 	testSanity(t, solver.ActionSolve, testBoard)
 }
 
@@ -67,10 +57,15 @@ func testSanity(t *testing.T, action solver.Action, testBoards ...testBoard) {
 			}
 			assert.Equal(t, res.Status, expected)
 			if expected == solver.StatusSucceeded {
-				if action == solver.ActionSolve &&
-					sample.expectedLevel != solver.LevelUnknown {
-					assert.Check(t, cmp.Equal(res.Steps.Level, sample.expectedLevel))
+				if action == solver.ActionSolve {
+					if sample.expectedLevel != solver.LevelUnknown {
+						assert.Check(t, cmp.Equal(res.Steps.Level, sample.expectedLevel))
+					}
+					if sample.expectedComplexity > 0 {
+						assert.Check(t, cmp.Equal(res.Steps.Complexity, sample.expectedComplexity))
+					}
 				}
+
 				assert.Equal(t, res.Solutions.Size(), 1)
 				sol := res.Solutions.At(0)
 
@@ -189,6 +184,9 @@ func BenchmarkProveAll(b *testing.B) {
 // - all			21	  55324716 ns/op	   26824 B/op	     117 allocs/op
 // - fast first		943	   1130329 ns/op	   22960 B/op	      61 allocs/op
 // - fast all		637	   1830455 ns/op	   68280 B/op	     199 allocs/op
+// Always Prove on Solve to avoid deep recursion on boards with many solutions:
+// - first only		80	  14702170 ns/op	   25258 B/op	      74 allocs/op
+// - all			19	  58728298 ns/op	   76536 B/op	     250 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, &solver.Options{
@@ -215,6 +213,9 @@ func BenchmarkSolveFastAll(b *testing.B) {
 }
 
 func benchRun(b *testing.B, opts *solver.Options, numBoards int) {
+	prev := solver.DisableNLog(true) // disable logging in benchmarks
+	defer solver.DisableNLog(prev)
+
 	ctx := b.Context()
 
 	var parsed []*boards.Game

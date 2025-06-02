@@ -7,6 +7,9 @@ type Action int
 const (
 	ActionProve Action = iota
 	ActionSolveFast
+	// ActionSolve always runs Prove first to make sure solver does not
+	// run too long on a board that has too many solutions, entering very
+	// deep recursion.
 	ActionSolve
 	// ActionHint
 )
@@ -37,4 +40,3 @@ func (a Action) LevelRequested() bool {
 func (a Action) ProofRequested() bool {
 	return a == ActionProve
 }
-// 

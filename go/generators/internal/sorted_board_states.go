@@ -3,7 +3,6 @@ package internal
 import (
 	"slices"
 
-	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/internal/collections"
 	"github.com/nissimnatanov/des/go/solver"
 )
@@ -68,7 +67,7 @@ sortingLoop:
 			break sortingLoop
 		}
 		// do not add duplicates
-		if boards.Equivalent(bs.board, newBoard.board) {
+		if bs.BoardEquivalentTo(newBoard) {
 			return i, false
 		}
 	}

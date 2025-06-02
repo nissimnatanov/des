@@ -12,7 +12,6 @@ import (
 )
 
 type BoardState struct {
-	board *boards.Game
 	state *SolutionState
 	res   *solver.Result
 
@@ -25,21 +24,22 @@ type BoardState struct {
 	candidates indexes.BitSet81
 }
 
-type boardSource interface {
-	Clone(mode boards.Mode) *boards.Game
-}
-
 // newBoardState creates a new BoardState for the given board.
-func newBoardState(ctx context.Context, state *SolutionState, levelRange LevelRange, srcBoard boardSource) *BoardState {
-	editBoard := srcBoard.Clone(boards.Edit)
+// if solver fails, it returns nil with the failed result
+func newBoardState(
+	ctx context.Context, state *SolutionState, levelRange LevelRange, srcBoard *boards.Game,
+) (*BoardState, *solver.Result) {
 	// we could prob create fake result for solutions, but it does not matter much
-	res := state.solver.Run(ctx, editBoard)
+	res := state.solver.Run(ctx, srcBoard)
 	if res.Status != solver.StatusSucceeded {
-		panic(fmt.Sprintf("failed to solve the board: %s", res.Error))
+		return nil, res
 	}
+	// preserve the clone as Edit board instead of the original board
+	// TODO: maybe reset and reuse the play-board since it is no longer needed
+	editBoard := res.Input.Clone(boards.Edit)
+	res.Input = editBoard
 	progress := levelRange.shouldContinue(state.rand, editBoard, res)
 	bs := &BoardState{
-		board:             editBoard,
 		state:             state,
 		res:               res,
 		desiredLevelRange: levelRange,
@@ -47,7 +47,31 @@ func newBoardState(ctx context.Context, state *SolutionState, levelRange LevelRa
 		candidates:        editBoard.EmptyCells().Complement(),
 	}
 	bs.checkIntegrity()
+	return bs, res
+}
+
+func newSolutionBoardState(
+	ctx context.Context, state *SolutionState, levelRange LevelRange, sol *boards.Solution,
+) *BoardState {
+	// we could prob create fake result for solutions, but it does not matter much
+	editBoard := sol.Clone(boards.Edit)
+	res := state.solver.Run(ctx, editBoard)
+	if res.Status != solver.StatusSucceeded {
+		panic("failed to solve a solution")
+	}
+	bs := &BoardState{
+		state:             state,
+		res:               res,
+		desiredLevelRange: levelRange,
+		progress:          TooEarly,
+		candidates:        indexes.MaxBitSet81,
+	}
+	bs.checkIntegrity()
 	return bs
+}
+
+func (bs *BoardState) board() *boards.Game {
+	return bs.res.Input
 }
 
 func (bs *BoardState) checkIntegrity() {
@@ -57,10 +81,13 @@ func (bs *BoardState) checkIntegrity() {
 
 	allIndexes := make([]int, 0, boards.Size)
 	for index := range bs.candidates.Indexes {
-		if bs.board.Get(index) == 0 {
+		if bs.board().Get(index) == 0 {
 			panic("remained index points to an empty value")
 		}
 		allIndexes = append(allIndexes, index)
+	}
+	if !boards.ContainsAll(bs.state.solution, bs.board()) {
+		panic("provided solution does not contain the board")
 	}
 }
 
@@ -85,7 +112,7 @@ func (bs *BoardState) DesiredLevelRange() LevelRange {
 }
 
 func (bs *BoardState) BoardEquivalentTo(other *BoardState) bool {
-	return boards.Equivalent(bs.board, other.board)
+	return boards.Equivalent(bs.board(), other.board())
 }
 
 func (bs *BoardState) Candidates() indexes.BitSet81 {
@@ -113,7 +140,7 @@ func (bs *BoardState) Remove(ctx context.Context, args RemoveArgs) *BoardState {
 
 	next := bs
 	removedOnce := false
-	for next.board.FreeCellCount() < args.FreeCells {
+	for next.board().FreeCellCount() < args.FreeCells {
 		{
 			nextRemoved := next.tryRemove(ctx, &args)
 			if nextRemoved == nil {
@@ -223,7 +250,7 @@ func (bs *BoardState) tryRemove(ctx context.Context, args *RemoveArgs) *BoardSta
 	next := bs
 	removedOnce := false
 	for range args.BatchMaxTries {
-		allowedToRemove := solver.MaxFreeCellsForValidBoard - next.board.FreeCellCount()
+		allowedToRemove := solver.MaxFreeCellsForValidBoard - next.board().FreeCellCount()
 		if allowedToRemove == 0 {
 			break
 		}
@@ -275,25 +302,20 @@ func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int)
 	}
 
 	if boards.GetIntegrityChecks() {
-		res := bs.state.prover.Run(ctx, bs.board)
+		res := bs.state.prover.Run(ctx, bs.board())
 		if res.Status != solver.StatusSucceeded {
 			panic("do not use invalid boards as an input here")
 		}
 	}
 
 	for _, index := range candidates {
-		bs.board.Set(index, 0)
+		bs.board().Set(index, 0)
 	}
 
-	res := bs.state.prover.Run(ctx, bs.board)
-	var next *BoardState
-	if res.Status == solver.StatusSucceeded {
-		// clone the new board
-		next = newBoardState(ctx, bs.state, bs.desiredLevelRange, bs.board)
-	}
+	next, _ := newBoardState(ctx, bs.state, bs.desiredLevelRange, bs.board())
 	// always restore the board to its original state
 	for _, index := range candidates {
-		bs.board.SetReadOnly(index, bs.state.solution.Get(index))
+		bs.board().SetReadOnly(index, bs.state.solution.Get(index))
 	}
 	if next != nil {
 		// if we overflowed the desired level, consider it a failure as well
@@ -327,6 +349,6 @@ func (bs *BoardState) WithDesiredLevelRange(lr LevelRange) *BoardState {
 	}
 	// reevaluate the progress based on the new level
 	clone.desiredLevelRange = lr
-	clone.progress = lr.shouldContinue(bs.state.rand, bs.board, bs.res)
+	clone.progress = lr.shouldContinue(bs.state.rand, bs.board(), bs.res)
 	return &clone
 }
