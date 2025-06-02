@@ -48,13 +48,14 @@ func (sbs *SortedBoardStates) Boards(yield func(*BoardState) bool) {
 // Add adds a new board to the sorted list if it is not a duplicate.
 func (sbs *SortedBoardStates) Add(newBoard *BoardState) bool {
 	insertIndex := len(sbs.sorted)
+sortingLoop:
 	for i, bs := range sbs.sorted {
 		switch {
 		case bs.Complexity() > newBoard.Complexity():
 			continue
 		case bs.Complexity() < newBoard.Complexity():
 			insertIndex = i
-			break
+			break sortingLoop
 		}
 		// do not add duplicates
 		if boards.Equivalent(bs.board, newBoard.board) {

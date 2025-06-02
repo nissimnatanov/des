@@ -30,26 +30,40 @@ func TestGeneratorFast(t *testing.T) {
 	}
 }
 
-// Initial state:
-// * 1749	    653157 ns/op	  260671 B/op	    1535 allocs/op
-// * Generations: 1749, ~Elapsed: 554.192µs, ~Retries: 1, ~Complexity: 117.87
-// * Solutions: 1749, ~Elapsed: 97.204µs, ~Retries: 10.2
+// Initial state (bulks of 10):
+// * 190	   5919386 ns/op	  808996 B/op	    5269 allocs/op
+// * Generations: 1900, ~Elapsed: 587.798µs, ~Retries: 1.000,
+//   Stages: [{1900 416 0} {1484 1157 0} {327 327 0}]
 
 func BenchmarkEasyOrMedium(b *testing.B) {
-	runBenchmark(b, solver.LevelEasy, solver.LevelMedium, 100)
+	runBenchmark(b, solver.LevelEasy, solver.LevelMedium, 10)
 }
+
+// Initial state (bulks of 10):
+// * 22	  59968347 ns/op	 6069760 B/op	   41416 allocs/op
+// * Generations: 220, ~Elapsed: 5.992518ms, ~Retries: 2.205,
+//   Stages: [{220 0 0} {220 42 0} {178 178 6}]
 
 func BenchmarkHardOrVeryHard(b *testing.B) {
-	runBenchmark(b, solver.LevelHard, solver.LevelVeryHard, 20)
+	runBenchmark(b, solver.LevelHard, solver.LevelVeryHard, 10)
 }
 
-// Initial state:
-// * 10	 106926608 ns/op	36740413 B/op	  149229 allocs/op
-// * Generations: 10, ~Elapsed: 106.817354ms, ~Retries: 94.4, ~Complexity: 4396.20
-// * Solutions: 10, ~Elapsed: 103.583µs, ~Retries: 9
+// Initial state (bulks of 10):
+// * 1	1844170500 ns/op	207972736 B/op	 1415498 allocs/op
+// * Generations: 20, ~Elapsed: 184.406731ms, ~Retries: 2.100,
+//   Stages: [{20 0 0} {20 0 0} {20 0 454} {20 0 0} {20 0 0} {20 0 0} {20 4 0} {16 16 0}]
 
-func BenchmarkEviOrDarkEvil(b *testing.B) {
-	runBenchmark(b, solver.LevelEvil, solver.LevelDarkEvil, 10)
+func BenchmarkEvil(b *testing.B) {
+	runBenchmark(b, solver.LevelEvil, solver.LevelEvil, 10)
+}
+
+// Initial state (bulks of 10):
+// * 1	41888266875 ns/op	4805446688 B/op	32630397 allocs/op
+// * Generations: 20, ~Elapsed: 4.188811889s, ~Retries: 50.000,
+//   Stages: [{20 0 0} {20 0 0} {20 0 10674} {20 0 0} {20 0 0} {20 0 0} {20 6 0} {14 14 6}]
+
+func BenchmarkDarkEvil(b *testing.B) {
+	runBenchmark(b, solver.LevelDarkEvil, solver.LevelDarkEvil, 10)
 }
 
 func BenchmarkNightmareOrBlackHole(b *testing.B) {
