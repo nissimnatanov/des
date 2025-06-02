@@ -29,9 +29,7 @@ func NewSolutionState(args SolutionStateArgs) *SolutionState {
 		args.Rand = random.New()
 	}
 	if args.Solution == nil {
-		// to avoid circular dependencies, force caller to provide a solution
-		// TODO: move solution generator to this internal pkg
-		panic("internal GeneratorStateArgs must come with a solution")
+		panic("solution must be provided")
 	}
 	if args.Solver == nil {
 		args.Solver = solver.New(&solver.Options{Action: solver.ActionSolve})

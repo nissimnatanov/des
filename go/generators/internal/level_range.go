@@ -47,6 +47,7 @@ func (lr LevelRange) shouldContinue(r *random.Random, board *boards.Game, res *s
 		return AboveMaxLevel
 	}
 
+	// shoot for the max desired level
 	if shouldContinueAtLevel(lr.Max, r) {
 		// Keep going, we are at the desired level.
 		return InRangeKeepGoing

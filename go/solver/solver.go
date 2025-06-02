@@ -31,7 +31,6 @@ type Solver struct {
 	algorithms []Algorithm
 }
 
-// TODO: itemize the options
 func New(opts *Options) *Solver {
 	if opts == nil {
 		opts = &Options{}

@@ -30,6 +30,10 @@ func (sbs *SortedBoardStates) Size() int {
 	return len(sbs.sorted)
 }
 
+func (sbs *SortedBoardStates) Get(index int) *BoardState {
+	return sbs.sorted[index]
+}
+
 func (sbs *SortedBoardStates) TrimSize(limit int) {
 	if len(sbs.sorted) < limit {
 		return
@@ -47,9 +51,15 @@ func (sbs *SortedBoardStates) Boards(yield func(*BoardState) bool) {
 
 // Add adds a new board to the sorted list if it is not a duplicate.
 func (sbs *SortedBoardStates) Add(newBoard *BoardState) bool {
+	_, added := sbs.addInternal(newBoard, 0)
+	return added
+}
+
+func (sbs *SortedBoardStates) addInternal(newBoard *BoardState, from int) (int, bool) {
 	insertIndex := len(sbs.sorted)
 sortingLoop:
-	for i, bs := range sbs.sorted {
+	for i := from; i < len(sbs.sorted); i++ {
+		bs := sbs.sorted[i]
 		switch {
 		case bs.Complexity() > newBoard.Complexity():
 			continue
@@ -59,19 +69,17 @@ sortingLoop:
 		}
 		// do not add duplicates
 		if boards.Equivalent(bs.board, newBoard.board) {
-			return false
+			return i, false
 		}
 	}
 	sbs.sorted = slices.Insert(sbs.sorted, insertIndex, newBoard)
-	return true
+	return insertIndex, true
 }
 
 func (sbs *SortedBoardStates) AddAll(boards *SortedBoardStates) {
-	// TODO: can optimize by sorting the input boards and deduping them
+	lastIndex := -1
 	for _, board := range boards.sorted {
-		if !sbs.Add(board) {
-			continue
-		}
+		lastIndex, _ = sbs.addInternal(board, lastIndex+1)
 	}
 }
 

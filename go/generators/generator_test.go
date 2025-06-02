@@ -1,6 +1,7 @@
 package generators_test
 
 import (
+	"runtime/debug"
 	"testing"
 
 	"github.com/nissimnatanov/des/go/boards"
@@ -30,13 +31,13 @@ func TestGeneratorFast(t *testing.T) {
 	}
 }
 
-// Initial state (bulks of 10):
-// * 190	   5919386 ns/op	  808996 B/op	    5269 allocs/op
-// * Generations: 1900, ~Elapsed: 587.798µs, ~Retries: 1.000,
-//   Stages: [{1900 416 0} {1484 1157 0} {327 327 0}]
+// Initial state (bulks of 100):
+// * 18	  57867785 ns/op	 7639343 B/op	   50437 allocs/op
+// * Generations: 1800, ~Elapsed: 577.917µs, ~Retries: 1.000,
+//   Stages: [{1800 452 0} {1348 1048 0} {300 300 0}]
 
 func BenchmarkEasyOrMedium(b *testing.B) {
-	runBenchmark(b, solver.LevelEasy, solver.LevelMedium, 10)
+	runBenchmark(b, solver.LevelEasy, solver.LevelMedium, 100)
 }
 
 // Initial state (bulks of 10):
@@ -52,15 +53,23 @@ func BenchmarkHardOrVeryHard(b *testing.B) {
 // * 1	1844170500 ns/op	207972736 B/op	 1415498 allocs/op
 // * Generations: 20, ~Elapsed: 184.406731ms, ~Retries: 2.100,
 //   Stages: [{20 0 0} {20 0 0} {20 0 454} {20 0 0} {20 0 0} {20 0 0} {20 4 0} {16 16 0}]
+// Fixes (and change to bulk of 100):
+// * 1	12233012125 ns/op	1107809424 B/op	 7944966 allocs/op
+// * Generations: 200, ~Elapsed: 122.328782ms, ~Retries: 1.230,
+//   Stages: [{200 0 0} {200 6 0} {194 36 0} {158 158 0}]
 
 func BenchmarkEvil(b *testing.B) {
-	runBenchmark(b, solver.LevelEvil, solver.LevelEvil, 10)
+	runBenchmark(b, solver.LevelEvil, solver.LevelEvil, 100)
 }
 
 // Initial state (bulks of 10):
 // * 1	41888266875 ns/op	4805446688 B/op	32630397 allocs/op
 // * Generations: 20, ~Elapsed: 4.188811889s, ~Retries: 50.000,
 //   Stages: [{20 0 0} {20 0 0} {20 0 10674} {20 0 0} {20 0 0} {20 0 0} {20 6 0} {14 14 6}]
+// Fixes:
+// * 1	16119979791 ns/op	1435290304 B/op	10328974 allocs/op
+// * Generations: 20, ~Elapsed: 1.611989s, ~Retries: 15.900,
+//   Stages: [{20 0 0} {20 0 0} {20 4 0} {16 16 0}]
 
 func BenchmarkDarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelDarkEvil, solver.LevelDarkEvil, 10)
@@ -80,7 +89,7 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 		if msg == nil {
 			return
 		}
-		b.Fatalf("generator panicked with Seed: %d: %v", g.Seed(), msg)
+		b.Fatalf("generator panicked with Seed: %d: %v\n%s", g.Seed(), msg, string(debug.Stack()))
 	}()
 	for b.Loop() {
 		res := g.Generate(ctx)
