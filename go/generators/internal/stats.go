@@ -43,5 +43,5 @@ func (s *stats) ReportOneSolution(elapsed time.Duration, retries int64) {
 func (s *stats) ReportGeneration(count int, elapsed time.Duration, retries int64, stageStats GamePerStageStats) {
 	s.rw.Lock()
 	defer s.rw.Unlock()
-	s.game.reportCount(count, elapsed, retries, stageStats)
+	s.game.report(count, elapsed, retries, stageStats)
 }

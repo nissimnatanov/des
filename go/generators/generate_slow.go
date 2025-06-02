@@ -47,10 +47,10 @@ func (g *Generator) generateSlow(ctx context.Context, initState *internal.BoardS
 		Min: solver.LevelEasy,
 		Max: solver.LevelEasy,
 	}
+	start := time.Now()
 
 generationLoop:
 	for ctx.Err() == nil {
-		start := time.Now()
 		candidates.Reset()
 		tries++
 
@@ -59,7 +59,7 @@ generationLoop:
 		for candidates.Size() < slowStages[0].CandidateCount && ctx.Err() == nil {
 			res, stage := g.tryGenerateFastOnce(ctx, fastInitState)
 			if res == nil {
-				stageStats.Report(stage, false)
+				stageStats.Report(0, stage)
 				continue
 			}
 			res = res.WithDesiredLevelRange(requestedLevelRange)
@@ -71,12 +71,12 @@ generationLoop:
 
 			// we won't be able to enhance this board
 			if res.Progress() <= internal.BelowMinLevel {
+				stageStats.Report(0, stage)
 				continue
 			}
 			finalCandidates.Add(res)
+			stageStats.Report(1, stage)
 			if hasEnoughFinalCandidates(finalCandidates, count) {
-				stageStats.Report(stage, true)
-				internal.Stats.ReportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
 				break generationLoop
 			}
 		}
@@ -88,12 +88,15 @@ generationLoop:
 		for ssi < len(slowStages) && ctx.Err() == nil {
 			newFinal, newCandidates := g.generateSlowStage(ctx, candidates, slowStages[ssi])
 			if newFinal.Size() == 0 && newCandidates.Size() == 0 {
+				stageStats.Report(0, stage)
 				break
 			}
 			finalCandidates.AddAll(newFinal)
+			if newFinal.Size() > 0 {
+				stageStats.Report(newFinal.Size(), stage)
+			}
 			if hasEnoughFinalCandidates(finalCandidates, count) {
 				// stop once we have at least one if count was requested
-				stageStats.Report(stage, true)
 				internal.Stats.ReportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
 				break generationLoop
 			}
@@ -101,18 +104,13 @@ generationLoop:
 			ssi++
 			stage++
 		}
-
-		if finalCandidates.Size() == 0 {
-			// if we went through all stages and did not find any candidates,
-			// try again
-			stageStats.Report(stage, false)
-			continue
-		}
-
-		internal.Stats.ReportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
 	}
 
 	// return the results so far, even if ctx canceled in the middle
+	internal.Stats.ReportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
+	if count > 0 {
+		finalCandidates.TrimSize(count)
+	}
 	return finalCandidates.Results()
 }
 
@@ -129,7 +127,7 @@ func (g *Generator) generateSlowStage(
 		switch len(indexCandidates) {
 		case 0:
 			// this board can no longer be enhanced
-			if bs.Progress() >= internal.InRangeKeepGoing {
+			if bs.Progress() >= internal.InRangeKeepGoing && bs.Progress() <= internal.InRangeStop {
 				finalCandidates.Add(bs)
 			}
 			// throw this candidate away, it is below the desired level
@@ -146,6 +144,14 @@ func (g *Generator) generateSlowStage(
 		}
 		forkCount := stage.ForkCount
 		for range forkCount {
+			if bs.Candidates() == indexes.MinBitSet81 {
+				// we can no longer enhance this board, add it to final candidates
+				if bs.Progress() >= internal.InRangeKeepGoing && bs.Progress() <= internal.InRangeStop {
+					finalCandidates.Add(bs)
+				}
+				// otherwise stop trying this board
+				break
+			}
 			// can refine more, try random first
 			bsForked := bs.Remove(ctx, internal.RemoveArgs{
 				FreeCells:        stage.FreeCells,

@@ -100,8 +100,13 @@ type RemoveArgs struct {
 }
 
 func (bs *BoardState) Remove(ctx context.Context, args RemoveArgs) *BoardState {
-	if bs.progress == InRangeStop || bs.progress == AboveMaxLevel {
+	if bs.progress == AboveMaxLevel {
 		// we already overflowed the level, no point in removing anything
+		panic("do not use Remove if the board is already above the max level")
+	}
+	if bs.progress == InRangeStop && bs.candidates == indexes.MinBitSet81 {
+		// we can no longer tune the board and it is on desired level, hence
+		// calling this method in a loop will cause an infinite loop
 		panic("do not use Remove if already reached the desired level or overflowed it")
 	}
 	defer bs.checkIntegrity()

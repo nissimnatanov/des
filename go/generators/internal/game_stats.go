@@ -5,28 +5,39 @@ import (
 	"time"
 )
 
-type GamePerStageStats [SlowStageCount + 1]GameStageStats
+// we currently only have ~8 stages in slow generators, so we can use a fixed size array
+// with an extra capacity for future stages
+type GamePerStageStats [12]GameStageStats
 
-func (stages *GamePerStageStats) Report(stage int, success bool) {
-	if stage < 0 || stage >= len(stages) {
-		panic("stage out of range")
+func (stages *GamePerStageStats) Report(count int, stage int) {
+	if stage < 0 || stage >= len(*stages) {
+		panic("negative stage")
 	}
 	for s := range stage + 1 {
-		stages[s].Total++
+		(*stages)[s].Total += count
 	}
-	if success {
-		stages[stage].Succeeded++
+	if count > 0 {
+		(*stages)[stage].Succeeded += count
 	} else {
-		stages[stage].Failed++
+		(*stages)[stage].Failed++
 	}
 }
 
 func (stages *GamePerStageStats) merge(other GamePerStageStats) {
-	for i := range stages {
-		stages[i].Total += other[i].Total
-		stages[i].Succeeded += other[i].Succeeded
-		stages[i].Failed += other[i].Failed
+	for i := range other {
+		(*stages)[i].Total += other[i].Total
+		(*stages)[i].Succeeded += other[i].Succeeded
+		(*stages)[i].Failed += other[i].Failed
 	}
+}
+
+func (stages GamePerStageStats) String() string {
+	// trim down zero stages
+	last := len(stages) - 1
+	for last >= 0 && stages[last].Total == 0 {
+		last--
+	}
+	return fmt.Sprint(stages[:last+1])
 }
 
 type GameStageStats struct {
@@ -64,7 +75,7 @@ func (gs GameStats) String() string {
 		gs.Count, gs.AverageElapsed(), gs.AverageRetries(), gs.StageStats)
 }
 
-func (gs *GameStats) reportCount(count int, elapsed time.Duration, retries int64, stageStats GamePerStageStats) {
+func (gs *GameStats) report(count int, elapsed time.Duration, retries int64, stageStats GamePerStageStats) {
 	gs.Count += int64(count)
 	gs.Elapsed += elapsed
 	gs.Retries += retries

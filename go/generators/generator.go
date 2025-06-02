@@ -116,10 +116,12 @@ func (g *Generator) generateFast(ctx context.Context, initState *internal.BoardS
 	for ctx.Err() == nil {
 		tries++
 		bs, stage := g.tryGenerateFastOnce(ctx, initState)
-		stageStats.Report(stage, bs != nil)
 		if bs == nil {
+			stageStats.Report(0, stage)
 			continue
 		}
+
+		stageStats.Report(1, stage)
 		elapsed := time.Since(start)
 		internal.Stats.ReportGeneration(1, elapsed, int64(tries), stageStats)
 		return bs
