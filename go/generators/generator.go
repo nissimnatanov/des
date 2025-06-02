@@ -26,10 +26,7 @@ func New(opts *Options) *Generator {
 		Max: opts.MaxLevel,
 	}
 	lr = lr.WithDefaults()
-	count := opts.Count
-	if count < 0 {
-		count = 0 // all available boards, at least one
-	}
+	count := max(opts.Count, 0)
 	solProvider := opts.SolutionProvider
 	if solProvider == nil {
 		solProvider = func() *boards.Solution {
@@ -42,6 +39,7 @@ func New(opts *Options) *Generator {
 		lr:          lr,
 		count:       count,
 		solProvider: solProvider,
+		onNewResult: opts.OnNewResult,
 	}
 	return g
 }
@@ -52,6 +50,7 @@ type Generator struct {
 	count int
 
 	solProvider func() *boards.Solution
+	onNewResult func(*solver.Result)
 	// if set, it will be used to enhance the board
 	// enhanceBoard *boards.Game
 }
@@ -73,6 +72,11 @@ type Options struct {
 
 	// optional
 	SolutionProvider func() *boards.Solution
+
+	// OnNewResult is an optional callback that will be called for each new board's result generated.
+	// Note: it can be called multiple times for the same board and it can be called more than
+	// the requested Count time (deduplication happens at the end of the generation process).
+	OnNewResult func(*solver.Result)
 }
 
 func (g *Generator) Generate(ctx context.Context) []*solver.Result {
@@ -93,6 +97,9 @@ func (g *Generator) Generate(ctx context.Context) []*solver.Result {
 	for len(results) < count && ctx.Err() == nil {
 		bs := g.generateFast(ctx, initState)
 		results = append(results, bs.Result())
+		if g.onNewResult != nil {
+			g.onNewResult(bs.Result())
+		}
 	}
 	return results
 }

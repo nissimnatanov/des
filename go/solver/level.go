@@ -1,6 +1,9 @@
 package solver
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Level int8
 
@@ -41,6 +44,15 @@ func (l Level) String() string {
 	}
 }
 
+func LevelFromString(s string) Level {
+	for l := LevelEasy; l <= LevelBlackHole; l++ {
+		if strings.EqualFold(l.String(), s) {
+			return l
+		}
+	}
+	return LevelUnknown
+}
+
 type LevelComplexityBar int64
 
 const (
@@ -54,7 +66,7 @@ const (
 	// aligned with the second recursion step complexity
 	LevelDarkEvilBar LevelComplexityBar = 40000
 	// have not seen yet a puzzle with complexity above this level (at least one
-	// third-level recursion or way too many second and/or first recursions)
+	// second-level recursion or way too many second and/or first recursions)
 	LevelNightmareBar LevelComplexityBar = 100000
 )
 

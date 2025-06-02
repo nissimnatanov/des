@@ -2,6 +2,7 @@ package boards
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -83,4 +84,8 @@ func (sol *Solution) validateSequence(s indexes.Sequence) error {
 		return fmt.Errorf("incomplete board")
 	}
 	return nil
+}
+
+func (sol *Solution) MarshalJSON() ([]byte, error) {
+	return json.Marshal(Serialize(sol))
 }

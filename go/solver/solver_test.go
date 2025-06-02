@@ -78,7 +78,7 @@ func testSanity(t *testing.T, action solver.Action, testBoards ...testBoard) {
 				assert.Check(t, cmp.Equal(solStr, sample.solution))
 			}
 
-			if sample.failToLog {
+			if sample.failToLog || t.Failed() {
 				resJSON, err := json.MarshalIndent(res, "", "  ")
 				assert.NilError(t, err)
 				t.Log(string(resJSON))

@@ -16,7 +16,7 @@ var benchBoards = []testBoard{
 	{
 		/*
 			>>> Level: Black Hole
-			>>> Complexity: 173038
+			>>> Complexity: 200038
 			╔═══════╦═══════╦═══════╗
 			║ 6 0.0.║ 0.0.8 ║ 9 4 0.║
 			║ 9 0.0.║ 0.0.6 ║ 1 0.0.║
@@ -38,7 +38,7 @@ var benchBoards = []testBoard{
 	{
 		/*
 			>>> Level: Black Hole
-			>>> Complexity: 121418
+			>>> Complexity: 139418
 		*/
 		name:     "al escargot",
 		board:    "1D7A9B3B2C8B96B5D53B9C1B8C26D4C3F1B4F7B7C3B",
@@ -99,14 +99,14 @@ var otherBoards = []testBoard{
 	{
 		/*
 			>>> Level: Black Hole
-			>>> Complexity: 127053, hardest so far created by me (with C++ solver)
+			>>> Complexity: 163053, hardest so far created by me (with C++ solver)
 		*/
-		name:     "my black hole 1",
+		name:     "my board 1",
 		board:    "B1A6A5B4A8B16C5E12B4E3C9F3B7B6A2C3C1A156C7A8B7E",
 		solution: "7_2_13_68_54_9_49_82_5_163_7_6_53_4_9_7_8_125_7_48_2_6_1_9_31_8_6_94_3_7_2_5_9_32_1_75_4_68_26_7_5_34_9_8_13_1568_9_2_74_84_9_71_2_3_5_6_",
 	},
 	{
-		name:     "my black hole 2",
+		name:     "my board 2",
 		board:    "I1B38A5C9B5A31A7B54B6B36C4F6C8I5C3B41A7B1683A",
 		solution: "6_5_3_1_7_9_2_8_4_14_7_382_59_6_2_98_6_54_317_72_9_548_1_63_8_367_2_1_45_9_4_1_5_9_63_7_2_83_8_1_4_9_5_6_7_2_56_2_8_37_9_419_74_2_16835_",
 	},
@@ -115,9 +115,54 @@ var otherBoards = []testBoard{
 			>>> Level: Nightmare
 			>>> Complexity: 61558
 		*/
-		name:     "my black hole 3",
+		name:     "my board 3",
 		board:    "B3A85C6B1G27C5E17A8B6B3A51F6B7A9A3A86B1C7F5C8B",
 		solution: "7_1_34_852_6_9_65_8_19_2_7_4_3_9_4_276_3_1_58_5_3_9_2_174_86_4_67_8_39_512_8_2_1_5_4_69_3_72_94_35_867_1_18_6_9_74_3_2_5_3_7_56_2_1_89_4_",
+	},
+	{
+		/*
+			>>> Level: Nightmare
+			>>> Complexity: 82744
+		*/
+		name:     "my board 4",
+		board:    "F5E7A8A9I62A7A4A6B9F71A6A3B95B2495A8F2D1C8D",
+		solution: "7_9_3_6_1_4_52_8_6_5_2_73_81_94_8_4_1_2_9_5_7_3_621_75_49_68_3_93_5_8_6_2_4_714_68_37_1_952_3_24956_81_7_5_8_6_1_27_3_4_9_17_9_4_83_2_6_5_",
+	},
+	{
+		/*
+			>>> Level: Nightmare
+			>>> Complexity: 70755
+		*/
+		name:     "my board 5",
+		board:    "B3A1B2D7A8A9E9A7D7B96J14A8D5C4A56C5B12A3B1G5",
+		solution: "7_9_36_14_5_28_6_5_2_73_81_94_8_4_1_2_95_73_6_2_1_75_4_968_3_9_3_5_8_6_2_4_7_146_83_7_1_9_52_3_2_49_568_1_7_58_6_127_34_9_17_9_4_8_3_2_6_5",
+	},
+	{
+		/*
+			>>> Level: Nightmare
+			>>> Complexity: 73470
+		*/
+		name:     "my board 6",
+		board:    "A936B5C5B381B8H2A7C6C3F14F5E5B1C6A27A49C4E",
+		solution: "7_9361_4_52_8_6_52_7_3819_4_84_1_2_9_5_7_3_6_21_75_4_9_68_3_9_35_8_6_2_4_7_146_8_3_7_1_9_52_3_2_4_9_56_8_17_5_8_61_273_491_7_9_48_3_2_6_5_",
+	},
+	{
+		/*
+			>>> Level: Nightmare
+			>>> Complexity: 70197
+		*/
+		name:     "my board 7",
+		board:    "C6A4C6C38E1A9D2B5B6C3C2B1B8A7A9H8B5F49A79C26A",
+		solution: "7_9_3_61_45_2_8_65_2_7_381_9_4_8_4_12_95_7_3_6_21_7_54_9_68_3_9_35_8_6_24_7_14_6_83_71_95_2_3_2_4_9_5_6_81_7_58_6_1_2_7_3_491_794_8_3_265_",
+	},
+	{
+		/*
+			>>> Level: Nightmare
+			>>> Complexity: 92401
+		*/
+		name:     "my board 8",
+		board:    "C6F5B3A1A4F7C1B4C3A35B2A7A4K95A8D612D17C3B5",
+		solution: "7_9_3_61_4_5_2_8_6_52_7_38_19_48_4_1_2_9_5_73_6_2_17_5_49_6_8_39_358_6_24_71_46_8_3_7_1_9_5_2_3_2_4_956_81_7_5_8_6127_3_4_9_179_4_8_32_6_5",
 	},
 	/*
 			    "B1D4C9A4A5A14C2A83B4B32A7A6B4C8A7G4A8A37B2E6A7E2A8C", // 27270

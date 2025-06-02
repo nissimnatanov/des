@@ -58,6 +58,11 @@ generationLoop:
 				stageStats.Report(0, stage)
 				break
 			}
+			if g.onNewResult != nil {
+				for _, res := range newFinal.Results() {
+					g.onNewResult(res)
+				}
+			}
 			finalCandidates.AddAll(newFinal)
 			if newFinal.Size() > 0 {
 				stageStats.Report(newFinal.Size(), stage)
@@ -134,7 +139,7 @@ func (g *Generator) generateSlowStage(
 				(stage.SelectBest == 0 && bsForked.Progress() == internal.InRangeKeepGoing) {
 				// capture if we have reached the desired level, or if we are at level but
 				// also the last stage
-				finalCandidates.Add(bs)
+				finalCandidates.Add(bsForked)
 			} else {
 				if newPerBoard == nil {
 					// first child candidate for the current one

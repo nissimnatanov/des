@@ -24,10 +24,28 @@ func TestGeneratorFast(t *testing.T) {
 				for _, res := range rs {
 					assert.Assert(t, res != nil)
 					assert.Equal(t, res.Status, solver.StatusSucceeded)
-					assert.Check(t, res.Steps.Level == level, "expected at least level %s, got %s", level, res.Steps.Level)
+					assert.Check(t, res.Steps.Level == level, "expected level %s, got %s", level, res.Steps.Level)
 				}
 			}
 		})
+	}
+}
+
+func TestGeneratorRangeWithSlowMax(t *testing.T) {
+	const loop = 10
+	ctx := t.Context()
+	for range loop {
+		min := solver.LevelHard
+		max := solver.LevelDarkEvil // evil requires slow generation
+		g := generators.New(&generators.Options{MinLevel: min, MaxLevel: max, Count: 3})
+		rs := g.Generate(ctx)
+		assert.Check(t, cmp.Len(rs, 3), "expected three results, got %d", len(rs))
+		for _, res := range rs {
+			assert.Assert(t, res != nil)
+			assert.Equal(t, res.Status, solver.StatusSucceeded)
+			assert.Check(t, res.Steps.Level >= min && res.Steps.Level <= max,
+				"expected level between %s and %s, got %s", min, max, res.Steps.Level)
+		}
 	}
 }
 
@@ -76,7 +94,7 @@ func BenchmarkDarkEvil(b *testing.B) {
 }
 
 func BenchmarkNightmareOrBlackHole(b *testing.B) {
-	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole, 1)
+	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole, 10)
 }
 
 func runBenchmark(b *testing.B, min, max solver.Level, count int) {

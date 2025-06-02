@@ -2,6 +2,7 @@ package boards
 
 import (
 	"bufio"
+	"encoding/json"
 	"strings"
 
 	"github.com/nissimnatanov/des/go/boards/indexes"
@@ -224,6 +225,10 @@ func (b *Game) String() string {
 	var sb strings.Builder
 	WriteValues(b, bufio.NewWriter(&sb))
 	return sb.String()
+}
+
+func (b *Game) MarshalJSON() ([]byte, error) {
+	return json.Marshal(Serialize(b))
 }
 
 func (b *Game) copyStats(source *Game) {
