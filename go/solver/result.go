@@ -8,13 +8,8 @@ import (
 
 type Result struct {
 	// Input is the initial input board, as provided by the caller.
-	Input  *boards.Game `json:"board,omitempty"`
-	Action Action       `json:"action,omitempty"`
-	// Play is the player's board used by the solver, it includes the progress made on the board
-	// during the solving process. If the solving process was successful, this board will be
-	// equivalent to the solution. If the solving process failed, this board will contain the
-	// progress made until the failure point.
-	Play      *boards.Game  `json:"-"`
+	Input     *boards.Game  `json:"board,omitempty"`
+	Action    Action        `json:"action,omitempty"`
 	Status    Status        `json:"status"`
 	Error     error         `json:"error,omitempty"`
 	Steps     StepStats     `json:"steps"`

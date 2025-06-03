@@ -40,10 +40,12 @@ func New(opts *Options) *Generator {
 		count:       count,
 		solProvider: solProvider,
 		onNewResult: opts.OnNewResult,
+		solver:      solver.New(),
 	}
 	return g
 }
 
+// Generator is single-threaded!
 type Generator struct {
 	r     *random.Random
 	lr    internal.LevelRange
@@ -51,6 +53,11 @@ type Generator struct {
 
 	solProvider func() *boards.Solution
 	onNewResult func(*solver.Result)
+
+	// cache the solver instances to preserve its caches and keep the memory
+	// profiling cleaner
+	solver *solver.Solver
+
 	// if set, it will be used to enhance the board
 	// enhanceBoard *boards.Game
 }
@@ -83,6 +90,7 @@ func (g *Generator) Generate(ctx context.Context) []*solver.Result {
 	state := internal.NewSolutionState(internal.SolutionStateArgs{
 		Solution: g.solProvider(),
 		Rand:     g.r,
+		Solver:   g.solver,
 	})
 	initState := state.InitialBoardState(ctx, g.lr)
 	if g.lr.Max > internal.FastGenerationCap {

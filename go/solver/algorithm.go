@@ -15,7 +15,7 @@ type AlgorithmState interface {
 	AddStep(step Step, complexity StepComplexity, count int)
 
 	// recursiveRun is used to run the algorithm recursively
-	recursiveRun(ctx context.Context, b *boards.Game) *Result
+	recursiveRun(ctx context.Context, b *boards.Game) Status
 }
 
 type Algorithm interface {
@@ -24,7 +24,7 @@ type Algorithm interface {
 }
 
 // for now hardcoded algorithms, we can allow dynamic register for the algorithms later
-func GetAlgorithms(action Action) []Algorithm {
+func getAlgorithms(action Action) []Algorithm {
 	// for now - same algos for all actions
 	switch action {
 	case ActionSolve:
@@ -38,7 +38,7 @@ func GetAlgorithms(action Action) []Algorithm {
 			identifyTriplets{},
 			&squareToRowColumnConstraints{},
 			&rowColToSquareConstraints{},
-			newTrialAndError(),
+			trialAndError{},
 		}
 	case ActionSolveFast, ActionProve:
 		return []Algorithm{
@@ -54,7 +54,7 @@ func GetAlgorithms(action Action) []Algorithm {
 			// identifyPairs{},
 			// identifyTriplets{},
 			// &rowColToSquareConstraints{},
-			newTrialAndError(),
+			trialAndError{},
 		}
 	default:
 		panic("unknown action: " + action.String())

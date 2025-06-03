@@ -5,7 +5,6 @@ import (
 	"slices"
 
 	"github.com/nissimnatanov/des/go/boards"
-	"github.com/nissimnatanov/des/go/internal/cache"
 )
 
 const trialAndErrorStepName = Step("Trial and Error")
@@ -18,25 +17,13 @@ type indexWithAllowedSize struct {
 // trialAndError is a recursive algorithm, please always run it after the
 // theOnlyChoice algo (never as standalone)
 type trialAndError struct {
-	testBoardCache *cache.Cache[*boards.Game]
-}
-
-func newTrialAndError() *trialAndError {
-	return &trialAndError{
-		testBoardCache: cache.New(cache.Args[*boards.Game]{
-			Factory: func() *boards.Game {
-				return boards.New()
-			},
-			MaxSize: 50,
-		}),
-	}
 }
 
 func (a trialAndError) String() string {
 	return string(trialAndErrorStepName)
 }
 
-func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
+func (a trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	if state.CurrentRecursionDepth() >= state.MaxRecursionDepth() {
 		return StatusUnknown
 	}
@@ -98,8 +85,7 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 	})
 
 	// create testBoard once and reuse it
-	testBoard := a.testBoardCache.Get()
-	defer a.testBoardCache.Put(testBoard)
+	testBoard := boards.New()
 
 	var disallowedAtLeastOne bool
 	for _, tei := range indexes {
@@ -127,20 +113,20 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 
 			b.CloneInto(boards.Play, testBoard)
 			testBoard.Set(index, testValue)
-			result := state.recursiveRun(ctx, testBoard)
+			resultStatus := state.recursiveRun(ctx, testBoard)
 			// recursiveRun will also report the recursion step's complexity and merge the child
 			// steps appropriately
 
-			if result.Status == StatusUnknown {
+			if resultStatus == StatusUnknown {
 				// remember that we had a value with unknown result and try the next one
 				foundUnknown = true
 				continue
 			}
-			if result.Status == StatusError {
+			if resultStatus == StatusError {
 				return StatusError
 			}
 
-			if result.Status == StatusNoSolution {
+			if resultStatus == StatusNoSolution {
 				// when settings this value, the board cannot be solved, disallow it for future use
 				b.DisallowValue(index, testValue)
 				// we just disallowed one value, let's finish this cell since we already here
@@ -151,13 +137,13 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			}
 
 			// only options available are two solutions or success
-			if result.Status == StatusMoreThanOneSolution {
+			if resultStatus == StatusMoreThanOneSolution {
 				return StatusMoreThanOneSolution
 			}
 
-			if result.Status != StatusSucceeded {
+			if resultStatus != StatusSucceeded {
 				// should never happen
-				panic("unexpected state of TrialAndError: " + result.Status.String())
+				panic("unexpected state of TrialAndError: " + resultStatus.String())
 			}
 
 			if !state.Action().ProofRequested() && !state.Action().LevelRequested() {
@@ -172,13 +158,10 @@ func (a *trialAndError) Run(ctx context.Context, state AlgorithmState) Status {
 			// cell to prove that the found solution is the only one on that cell or to reduce the
 			// 'value order bias' from the level score
 			if foundBoard != nil {
-				a.testBoardCache.Put(foundBoard)
 				return StatusMoreThanOneSolution
 			}
 
-			foundBoard = a.testBoardCache.Get()
-			defer a.testBoardCache.Put(foundBoard)
-			testBoard.CloneInto(boards.Immutable, foundBoard)
+			foundBoard = testBoard.Clone(boards.Immutable)
 		}
 		// found boards can be either empty or have one board in it, we just checked above for >1
 		if foundBoard != nil {

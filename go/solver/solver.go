@@ -24,56 +24,66 @@ const maxRecursionDepthLimit = 127
 
 // Each Solver can be used on a single thread only.
 type Solver struct {
-	opts       Options
-	algorithms []Algorithm
+	solveAlgorithms     []Algorithm
+	proveAlgorithms     []Algorithm
+	fastSolveAlgorithms []Algorithm
 }
 
-func New(opts *Options) *Solver {
-	if opts == nil {
-		opts = &Options{}
-	}
-	algorithms := GetAlgorithms(opts.Action)
-
+func New() *Solver {
 	return &Solver{
-		opts:       *opts,
-		algorithms: algorithms,
+		solveAlgorithms:     getAlgorithms(ActionSolve),
+		proveAlgorithms:     getAlgorithms(ActionProve),
+		fastSolveAlgorithms: getAlgorithms(ActionSolveFast),
 	}
 }
 
-func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
+func (s *Solver) Run(ctx context.Context, b *boards.Game, action Action) *Result {
 	if b == nil {
 		panic("solver.Run called with nil board")
 	}
 
-	if s.opts.Action == ActionSolve {
+	if action == ActionSolve {
 		// ActionSolve uses layered recursion to calculate the level,
 		// if the board has more than one solution Solve can take
 		// really long time to run. Hence, we do not allow level calculation
 		// on an unproven board.
-		proveOpts := s.opts
-		proveOpts.Action = ActionProve
-		res := New(&proveOpts).Run(ctx, b)
+		res := s.Run(ctx, b, ActionProve)
 		if res.Status != StatusSucceeded {
-			res.Action = ActionSolve
 			return res
 		}
 	}
 
-	r := &runner{
-		currentRecursionDepth: 0,
-		result: Result{
-			Status: StatusUnknown,
-			// capture the original board AS IS, solver does not modify the Input
-			Input:  b,
-			Action: s.opts.Action,
-			// before we modify the input board, we must clone it into Play mode
-			Play: b.Clone(boards.Play),
+	var algorithms []Algorithm
+	switch action {
+	case ActionSolve:
+		algorithms = s.solveAlgorithms
+	case ActionSolveFast:
+		algorithms = s.fastSolveAlgorithms
+	case ActionProve:
+		algorithms = s.proveAlgorithms
+	default:
+		panic(fmt.Sprintf("unknown action: %s", action))
+	}
 
+	// before we modify the input board, we must clone it into Play mode
+	play := b.Clone(boards.Play)
+
+	r := &runner{
+		play:                  play,
+		parent:                s,
+		algorithms:            algorithms,
+		currentRecursionDepth: 0,
+		// without recursion it is virtually impossible to solve many boards,
+		// zero is not a valid value
+		// note: recursion with this package is almost 'allocation-free', and it is fast
+		maxRecursionDepth: maxRecursionDepthLimit,
+		result: &Result{
+			Action: action,
+			Input:  b,
 			// solutions are shared so that we can deduplicate them and
 			// stop once two solutions are found
 			Solutions: &Solutions{},
 		},
-		algorithms: s.algorithms,
 	}
 
 	start := time.Now()
@@ -113,16 +123,6 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
 		return r.result.complete(StatusTwoOrMoreValuesMissing)
 	}
 
-	if s.opts.MaxRecursionDepth > maxRecursionDepthLimit ||
-		s.opts.MaxRecursionDepth <= 0 {
-		// without recursion it is virtually impossible to solve many boards,
-		// zero is not a valid value
-		// note: recursion with this package is almost 'allocation-free', and it is fast
-		r.maxRecursionDepth = maxRecursionDepthLimit
-	} else {
-		r.maxRecursionDepth = int8(s.opts.MaxRecursionDepth)
-	}
-
 	// must run inside nested func to catch panic from run only
 	// and guarantee result ref is returned
 	func() {
@@ -147,20 +147,21 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game) *Result {
 		// if we got two solutions yet proof was requested, we must guarantee a different status
 		r.result.complete(StatusMoreThanOneSolution)
 	}
-	logResult(&r.result)
+	logResult(r.result)
 
 	// if run panics, we want to return both the error and the partial result
-	return &r.result
+	return r.result
 }
 
 type runner struct {
+	play   *boards.Game // the board to be solved, in Play mode
+	parent *Solver
+
 	currentRecursionDepth int8
 	maxRecursionDepth     int8
-	result                Result
+	result                *Result
 
-	// to reduce calls into alloc, cache nested runner to speed up its access
-	nestedCache *runner
-	algorithms  []Algorithm
+	algorithms []Algorithm
 }
 
 func (r *runner) start(ctx context.Context) {
@@ -299,7 +300,7 @@ func (r *runner) Action() Action {
 }
 
 func (r *runner) Board() *boards.Game {
-	return r.result.Play
+	return r.play
 }
 func (r *runner) CurrentRecursionDepth() int {
 	return int(r.currentRecursionDepth)
@@ -311,7 +312,7 @@ func (r *runner) AddStep(step Step, complexity StepComplexity, count int) {
 	r.result.Steps.AddStep(step, complexity, count)
 }
 
-func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) *Result {
+func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) Status {
 	result := r.recursiveRunNested(ctx, b)
 	// merge the sub-steps into the parent result
 
@@ -321,7 +322,7 @@ func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) *Result {
 		// for efficiency, hence it does not matter how deep we are
 		result.Steps.AddStep(trialAndErrorStepName, StepComplexityRecursion1, 1)
 		r.result.Steps.Merge(&result.Steps)
-		return result
+		return result.Status
 	}
 
 	// Solve uses layered recursion to calculate the level, starting from maxRecursionDepth of 1
@@ -359,33 +360,22 @@ func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) *Result {
 	}
 	result.Steps.AddStep(trialAndErrorStepName, complexity, 1)
 	r.result.Steps.Merge(&result.Steps)
-	return result
+	return result.Status
 }
 
 func (r *runner) recursiveRunNested(ctx context.Context, b *boards.Game) *Result {
-	nested := r.nestedCache
-	if nested == nil {
-		nested = &runner{
-			currentRecursionDepth: r.currentRecursionDepth + 1,
-			maxRecursionDepth:     r.maxRecursionDepth,
-			algorithms:            r.algorithms,
-
-			// result includes ref to the shared solutions
-			result: Result{
-				Action:    r.Action(),
-				Play:      b,
-				Status:    StatusUnknown,
-				Solutions: r.result.Solutions,
-			},
-		}
-		r.nestedCache = nested
-	} else {
-		// we just need to set the board and reset the result's status
-		nested.maxRecursionDepth = r.maxRecursionDepth
-		nested.result.Play = b
-		nested.result.Status = StatusUnknown
-		nested.result.Error = nil
-		nested.result.Steps.reset()
+	nested := &runner{
+		play:                  b,
+		parent:                r.parent,
+		algorithms:            r.algorithms,
+		currentRecursionDepth: r.currentRecursionDepth + 1,
+		maxRecursionDepth:     r.maxRecursionDepth,
+		result: &Result{
+			Action: r.Action(),
+			// solutions are shared, do to clone them
+			Solutions: r.result.Solutions,
+			// input board is not needed, it is set below only if integrity checks are enabled
+		},
 	}
 
 	if ctx.Err() != nil {
@@ -398,12 +388,12 @@ func (r *runner) recursiveRunNested(ctx context.Context, b *boards.Game) *Result
 	}
 
 	if boards.GetIntegrityChecks() {
-		// we only need input board for recursive runs if the integrity checks are enabled,
+		// we only need input board for recursive runs if the integrity checks are enabled
 		nested.result.Input = b.Clone(boards.Immutable)
 	}
 
 	nested.run(ctx)
-	return &nested.result
+	return nested.result
 }
 
 // inputOrActiveBoard can be used for troubleshooting or logging abnormal cases

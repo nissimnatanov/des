@@ -14,14 +14,12 @@ type SolutionState struct {
 	solution *boards.Solution
 	rand     *random.Random
 	solver   *solver.Solver
-	prover   *solver.Solver
 }
 
 type SolutionStateArgs struct {
 	Solution *boards.Solution
 	Rand     *random.Random
 	Solver   *solver.Solver
-	Prover   *solver.Solver
 }
 
 func NewSolutionState(args SolutionStateArgs) *SolutionState {
@@ -32,25 +30,22 @@ func NewSolutionState(args SolutionStateArgs) *SolutionState {
 		panic("solution must be provided")
 	}
 	if args.Solver == nil {
-		args.Solver = solver.New(&solver.Options{Action: solver.ActionSolve})
-	}
-	if args.Prover == nil {
-		args.Prover = solver.New(&solver.Options{Action: solver.ActionProve})
+		args.Solver = solver.New()
 	}
 
 	return &SolutionState{
 		solver:   args.Solver,
-		prover:   args.Prover,
 		solution: args.Solution,
 		rand:     args.Rand,
 	}
 }
 
+/*
 func NewEnhanceBoardState(ctx context.Context, minLevel, maxLevel solver.Level, r *random.Random, board *boards.Game) (*SolutionState, *BoardState) {
 	args := SolutionStateArgs{
 		Rand:   r,
-		Solver: solver.New(&solver.Options{Action: solver.ActionSolve}),
-		Prover: solver.New(&solver.Options{Action: solver.ActionProve}),
+		Solver: solver.New(solver.ActionSolve),
+		Prover: solver.New(solver.ActionProve),
 	}
 	res := args.Prover.Run(ctx, board)
 	if res.Status != solver.StatusSucceeded {
@@ -66,6 +61,7 @@ func NewEnhanceBoardState(ctx context.Context, minLevel, maxLevel solver.Level, 
 	bs, _ := newBoardState(ctx, s, lr, board)
 	return s, bs
 }
+*/
 
 func (s *SolutionState) InitialBoardState(ctx context.Context, levelRange LevelRange) *BoardState {
 	return newSolutionBoardState(ctx, s, levelRange, s.solution)

@@ -11,7 +11,6 @@ const (
 	// run too long on a board that has too many solutions, entering very
 	// deep recursion.
 	ActionSolve
-	// ActionHint
 )
 
 func (a Action) String() string {

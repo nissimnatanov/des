@@ -38,17 +38,14 @@ func testSanity(t *testing.T, action solver.Action, testBoards ...testBoard) {
 	boards.SetIntegrityChecks(true)
 
 	ctx := t.Context()
+	s := solver.New()
 	for _, sample := range testBoards {
 		t.Run(sample.name, func(t *testing.T) {
 			b, err := boards.Deserialize(sample.board)
 			assert.NilError(t, err)
 
-			s := solver.New(&solver.Options{
-				Action: action,
-			})
-
 			// Solve the board
-			res := s.Run(ctx, b)
+			res := s.Run(ctx, b, action)
 			assert.NilError(t, res.Error)
 
 			expected := solver.StatusSucceeded
@@ -172,20 +169,16 @@ func testSanity(t *testing.T, action solver.Action, testBoards ...testBoard) {
 // Bitset improvements:
 // - first only		529	   2130160 ns/op	   26082 B/op	      72 allocs/op
 // - all			322	   3593113 ns/op	   77953 B/op	     237 allocs/op
-// Improve the only choice in sequence and trial-and-error:
-// - first only		727	   1604511 ns/op	    4027 B/op	      31 allocs/op
-// - all			428	   2713680 ns/op	   13934 B/op	     107 allocs/op
+// Improve the only choice in sequence and trial-and-error, remove object cache:
+// - first only		649	   1689756 ns/op	  293009 B/op	    1109 allocs/op
+// - all			416	   2803281 ns/op	  440462 B/op	    1683 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
-	benchRun(b, &solver.Options{
-		Action: solver.ActionProve,
-	}, 1)
+	benchRun(b, solver.ActionProve, 1)
 }
 
 func BenchmarkProveAll(b *testing.B) {
-	benchRun(b, &solver.Options{
-		Action: solver.ActionProve,
-	}, len(benchBoards))
+	benchRun(b, solver.ActionProve, len(benchBoards))
 }
 
 // start: with hint01 and bitset improvements:
@@ -218,37 +211,29 @@ func BenchmarkProveAll(b *testing.B) {
 // Always Prove on Solve to avoid deep recursion on boards with many solutions:
 // - first only		80	  14702170 ns/op	   25258 B/op	      74 allocs/op
 // - all			19	  58728298 ns/op	   76536 B/op	     250 allocs/op
-// Improve the only choice in sequence and trial-and-error:
-// - first only		103	  11330074 ns/op	   13963 B/op	      60 allocs/op
-// - all			25	  44282987 ns/op	   44591 B/op	     207 allocs/op
-// - fast first		1480  813083 ns/op	        3860 B/op	      26 allocs/op
-// - fast all		861	  1375158 ns/op	  	   13368 B/op	      89 allocs/op
+// Improve the only choice in sequence and trial-and-error, remove object cache:
+// - first only		103	  11445505 ns/op	  542710 B/op	    4076 allocs/op
+// - all			26	  45047901 ns/op	 1389972 B/op	   12756 allocs/op
+// - fast first		1384	861829 ns/op	  146616 B/op	     560 allocs/op
+// - fast all		818	   1429418 ns/op	  219543 B/op	     854 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
-	benchRun(b, &solver.Options{
-		Action: solver.ActionSolve,
-	}, 1)
+	benchRun(b, solver.ActionSolve, 1)
 }
 
 func BenchmarkSolveAll(b *testing.B) {
-	benchRun(b, &solver.Options{
-		Action: solver.ActionSolve,
-	}, len(benchBoards))
+	benchRun(b, solver.ActionSolve, len(benchBoards))
 }
 
 func BenchmarkSolveFastFirstOnly(b *testing.B) {
-	benchRun(b, &solver.Options{
-		Action: solver.ActionSolveFast,
-	}, 1)
+	benchRun(b, solver.ActionSolveFast, 1)
 }
 
 func BenchmarkSolveFastAll(b *testing.B) {
-	benchRun(b, &solver.Options{
-		Action: solver.ActionSolveFast,
-	}, len(benchBoards))
+	benchRun(b, solver.ActionSolveFast, len(benchBoards))
 }
 
-func benchRun(b *testing.B, opts *solver.Options, numBoards int) {
+func benchRun(b *testing.B, action solver.Action, numBoards int) {
 	prev := solver.DisableNLog(true) // disable logging in benchmarks
 	defer solver.DisableNLog(prev)
 
@@ -266,14 +251,14 @@ func benchRun(b *testing.B, opts *solver.Options, numBoards int) {
 	}
 
 	// Create a new solver
-	s := solver.New(opts)
+	s := solver.New()
 
 	for b.Loop() {
 		for _, bd := range parsed {
-			res := s.Run(ctx, bd.Clone(boards.Play))
+			res := s.Run(ctx, bd.Clone(boards.Play), action)
 			assert.NilError(b, res.Error)
 			assert.Equal(b, res.Status, solver.StatusSucceeded)
-			if opts.Action.LevelRequested() {
+			if action.LevelRequested() {
 				assert.Assert(b, res.Steps.Level >= solver.LevelDarkEvil)
 			}
 			assert.Equal(b, res.Solutions.Size(), 1)

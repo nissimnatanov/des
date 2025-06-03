@@ -83,10 +83,10 @@ func BenchmarkHardOrVeryHard(b *testing.B) {
 // * 1	12233012125 ns/op	1107809424 B/op	 7944966 allocs/op
 // * Generations: 200, ~Elapsed: 122.328782ms, ~Retries: 1.230,
 //   Stages: [{200 0 0} {200 6 0} {194 36 0} {158 158 0}]
-// Improve the only choice in sequence and trial-and-error:
-// * 1	13336058416 ns/op	3186469904 B/op	15343577 allocs/op
-// * Generations: 200, ~Elapsed: 133.359486ms, ~Retries: 1.600,
-//   Stages: [{210 0 0} {210 8 0} {202 26 0} {176 176 0}]
+// Improve the only choice in sequence and trial-and-error, remove object cache:
+// * 1	13000732166 ns/op	3166094672 B/op	16387331 allocs/op
+// * Generations: 204, ~Elapsed: 127.456325ms, ~Retries: 1.569,
+//   Stages: [{226 0 0} {226 20 0} {206 28 0} {178 178 0}]
 
 func BenchmarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelEvil, solver.LevelEvil, 100)

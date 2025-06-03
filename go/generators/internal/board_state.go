@@ -30,12 +30,11 @@ func newBoardState(
 	ctx context.Context, state *SolutionState, levelRange LevelRange, srcBoard *boards.Game,
 ) (*BoardState, *solver.Result) {
 	// we could prob create fake result for solutions, but it does not matter much
-	res := state.solver.Run(ctx, srcBoard)
+	res := state.solver.Run(ctx, srcBoard, solver.ActionSolve)
 	if res.Status != solver.StatusSucceeded {
 		return nil, res
 	}
 	// preserve the clone as Edit board instead of the original board
-	// TODO: maybe reset and reuse the play-board since it is no longer needed
 	editBoard := res.Input.Clone(boards.Edit)
 	res.Input = editBoard
 	progress := levelRange.shouldContinue(state.rand, editBoard, res)
@@ -55,7 +54,7 @@ func newSolutionBoardState(
 ) *BoardState {
 	// we could prob create fake result for solutions, but it does not matter much
 	editBoard := sol.Clone(boards.Edit)
-	res := state.solver.Run(ctx, editBoard)
+	res := state.solver.Run(ctx, editBoard, solver.ActionSolve)
 	if res.Status != solver.StatusSucceeded {
 		panic("failed to solve a solution")
 	}
@@ -302,7 +301,7 @@ func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int)
 	}
 
 	if boards.GetIntegrityChecks() {
-		res := bs.state.prover.Run(ctx, bs.board())
+		res := bs.state.solver.Run(ctx, bs.board(), solver.ActionProve)
 		if res.Status != solver.StatusSucceeded {
 			panic("do not use invalid boards as an input here")
 		}

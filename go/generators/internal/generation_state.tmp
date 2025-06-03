@@ -1,0 +1,476 @@
+
+
+/*
+type phase struct {
+	freeCount            int
+	minComplexity        solver.StepComplexity
+	enforceMinComplexity bool
+	generateCount        int
+	selectCount          int
+	restore              bool
+	merge                bool
+}
+
+// TODO: turn off
+const debugPrint = true
+
+var phases = []phase{
+	// freeCount, minComplexity, enforceMinComplexity, generateCount, selectCount, restore, merge
+	{40, 100, true, 1000, 5, true, true},
+	{42, 220, true, 20, 5, true, false},
+	{44, 450, true, 30, 5, true, false},
+	{46, 700, true, 40, 5, true, false},
+	{48, 1000, true, 50, 5, true, false},
+	{50, 1300, true, 60, 5, true, false},
+	{53, 1700, true, 70, 5, true, false},
+	{53, 1700, true, 80, 5, true, false},
+	{56, 2000, true, 90, 5, true, false},
+	{56, 2000, true, 100, 5, true, false},
+	// Stop restoration
+	{56, 2000, true, 100, 5, false, false},
+}
+
+func (g *Generator) generateSlow(ctx context.Context, initialState *internal.BoardState) *solver.Result {
+	var current []*internal.BoardState
+	for phi, phase := range phases {
+		if phi == 0 {
+			current = g.generatePhase0Batch(ctx, initialState, phase)
+		} else {
+			current = g.generatePhaseNBatch(ctx, current, phase)
+			if phase.enforceMinComplexity &&
+				(phase.minComplexity > current[0].Complexity(ctx)) {
+				// TODO: if debugPrint {
+				//	printBest(phi, "failed", phase.minComplexity, current)
+				//	println("----")
+				//}
+				// do not bother if requirements were not met.
+				return current[0].Solve(ctx)
+			}
+		}
+		// TODO: printBest(phi, "base", phase.minComplexity, current)
+		if phase.restore {
+			g.restore(ctx, current, phase.minComplexity)
+			// TODO: printBest(phi, "restored", phase.minComplexity, current)
+		}
+
+		if phase.merge {
+			var mergedAtLeastOne bool
+			current, mergedAtLeastOne := g.addMergedBoards(ctx, current)
+			// TODO: printBest(phi, "merged(before sort)", phase.minComplexity, current);
+			if mergedAtLeastOne {
+				current = g.sortByComplexityAndTrim(ctx, current, phase.selectCount, phase.minComplexity)
+				// TODO: printBest(phi, "merged", phase.minComplexity, current);
+				if phase.restore {
+					g.restore(ctx, current, phase.minComplexity)
+					// TODO: printBest(phi, "merged/restored", phase.minComplexity, current);
+				}
+			}
+		}
+	}
+
+	{
+		var last []*internal.BoardState
+		for _, bLast := range current {
+			last = g.findAllPossibleBoards(ctx, bLast, last, 1)
+		}
+		last = g.sortByComplexityAndTrim(ctx, last, 3, 0)
+		current = last
+	}
+	// TODO: printBest(phase_count, "last", 0, current)
+	for _, bs := range current {
+		res := bs.Solve(ctx)
+		if res.Steps.Level < solver.LevelDarkEvil {
+			// current is sorted by level, no point in continuing
+			break
+		}
+		if debugPrint {
+			boardSerialized := boards.Serialize(res.Input)
+			fmt.Printf("Level: %s, Complexity: %d, Board: %s\n",
+				res.Steps.Level, res.Steps.Complexity, boardSerialized)
+			// TODO: do we need generation chain here?
+		}
+	}
+	return current[0].Solve(ctx)
+}
+
+func (g *Generator) findAllPossibleBoards(
+	ctx context.Context, source *internal.BoardState,
+	best []*internal.BoardState, depth int,
+) []*internal.BoardState {
+	mustStayIndexes := make([]int, 0)
+	type candidate struct {
+		bs    *internal.BoardState
+		index int
+	}
+	var candidates []candidate
+
+	for _, index := range source.RemainedIndexes() {
+		state := source.Clone()
+		if state.TryRemoveFromIndex(ctx, index) {
+			candidates = append(candidates, candidate{state, index})
+		} else {
+			mustStayIndexes = append(mustStayIndexes, index)
+		}
+	}
+
+	if len(candidates) == 0 {
+		// Leaf board - stop now.
+		best = append(best, source)
+		return best
+	}
+
+	maxCandidates := getMaxCandidateSize(depth)
+
+	if len(candidates) > maxCandidates {
+		// recursion depth will explode, limit it.
+		internal.RandShuffle(g.r, candidates)
+		candidates = candidates[:maxCandidates]
+	}
+
+	// We have left with states with valid boards, try to fine tune one-by-one only those boards, removing
+	// indexes previously found as "must stay".
+	for _, candidate := range candidates {
+		for _, index := range mustStayIndexes {
+			candidate.bs.RemoveIndex(index)
+		}
+
+		// recursively find more boards.
+		best = g.findAllPossibleBoards(ctx, candidate.bs, best, depth+1)
+		mustStayIndexes = append(mustStayIndexes, candidate.index)
+	}
+	// once in a while, get rid of duplicates
+	if depth%3 == 0 {
+		best = g.sortByComplexityAndTrim(ctx, best, len(best), 0)
+	}
+	return best
+}
+
+func (g *Generator) restore(ctx context.Context, best []*internal.BoardState, minComplexity solver.StepComplexity) {
+	for i, bs := range best {
+		bs = bs.Clone()
+		bs.RestoreSimpleValues(ctx, minComplexity)
+		best[i] = bs
+	}
+}
+
+func (g *Generator) sortByComplexityAndTrim(ctx context.Context, states []*internal.BoardState, trimTo int, minComplexity solver.StepComplexity) []*internal.BoardState {
+	slices.SortFunc(states, func(state1, state2 *internal.BoardState) int {
+		c1 := state1.Complexity(ctx)
+		c2 := state2.Complexity(ctx)
+		return int(c2 - c1) // sort descending
+	})
+	// get rid of duplicates
+	{
+		uniqueStates := make([]*internal.BoardState, 0, len(states))
+		var compareTo []*internal.BoardState
+		for _, state := range states {
+			if len(compareTo) == 0 || state.Complexity(ctx) != compareTo[0].Complexity(ctx) {
+				// states are sorted by complexity, so if we have a new complexity, we can reset the whole compareTo
+				compareTo = compareTo[:0]
+				compareTo = append(compareTo, state)
+				uniqueStates = append(uniqueStates, state)
+				continue
+			}
+
+			// check if we have a dupe
+			var foundDupe bool
+			for _, ctState := range compareTo {
+				if state.BoardEquivalentTo(ctState) {
+					foundDupe = true
+					break
+				}
+			}
+			if foundDupe {
+				// skip this state, it is a duplicate
+				continue
+			}
+			// not a dupe, add to compareTo and uniqueStates
+			compareTo = append(compareTo, state)
+			uniqueStates = append(uniqueStates, state)
+		}
+		states = uniqueStates
+	}
+
+	trimTo = min(trimTo, len(states))
+	for trimTo > 1 &&
+		minComplexity > states[trimTo-1].Complexity(ctx) {
+		trimTo--
+	}
+	states = states[:trimTo]
+	return states
+}
+
+func (g *Generator) addMergedBoards(
+	ctx context.Context, states []*internal.BoardState) ([]*internal.BoardState, bool) {
+	// merge boards with the same complexity
+	mergedAtLeastOne := false
+	// capture size before adding new ones.
+	originalSize := len(states)
+	for i := 0; (i + 1) < originalSize; i++ {
+		for j := i + 1; j < originalSize; j++ {
+			mergedState := internal.TryMergeBoardStates(ctx, states[i], states[j])
+			if mergedState != nil {
+				// we have a new state, add it to the list
+				states = append(states, mergedState)
+				mergedAtLeastOne = true
+			}
+		}
+	}
+
+	return states, mergedAtLeastOne
+}
+
+func getMaxCandidateSize(depth int) int {
+	// 5 * 5 * 5 * 4 * 3 * 2 = 3,000
+	if depth < 4 {
+		return 5
+	}
+	if depth < 7 {
+		return 8 - depth
+	}
+
+	return 1
+}
+
+func (g *Generator) getBestWithRetries(ctx context.Context,
+	best []*internal.BoardState, start *internal.BoardState, count int,
+	args internal.RemoveWithRetriesArgs) []*internal.BoardState {
+	// ensure start has a valid last result
+	start.Solve(ctx)
+
+	newAdded := 0
+	betterFound := false
+
+	for newAdded < count {
+		state := start.Clone()
+		progress := state.RemoveWithRetries(ctx, args)
+		if progress.KeepGoing() || progress == internal.AtLevelStop {
+			break
+		}
+
+		newAdded++
+		best = append(best, state)
+		betterFound = betterFound || state.Complexity(ctx) > start.Complexity(ctx)
+	}
+
+	if !betterFound {
+		best = append(best, start.Clone())
+	}
+
+	return best
+
+}
+
+func (g *Generator) generatePhase0Batch(
+	ctx context.Context,
+	start *internal.BoardState,
+	phase phase) []*internal.BoardState {
+	best := make([]*internal.BoardState, 0, phase.generateCount)
+	done := false
+	count := 0
+	for !done {
+		state := g.removePhase0(ctx, start, phase.freeCount)
+		best = append(best, state)
+		count++
+		if count < phase.generateCount {
+			done = false
+		} else {
+			best = g.sortByComplexityAndTrim(ctx, best, phase.selectCount, phase.minComplexity)
+			if len(best) == 0 {
+				done = false
+			} else {
+				done = !phase.enforceMinComplexity ||
+					phase.minComplexity <= best[0].Complexity(ctx)
+			}
+		}
+	}
+	return best
+}
+
+func (g *Generator) removePhase0(ctx context.Context, start *internal.BoardState, freeCount int) *internal.BoardState {
+	for {
+		state := start.Clone()
+		// Tests show that the fastest and the most efficient way to remove the first batch appears to be
+		// a [2/3] combination.
+		progress := state.RemoveWithRetries(ctx, internal.RemoveWithRetriesArgs{
+			FreeAtLeast: freeCount - 2,
+			MinToRemove: 2,
+			MaxToRemove: 3,
+			MaxRetries:  15,
+		})
+		if progress.KeepGoing() {
+			progress = state.RemoveWithRetries(ctx, internal.RemoveWithRetriesArgs{
+				FreeAtLeast: freeCount,
+				MinToRemove: 1,
+				MaxToRemove: 1,
+				MaxRetries:  15,
+			})
+		}
+		if progress.KeepGoing() || progress == internal.AtLevelStop {
+			// done with phase 0
+			return state
+		}
+	}
+}
+
+func (g *Generator) generatePhaseNBatch(
+	ctx context.Context,
+	sources []*internal.BoardState,
+	phase phase) []*internal.BoardState {
+	next := make([]*internal.BoardState, 0, phase.generateCount)
+	for _, bs := range sources {
+		maxRetries := min(30, bs.RemainedIndexesSize())
+		bs.Clone()
+		minToRemove := 1
+		maxToRemove := 2
+		if bs.RemainedIndexesSize() > 44 {
+			minToRemove++
+			maxToRemove++
+		}
+		next = g.getBestWithRetries(
+			ctx, next, bs,
+			phase.generateCount, internal.RemoveWithRetriesArgs{
+				FreeAtLeast: phase.freeCount,
+				MinToRemove: minToRemove,
+				MaxToRemove: maxToRemove,
+				MaxRetries:  maxRetries,
+			})
+	}
+	next = g.sortByComplexityAndTrim(ctx, next, phase.selectCount, phase.minComplexity)
+	return next
+}
+*/
+
+/*
+		indexes := newIndexManager()
+		// Mark all cells as read-only and update index manager
+		for index := range boards.Size {
+			v := board.Get(index)
+			if v == 0 {
+				indexes.RemoveIndex(index)
+			} else {
+				board.SetReadOnly(index, v)
+			}
+		}
+
+type GenerationState struct {
+	indexManager *indexManager
+}
+
+func (gs *GenerationState) RemainedIndexes() []int {
+	return gs.indexManager.Remained()
+}
+
+func (gs *GenerationState) RemainedIndexesSize() int {
+	return gs.indexManager.RemainedSize()
+}
+
+func (gs *GenerationState) RemoveIndex(index int) {
+	gs.indexManager.RemoveIndex(index)
+}
+
+func (bs *BoardState) tryProve(ctx context.Context) bool {
+	if bs.proven {
+		panic("Do not prove twice on the same State (even after clone)!")
+	}
+
+	res := bs.state.prover.Run(ctx, bs.board)
+	bs.proven = res.Status == solver.StatusSucceeded
+	return bs.proven
+}
+
+func (bs *BoardState) TryRemoveFromIndex(ctx context.Context, index int) bool {
+	bs.indexManager.PrioritizeIndex(index)
+	progress := bs.tryRemoveBatch(ctx, 1)
+	return progress.KeepGoing() || progress == AtLevelStop
+}
+
+
+func (bs *BoardState) tryRemoveOne(ctx context.Context) Progress {
+	defer bs.checkIntegrity()
+
+	for bs.indexManager.RemainedSize() > 0 {
+		progress := bs.tryRemoveBatch(ctx, 1)
+		if progress != Failed {
+			return progress
+		}
+		// if batch has only one index and it fails, it is removed from remained list.
+	}
+
+	return Failed
+}
+
+func (bs *BoardState) Clone() *BoardState {
+	// shallow clone first
+	newState := *bs
+	newState.board = newState.board.Clone(boards.Edit)
+	newState.indexManager = newState.indexManager.clone()
+	newState.checkIntegrity()
+	return &newState
+}
+
+func (bs *BoardState) RestoreSimpleValues(ctx context.Context, minComplexity solver.StepComplexity) {
+	if !bs.proven {
+		panic("do not call RestoreSimpleValues without proving")
+	}
+
+	bs.indexManager.shuffleRemoved(bs.state.rand)
+
+	lastResult := bs.solveInternal(ctx)
+
+	for _, index := range bs.indexManager.Removed() {
+		if !bs.board.IsEmpty(index) {
+			// ignore cells with value, their indexes were marked as 'removed' because removing them leads to
+			// unsolvable board.
+			continue
+		}
+		bs.board.SetReadOnly(index, bs.state.solution.Get(index))
+		result := bs.solveInternal(ctx)
+		// TODO: review the 5 here
+		if result.Steps.Complexity < minComplexity ||
+			(lastResult.Steps.Complexity-result.Steps.Complexity) > 5 {
+			// Not a good choice for restoration - remove it
+			bs.board.Set(index, 0)
+		} else {
+			bs.indexManager.RestoreRemoved(index)
+			lastResult = result
+		}
+	}
+	bs.checkIntegrity()
+	bs.cachedSolve = lastResult
+	bs.cachedProgress = bs.shouldContinue(ctx)
+}
+
+
+func (bs *BoardState) mergeWith(other *BoardState) {
+	bs.proven = false
+	for index := range boards.Size {
+		currentValue := bs.board.Get(index)
+		if currentValue == 0 {
+			continue
+		}
+
+		otherValue := other.board.Get(index)
+		if otherValue != 0 && otherValue != currentValue {
+			panic("Values of current board do not match the values of merged one.")
+		}
+
+		if otherValue == 0 {
+			if bs.indexManager.TryRemoveIndex(index) {
+				bs.board.Set(index, 0)
+			}
+		}
+	}
+}
+
+func TryMergeBoardStates(ctx context.Context, state1, state2 *BoardState) *BoardState {
+	merge := state1.Clone()
+	merge.mergeWith(state2)
+	if merge.tryProve(ctx) {
+		// if we can prove the merged board, return it
+		return merge
+	}
+	// do not return invalid boards
+	return nil
+}
+*/
