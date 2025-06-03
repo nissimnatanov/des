@@ -16,8 +16,6 @@ type testBoard struct {
 var benchBoards = []testBoard{
 	{
 		/*
-			>>> Level: Black Hole
-			>>> Complexity: 200038
 			╔═══════╦═══════╦═══════╗
 			║ 6 0.0.║ 0.0.8 ║ 9 4 0.║
 			║ 9 0.0.║ 0.0.6 ║ 1 0.0.║
@@ -39,15 +37,11 @@ var benchBoards = []testBoard{
 		expectedComplexity: 200038,
 	},
 	{
-		/*
-			>>> Level: Black Hole
-			>>> Complexity: 139418
-		*/
 		name:               "al escargot",
 		board:              "1D7A9B3B2C8B96B5D53B9C1B8C26D4C3F1B4F7B7C3B",
 		solution:           "16_2_8_5_74_93_5_34_1_29_6_7_87_8_964_3_52_1_4_7_531_2_98_6_9_13_5_86_7_4_262_8_7_9_41_3_5_35_6_4_7_8_2_19_2_41_9_3_5_8_6_78_9_72_6_1_35_4_",
 		expectedLevel:      solver.LevelBlackHole,
-		expectedComplexity: 139418,
+		expectedComplexity: 139168,
 	},
 	{
 		name:     "Arto Inkala",
@@ -104,10 +98,7 @@ var otherBoards = []testBoard{
 		expectedComplexity: 41428,
 	},
 	{
-		/*
-			>>> Level: Black Hole
-			>>> Complexity: 163053, hardest so far created by me (with C++ solver)
-		*/
+		// hardest so far created by me (with C++ solver)
 		name:               "my board 1",
 		board:              "B1A6A5B4A8B16C5E12B4E3C9F3B7B6A2C3C1A156C7A8B7E",
 		solution:           "7_2_13_68_54_9_49_82_5_163_7_6_53_4_9_7_8_125_7_48_2_6_1_9_31_8_6_94_3_7_2_5_9_32_1_75_4_68_26_7_5_34_9_8_13_1568_9_2_74_84_9_71_2_3_5_6_",
@@ -120,21 +111,13 @@ var otherBoards = []testBoard{
 		solution: "6_5_3_1_7_9_2_8_4_14_7_382_59_6_2_98_6_54_317_72_9_548_1_63_8_367_2_1_45_9_4_1_5_9_63_7_2_83_8_1_4_9_5_6_7_2_56_2_8_37_9_419_74_2_16835_",
 	},
 	{
-		/*
-			>>> Level: Black Hole
-			>>> Complexity: 151558
-		*/
 		name:               "my board 3",
 		board:              "B3A85C6B1G27C5E17A8B6B3A51F6B7A9A3A86B1C7F5C8B",
 		solution:           "7_1_34_852_6_9_65_8_19_2_7_4_3_9_4_276_3_1_58_5_3_9_2_174_86_4_67_8_39_512_8_2_1_5_4_69_3_72_94_35_867_1_18_6_9_74_3_2_5_3_7_56_2_1_89_4_",
 		expectedLevel:      solver.LevelBlackHole,
-		expectedComplexity: 151558,
+		expectedComplexity: 151408,
 	},
 	{
-		/*
-			>>> Level: Nightmare
-			>>> Complexity: 82744
-		*/
 		name:               "my board 4",
 		board:              "F5E7A8A9I62A7A4A6B9F71A6A3B95B2495A8F2D1C8D",
 		solution:           "7_9_3_6_1_4_52_8_6_5_2_73_81_94_8_4_1_2_9_5_7_3_621_75_49_68_3_93_5_8_6_2_4_714_68_37_1_952_3_24956_81_7_5_8_6_1_27_3_4_9_17_9_4_83_2_6_5_",

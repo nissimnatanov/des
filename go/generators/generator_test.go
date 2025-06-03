@@ -87,6 +87,10 @@ func BenchmarkHardOrVeryHard(b *testing.B) {
 // * 1	13000732166 ns/op	3166094672 B/op	16387331 allocs/op
 // * Generations: 204, ~Elapsed: 127.456325ms, ~Retries: 1.569,
 //   Stages: [{226 0 0} {226 20 0} {206 28 0} {178 178 0}]
+// Improve the constraint algorithms:
+// * 1	10674286042 ns/op	2678858688 B/op	13787793 allocs/op
+// * Generations: 204, ~Elapsed: 104.648522ms, ~Retries: 1.314,
+//   Stages: [{228 0 0} {228 14 0} {214 40 0} {174 174 0}]
 
 func BenchmarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelEvil, solver.LevelEvil, 100)

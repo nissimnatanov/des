@@ -172,6 +172,9 @@ func testSanity(t *testing.T, action solver.Action, testBoards ...testBoard) {
 // Improve the only choice in sequence and trial-and-error, remove object cache:
 // - first only		649	   1689756 ns/op	  293009 B/op	    1109 allocs/op
 // - all			416	   2803281 ns/op	  440462 B/op	    1683 allocs/op
+// Improve the constraint algorithms:
+// - first only		727	   1595624 ns/op	  293023 B/op	    1109 allocs/op
+// - all			444	   2685913 ns/op	  440461 B/op	    1683 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
 	benchRun(b, solver.ActionProve, 1)
@@ -216,6 +219,11 @@ func BenchmarkProveAll(b *testing.B) {
 // - all			26	  45047901 ns/op	 1389972 B/op	   12756 allocs/op
 // - fast first		1384	861829 ns/op	  146616 B/op	     560 allocs/op
 // - fast all		818	   1429418 ns/op	  219543 B/op	     854 allocs/op
+// Improve the constraint algorithms:
+// - first only		126	   9468151 ns/op	  542741 B/op	    4076 allocs/op
+// - all			30	  38299142 ns/op	 1390153 B/op	   12756 allocs/op
+// - fast first		1311    794930 ns/op	  146608 B/op	     560 allocs/op
+// - fast all		825	   1336013 ns/op	  219549 B/op	     854 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, solver.ActionSolve, 1)

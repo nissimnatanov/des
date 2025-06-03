@@ -36,8 +36,8 @@ func getAlgorithms(action Action) []Algorithm {
 			theOnlyChoiceInSequence{},
 			identifyPairs{},
 			identifyTriplets{},
-			&squareToRowColumnConstraints{},
-			&rowColToSquareConstraints{},
+			squareToRowColumnConstraints{},
+			rowColToSquareConstraints{},
 			trialAndError{},
 		}
 	case ActionSolveFast, ActionProve:
@@ -48,7 +48,7 @@ func getAlgorithms(action Action) []Algorithm {
 			// would find, so no need to include this algo here.
 			theOnlyAllowedValueInCell{},
 			theOnlyChoiceInSequence{},
-			&squareToRowColumnConstraints{},
+			squareToRowColumnConstraints{},
 			// recursion is faster than the identify pairs & triplets, and the row-col-2-square
 			// algos - these algos are unfortunately too slow to beat the plain recursion
 			// identifyPairs{},
