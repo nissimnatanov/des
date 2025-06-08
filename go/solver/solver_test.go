@@ -12,40 +12,41 @@ import (
 )
 
 func TestMoreThanOneSolution(t *testing.T) {
-	testBoard := testBoard{
+	tb := testBoard{
 		name:     "More than one solution",
 		board:    "27B4A1A9B4O6A8D51A9B6D4D1B61B6D5B7A2D5C13C",
 		expected: solver.StatusMoreThanOneSolution,
 	}
-	testSanity(t, solver.ActionProve, testBoard)
+	testSanity(t, solver.ActionProve, []testBoard{tb})
 	// solver must also detect multiple solutions (it runs prove internally)
-	testSanity(t, solver.ActionSolve, testBoard)
+	testSanity(t, solver.ActionSolve, []testBoard{tb})
 }
 
 func TestSolveSanity(t *testing.T) {
-	testSanity(t, solver.ActionSolve, slices.Concat(benchBoards, otherBoards)...)
+	testSanity(t, solver.ActionSolve, slices.Concat(benchBoards, otherBoards))
 }
 
 func TestProveSanity(t *testing.T) {
-	testSanity(t, solver.ActionProve, slices.Concat(benchBoards, otherBoards)...)
+	testSanity(t, solver.ActionProve, slices.Concat(benchBoards, otherBoards))
 }
 
 func TestSolveFastSanity(t *testing.T) {
-	testSanity(t, solver.ActionSolveFast, slices.Concat(benchBoards, otherBoards)...)
+	testSanity(t, solver.ActionSolveFast, slices.Concat(benchBoards, otherBoards))
 }
 
-func testSanity(t *testing.T, action solver.Action, testBoards ...testBoard) {
+func testSanity(t *testing.T, action solver.Action, testBoards []testBoard, opts ...solver.Option) {
 	boards.SetIntegrityChecks(true)
 
 	ctx := t.Context()
 	s := solver.New()
+	optsWithAction := slices.Concat([]solver.Option{action}, opts)
 	for _, sample := range testBoards {
 		t.Run(sample.name, func(t *testing.T) {
 			b, err := boards.Deserialize(sample.board)
 			assert.NilError(t, err)
 
 			// Solve the board
-			res := s.Run(ctx, b, action)
+			res := s.Run(ctx, b, optsWithAction...)
 			assert.NilError(t, res.Error)
 
 			expected := solver.StatusSucceeded

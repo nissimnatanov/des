@@ -39,3 +39,11 @@ func (a Action) LevelRequested() bool {
 func (a Action) ProofRequested() bool {
 	return a == ActionProve
 }
+
+func (a Action) applySolverOptions(o *options) {
+	if o.actionSet {
+		panic("do not provide action twice")
+	}
+	o.action = a
+	o.actionSet = true
+}

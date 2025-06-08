@@ -34,7 +34,7 @@ func hasEnoughFinalCandidates(finalCandidates *internal.SortedBoardStates, reque
 	return finalCandidates.Size() >= requestedCount
 }
 
-func (g *Generator) generateSlow(ctx context.Context, initState *internal.BoardState, count int) []*solver.Result {
+func (g *Generator) generateSlow(ctx context.Context) []*solver.Result {
 	tries := 0
 
 	candidates := internal.NewSortedBoardStates()
@@ -45,11 +45,16 @@ func (g *Generator) generateSlow(ctx context.Context, initState *internal.BoardS
 	// candidates. If we start with harder boards, the generation becomes slower.
 	start := time.Now()
 
+	initState := g.newInitialBoardState(ctx)
+
 generationLoop:
 	for ctx.Err() == nil {
-		candidates.Reset()
-		candidates.Add(initState)
 		tries++
+
+		candidates.Reset()
+		startState := initState
+		startState = g.removeSingleValue(ctx, initState)
+		candidates.Add(startState)
 
 		// enhance the candidates to the desired level
 		for stage := 0; stage < len(slowStages) && ctx.Err() == nil; stage++ {
@@ -67,19 +72,23 @@ generationLoop:
 			if newFinal.Size() > 0 {
 				stageStats.Report(newFinal.Size(), stage)
 			}
-			if hasEnoughFinalCandidates(finalCandidates, count) {
+			if hasEnoughFinalCandidates(finalCandidates, g.count) {
 				// stop once we have at least one if count was requested
-				internal.Stats.ReportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
 				break generationLoop
 			}
 			candidates = combineCandidates(newCandidates, slowStages[stage].SelectBest)
+		}
+
+		if tries%25 == 0 {
+			// if we are stuck on the same solution for too long, try the next one
+			initState = g.newInitialBoardState(ctx)
 		}
 	}
 
 	// return the results so far, even if ctx canceled in the middle
 	internal.Stats.ReportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
-	if count > 0 {
-		finalCandidates.TrimSize(count)
+	if g.count > 0 {
+		finalCandidates.TrimSize(g.count)
 	}
 	return finalCandidates.Results()
 }

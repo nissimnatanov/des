@@ -16,11 +16,11 @@ const MaxFreeCellsForValidBoard = boards.Size - boards.MinValidBoardSize
 
 // maxRecursionDepthLimit is the maximum recursion depth that the solver
 // can ever reach even if all other algorithms are not included and only
-// the recursion is used to solve the board. For safety, set it to
+// the recursion is used to solve the board. For safety, set it to the
 // MaxFreeCellsForValidBoard, but technically speaking it would never come
 // close to that number since the recursion algorithm uses 'the only choice'
 // algorithm first and that would detect values.
-const maxRecursionDepthLimit = 127
+const maxRecursionDepthLimit = MaxFreeCellsForValidBoard
 
 // Each Solver can be used on a single thread only.
 type Solver struct {
@@ -37,11 +37,24 @@ func New() *Solver {
 	}
 }
 
-func (s *Solver) Run(ctx context.Context, b *boards.Game, action Action) *Result {
+type options struct {
+	actionSet bool
+	action    Action
+}
+
+type Option interface {
+	applySolverOptions(*options)
+}
+
+func (s *Solver) Run(ctx context.Context, b *boards.Game, os ...Option) *Result {
 	if b == nil {
 		panic("solver.Run called with nil board")
 	}
-
+	var opts options
+	for _, o := range os {
+		o.applySolverOptions(&opts)
+	}
+	action := opts.action
 	if action == ActionSolve {
 		// ActionSolve uses layered recursion to calculate the level,
 		// if the board has more than one solution Solve can take
@@ -154,19 +167,17 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game, action Action) *Result
 }
 
 type runner struct {
-	play   *boards.Game // the board to be solved, in Play mode
-	parent *Solver
-
+	play                  *boards.Game // the board to be solved, in Play mode
+	parent                *Solver
 	currentRecursionDepth int8
 	maxRecursionDepth     int8
 	result                *Result
-
-	algorithms []Algorithm
+	algorithms            []Algorithm
 }
 
 func (r *runner) start(ctx context.Context) {
 	if !r.Action().LevelRequested() || r.maxRecursionDepth < 2 {
-		r.run(ctx)
+		r.runWithCache(ctx)
 		return
 	}
 
@@ -175,7 +186,7 @@ func (r *runner) start(ctx context.Context) {
 	maxRecursionOriginal := r.maxRecursionDepth
 	for maxRecursionCurrent := int8(1); maxRecursionCurrent <= maxRecursionOriginal; maxRecursionCurrent++ {
 		r.maxRecursionDepth = maxRecursionCurrent
-		r.run(ctx)
+		r.runWithCache(ctx)
 		if r.result.Status != StatusUnknown {
 			return
 		}
@@ -187,17 +198,25 @@ func (r *runner) start(ctx context.Context) {
 	}
 }
 
-func (r *runner) run(ctx context.Context) {
+func (r *runner) runWithCache(ctx context.Context) {
 	if ctx.Err() != nil {
 		r.result.completeErr(ctx.Err())
 		return
 	}
-	if !r.Board().IsValid() {
+	b := r.Board()
+	if !b.IsValid() {
 		r.result.complete(StatusError)
 		return
 	}
 
-	for r.Board().FreeCellCount() > 0 {
+	// cache removed temporarily - need to check if it is beneficial
+	r.runAlgos(ctx)
+	return
+}
+
+func (r *runner) runAlgos(ctx context.Context) {
+	b := r.Board()
+	for b.FreeCellCount() > 0 {
 		if ctx.Err() != nil {
 			r.result.completeErr(ctx.Err())
 			return
@@ -211,13 +230,13 @@ func (r *runner) run(ctx context.Context) {
 	}
 
 	// if we are here, we have no more free cells and the board is solved
-	if !r.Board().IsSolved() {
+	if !b.IsSolved() {
 		// algo sets illegal value
 		panic("board has no free cells but is not solved")
 	}
 
 	// algos do not report solutions
-	sol := boards.NewSolution(r.Board())
+	sol := boards.NewSolution(b)
 	r.result.Solutions.Add(sol)
 	if boards.GetIntegrityChecks() {
 		if !boards.ContainsAll(sol, r.result.Input) {
@@ -233,6 +252,7 @@ func (r *runner) run(ctx context.Context) {
 
 func (r *runner) tryAlgorithms(ctx context.Context) Status {
 	eliminationOnly := false
+	b := r.Board()
 	for _, algo := range r.algorithms {
 		if ctx.Err() != nil {
 			r.result.completeErr(ctx.Err())
@@ -240,22 +260,22 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 		}
 		var startBoard *boards.Game
 		if boards.GetIntegrityChecks() {
-			startBoard = r.Board().Clone(boards.Immutable)
+			startBoard = b.Clone(boards.Immutable)
 		}
 
-		freeBefore := r.Board().FreeCellCount()
+		freeBefore := b.FreeCellCount()
 		status := algo.Run(ctx, r)
 
 		if boards.GetIntegrityChecks() {
-			if !boards.ContainsAll(r.Board(), startBoard) {
+			if !boards.ContainsAll(b, startBoard) {
 				panic(fmt.Errorf(
 					"algo %s removed values from the board: before %v, after %v",
-					algo, startBoard, r.Board()))
+					algo, startBoard, b))
 			}
-			if !r.Board().IsValid() {
+			if !b.IsValid() {
 				panic(fmt.Errorf(
 					"algo %s generated failed board:\nbefore:\n%v\nafter:\n%v",
-					algo, startBoard, r.Board()))
+					algo, startBoard, b))
 			}
 		}
 		if status != StatusUnknown {
@@ -268,9 +288,9 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 				}
 			}
 			if status == StatusSucceeded &&
-				r.Board().FreeCellCount() == freeBefore &&
+				b.FreeCellCount() == freeBefore &&
 				!r.Action().LevelRequested() &&
-				r.Board().Hint01() < 0 {
+				b.Hint01() < 0 {
 				// If we do not need an accurate level, it is proven to be faster if we
 				// try harder algorithms if the current one was only able to eliminate some
 				// choices without finding a new value. The algos that eliminate only need to
@@ -282,10 +302,10 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 		}
 		// with unknown status all algos must retain the board as is
 		if boards.GetIntegrityChecks() {
-			if !boards.Equivalent(r.Board(), startBoard) {
+			if !boards.Equivalent(b, startBoard) {
 				panic(fmt.Errorf(
 					"algo %s changed the board with unknown status:\nbefore:\n%v\nafter:\n%v",
-					algo, startBoard, r.Board()))
+					algo, startBoard, b))
 			}
 		}
 	}
@@ -320,8 +340,8 @@ func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) Status {
 	if !r.Action().LevelRequested() {
 		// fast solvers do nto care about levels and can use very deep recursion
 		// for efficiency, hence it does not matter how deep we are
-		result.Steps.AddStep(trialAndErrorStepName, StepComplexityRecursion1, 1)
 		r.result.Steps.Merge(&result.Steps)
+		r.result.Steps.AddStep(trialAndErrorStepName, StepComplexityRecursion1, 1)
 		return result.Status
 	}
 
@@ -358,8 +378,8 @@ func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) Status {
 			"Unexpected usedDepth %d, something is likely wrong with the Solve algorithm.\n%s.\n",
 			usedDepth, r.inputBoardAsString()))
 	}
-	result.Steps.AddStep(trialAndErrorStepName, complexity, 1)
 	r.result.Steps.Merge(&result.Steps)
+	r.result.Steps.AddStep(trialAndErrorStepName, complexity, 1)
 	return result.Status
 }
 
@@ -392,7 +412,7 @@ func (r *runner) recursiveRunNested(ctx context.Context, b *boards.Game) *Result
 		nested.result.Input = b.Clone(boards.Immutable)
 	}
 
-	nested.run(ctx)
+	nested.runWithCache(ctx)
 	return nested.result
 }
 

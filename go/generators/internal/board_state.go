@@ -7,13 +7,14 @@ import (
 
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/boards/indexes"
+	"github.com/nissimnatanov/des/go/boards/values"
 	"github.com/nissimnatanov/des/go/internal/random"
 	"github.com/nissimnatanov/des/go/solver"
 )
 
 type BoardState struct {
-	state *SolutionState
-	res   *solver.Result
+	solState *SolutionState
+	res      *solver.Result
 
 	desiredLevelRange LevelRange
 	// progress is relative to the desired level range
@@ -39,7 +40,7 @@ func newBoardState(
 	res.Input = editBoard
 	progress := levelRange.shouldContinue(state.rand, editBoard, res)
 	bs := &BoardState{
-		state:             state,
+		solState:          state,
 		res:               res,
 		desiredLevelRange: levelRange,
 		progress:          progress,
@@ -59,7 +60,7 @@ func newSolutionBoardState(
 		panic("failed to solve a solution")
 	}
 	bs := &BoardState{
-		state:             state,
+		solState:          state,
 		res:               res,
 		desiredLevelRange: levelRange,
 		progress:          TooEarly,
@@ -85,9 +86,13 @@ func (bs *BoardState) checkIntegrity() {
 		}
 		allIndexes = append(allIndexes, index)
 	}
-	if !boards.ContainsAll(bs.state.solution, bs.board()) {
+	if !boards.ContainsAll(bs.solState.solution, bs.board()) {
 		panic("provided solution does not contain the board")
 	}
+}
+
+func (bs *BoardState) SolutionState() *SolutionState {
+	return bs.solState
 }
 
 func (bs *BoardState) Complexity() solver.StepComplexity {
@@ -200,7 +205,7 @@ func (bs *BoardState) RemoveOneByOne(ctx context.Context) *BoardState {
 func (bs *BoardState) RemoveCandidatesOneByOne(ctx context.Context, candidates []int) *BoardState {
 	defer bs.checkIntegrity()
 
-	r := bs.state.rand
+	r := bs.solState.rand
 	random.Shuffle(r, candidates)
 	removedOnce := false
 	next := bs
@@ -244,7 +249,7 @@ func (bs *BoardState) tryRemove(ctx context.Context, args *RemoveArgs) *BoardSta
 		panic("minToRemove and maxToRemove are out of range")
 	}
 	defer bs.checkIntegrity()
-	r := bs.state.rand
+	r := bs.solState.rand
 
 	next := bs
 	removedOnce := false
@@ -301,7 +306,7 @@ func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int)
 	}
 
 	if boards.GetIntegrityChecks() {
-		res := bs.state.solver.Run(ctx, bs.board(), solver.ActionProve)
+		res := bs.solState.solver.Run(ctx, bs.board(), solver.ActionProve)
 		if res.Status != solver.StatusSucceeded {
 			panic("do not use invalid boards as an input here")
 		}
@@ -311,10 +316,10 @@ func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int)
 		bs.board().Set(index, 0)
 	}
 
-	next, _ := newBoardState(ctx, bs.state, bs.desiredLevelRange, bs.board())
+	next, _ := newBoardState(ctx, bs.solState, bs.desiredLevelRange, bs.board())
 	// always restore the board to its original state
 	for _, index := range candidates {
-		bs.board().SetReadOnly(index, bs.state.solution.Get(index))
+		bs.board().SetReadOnly(index, bs.solState.solution.Get(index))
 	}
 	if next != nil {
 		// if we overflowed the desired level, consider it a failure as well
@@ -348,6 +353,33 @@ func (bs *BoardState) WithDesiredLevelRange(lr LevelRange) *BoardState {
 	}
 	// reevaluate the progress based on the new level
 	clone.desiredLevelRange = lr
-	clone.progress = lr.shouldContinue(bs.state.rand, bs.board(), bs.res)
+	clone.progress = lr.shouldContinue(bs.solState.rand, bs.board(), bs.res)
 	return &clone
+}
+
+func (bs *BoardState) RemoveVal(ctx context.Context, v values.Value, count int) *BoardState {
+	// RemoveVal is invoked in the beginning of the generation process, we can skip res check
+	if bs.board().FreeCellCount() > 0 {
+		panic("use RemoveVal only when the board is full")
+	}
+	vIndexes := make([]int, 0, count)
+	for i := range boards.Size {
+		if bs.board().Get(i) == v {
+			vIndexes = append(vIndexes, i)
+		}
+	}
+	if count < len(vIndexes) {
+		random.Shuffle(bs.solState.rand, vIndexes)
+		vIndexes = vIndexes[:count]
+	}
+
+	for _, index := range vIndexes {
+		bs.board().Set(index, 0)
+	}
+	next, _ := newBoardState(ctx, bs.solState, bs.desiredLevelRange, bs.board())
+	// always restore the board to its original state
+	for _, index := range vIndexes {
+		bs.board().SetReadOnly(index, bs.solState.solution.Get(index))
+	}
+	return next
 }

@@ -40,29 +40,6 @@ func NewSolutionState(args SolutionStateArgs) *SolutionState {
 	}
 }
 
-/*
-func NewEnhanceBoardState(ctx context.Context, minLevel, maxLevel solver.Level, r *random.Random, board *boards.Game) (*SolutionState, *BoardState) {
-	args := SolutionStateArgs{
-		Rand:   r,
-		Solver: solver.New(solver.ActionSolve),
-		Prover: solver.New(solver.ActionProve),
-	}
-	res := args.Prover.Run(ctx, board)
-	if res.Status != solver.StatusSucceeded {
-		panic("cannot fine-tune unproven board")
-	}
-	args.Solution = res.Solutions.At(0)
-	s := NewSolutionState(args)
-	lr := LevelRange{
-		Min: minLevel,
-		Max: maxLevel,
-	}
-	lr = lr.WithDefaults()
-	bs, _ := newBoardState(ctx, s, lr, board)
-	return s, bs
-}
-*/
-
 func (s *SolutionState) InitialBoardState(ctx context.Context, levelRange LevelRange) *BoardState {
 	return newSolutionBoardState(ctx, s, levelRange, s.solution)
 }

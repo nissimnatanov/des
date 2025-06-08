@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/nissimnatanov/des/go/boards"
+	"github.com/nissimnatanov/des/go/boards/values"
 	"github.com/nissimnatanov/des/go/generators/internal"
 	"github.com/nissimnatanov/des/go/generators/solution"
 	"github.com/nissimnatanov/des/go/internal/random"
@@ -86,24 +87,29 @@ type Options struct {
 	OnNewResult func(*solver.Result)
 }
 
-func (g *Generator) Generate(ctx context.Context) []*solver.Result {
+func (g *Generator) newInitialBoardState(ctx context.Context) *internal.BoardState {
 	state := internal.NewSolutionState(internal.SolutionStateArgs{
 		Solution: g.solProvider(),
 		Rand:     g.r,
 		Solver:   g.solver,
 	})
-	initState := state.InitialBoardState(ctx, g.lr)
+	return state.InitialBoardState(ctx, g.lr)
+}
+
+func (g *Generator) Generate(ctx context.Context) []*solver.Result {
 	if g.lr.Max > internal.FastGenerationCap {
-		return g.generateSlow(ctx, initState, g.count)
+		return g.generateSlow(ctx)
 	}
 
+	initState := g.newInitialBoardState(ctx)
 	count := g.count
 	if count == 0 {
 		count = 1 // default to 1 for fast generation
 	}
 	results := make([]*solver.Result, 0, count)
 	for len(results) < count && ctx.Err() == nil {
-		bs := g.generateFast(ctx, initState)
+		bs := g.removeSingleValue(ctx, initState)
+		bs = g.generateFast(ctx, bs)
 		results = append(results, bs.Result())
 		if g.onNewResult != nil {
 			g.onNewResult(bs.Result())
@@ -191,4 +197,45 @@ func (g *Generator) tryGenerateFastOnce(ctx context.Context, initState *internal
 		panic("fast generation should end up with fastStageCount stages")
 	}
 	return nil, stage
+}
+
+// removeSingleValue must be called on full board only
+func (g *Generator) removeSingleValue(ctx context.Context, initState *internal.BoardState) *internal.BoardState {
+	minLevel := initState.DesiredLevelRange().Min
+	v := values.Value(g.r.Intn(9) + 1)
+	var removeCount int
+	switch {
+	case minLevel <= solver.LevelMedium:
+		// for perf reasons mostly, not much benefit otherwise
+		removeCount = 5
+	case minLevel < solver.LevelVeryHard:
+		switch g.r.Intn(3) {
+		case 0:
+			removeCount = 5
+		case 1:
+			removeCount = 6
+		default:
+			removeCount = 7
+		}
+	case minLevel < solver.LevelNightmare:
+		switch g.r.Intn(6) {
+		case 0:
+			removeCount = 6
+		case 1, 2:
+			removeCount = 7
+		default:
+			removeCount = 8
+		}
+	default:
+		switch g.r.Intn(6) {
+		case 0:
+			removeCount = 7
+		case 1, 2:
+			removeCount = 8
+		default:
+			removeCount = 9
+		}
+	}
+
+	return initState.RemoveVal(ctx, v, removeCount)
 }

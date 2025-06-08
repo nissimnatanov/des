@@ -176,6 +176,10 @@ func (b *Game) DisallowValues(index int, vs values.Set) {
 	b.updateHint01(index)
 }
 
+func (b *Game) DisallowedByUser(index int) values.Set {
+	return b.disallowedByUser[index]
+}
+
 func (b *Game) ResetDisallowedByUser(index int) {
 	if b.mode == Immutable {
 		panic("Cannot reset disallowed values on immutable board")

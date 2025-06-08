@@ -114,7 +114,7 @@ func BenchmarkDarkEvil(b *testing.B) {
 }
 
 func BenchmarkNightmareOrBlackHole(b *testing.B) {
-	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole, 10)
+	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole, 1)
 }
 
 func runBenchmark(b *testing.B, min, max solver.Level, count int) {
@@ -144,6 +144,5 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 		}
 	}
 	b.Log(internal.Stats.Game().String())
-	// solution stats look good, no longer needed here
-	// b.Log(generators.Stats.Solution().String())
+	b.Log(internal.Stats.Solution().String())
 }
