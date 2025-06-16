@@ -18,52 +18,39 @@ type Result struct {
 	Complexity StepComplexity `json:"complexity"`
 	Level      Level          `json:"level"`
 	// Steps are the steps that led to the current level.
-	Steps Steps `json:"steps"`
+	Steps Steps `json:"level_steps"`
+
+	// AllSteps includes all all the steps performed by the solver, including those that
+	// are not directly related to the current level, but had to be performed (like Proof before
+	// the actual solving, or layered recursion).
+	AllSteps Steps `json:"all_steps"`
 }
 
-func (r *Result) complete(status Status) *Result {
+func (r *Result) addNonLevelSteps(steps Steps) {
+	r.AllSteps.Merge(steps)
+}
+
+func (r *Result) completeWith(runRes *runResult) *Result {
 	if r.Status != StatusUnknown {
 		panic("result already completed")
 	}
-	r.Status = status
-	return r
-}
-
-func (r *Result) completeErr(err error) *Result {
-	if r.Status != StatusUnknown {
-		panic("result already completed")
+	if r.Count != 0 || r.Complexity != 0 {
+		panic("result should not have any partial count nor complexity reported, they are override below")
 	}
-	r.Status = StatusError
-	r.Error = err
-	return r
-}
-
-func (r *Result) Merge(other *Result) {
-	r.Count += other.Count
-	r.Complexity += other.Complexity
-	r.Level = LevelFromComplexity(r.Complexity)
-	r.Steps.Merge(other.Steps)
-}
-
-func (r *Result) AddStep(step Step, complexity StepComplexity, count int) {
-	switch {
-	case count <= 0:
-		panic("count must be > 0")
-	case complexity <= 0:
-		panic("complexity must be > 0")
-	case step == "":
-		panic("step must not be empty")
+	if runRes == nil || runRes.Status == StatusUnknown {
+		panic("solver returned nil or unknown status")
 	}
 
-	r.Count += int64(count)
-	r.Complexity += complexity * StepComplexity(count)
-	r.Level = LevelFromComplexity(r.Complexity)
-	r.Steps.Add(step, complexity, count)
-}
-
-func (r *Result) reset() {
-	r.Count = 0
-	r.Complexity = 0
-	r.Level = 0
-	r.Steps = Steps{}
+	r.Status = runRes.Status
+	r.Error = runRes.Error
+	r.Count = runRes.Count
+	r.Complexity = runRes.Complexity
+	r.Solutions = r.Solutions.With(runRes.Solutions)
+	if r.Status == StatusSucceeded {
+		r.Level = LevelFromComplexity(r.Complexity)
+	}
+	r.Steps.Merge(runRes.Steps)
+	// Note: AllSteps might already have some results, we should always merge with them
+	r.AllSteps.Merge(runRes.Steps)
+	return r
 }

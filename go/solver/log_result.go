@@ -48,6 +48,9 @@ func logResult(res *Result) {
 	if disableNLog {
 		return
 	}
+	if res.Status != StatusSucceeded {
+		return
+	}
 	if res.Level < LevelNightmare || res.Action != ActionSolve || res.Status != StatusSucceeded {
 		return
 	}
