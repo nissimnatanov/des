@@ -59,6 +59,8 @@ func newSolutionBoardState(
 	if res.Status != solver.StatusSucceeded {
 		panic("failed to solve a solution")
 	}
+	// flip back to the Edit board
+	res.Input = editBoard
 	bs := &BoardState{
 		solState:          state,
 		res:               res,

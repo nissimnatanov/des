@@ -44,13 +44,3 @@ func (rr *runResult) mergeStatsOnly(other *runResult) {
 	rr.Steps.Merge(other.Steps)
 	rr.Solutions = rr.Solutions.With(other.Solutions)
 }
-
-func (rr *runResult) reset() {
-	rr.Status = StatusUnknown
-	rr.Count = 0
-	rr.Complexity = 0
-	rr.Error = nil
-	if rr.Steps != nil {
-		clear(rr.Steps)
-	}
-}

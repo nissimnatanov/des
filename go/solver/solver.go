@@ -88,51 +88,16 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game, os ...Option) *Result 
 	return result
 }
 
-func (s *Solver) run(ctx context.Context, b *boards.Game, action Action, withSteps bool) *runResult {
-	var algorithms []Algorithm
-	switch action {
-	case ActionSolve:
-		algorithms = s.solveAlgorithms
-	case ActionSolveFast:
-		algorithms = s.fastSolveAlgorithms
-	case ActionProve:
-		algorithms = s.proveAlgorithms
-	default:
-		panic(fmt.Sprintf("unknown action: %s", action))
-	}
-
-	// before we modify the input board, we must clone it into Play mode
-	play := b.Clone(boards.Play)
-
-	r := &runner{
-		play:                  play,
-		algorithms:            algorithms,
-		currentRecursionDepth: 0,
-		// without recursion it is virtually impossible to solve many boards,
-		// zero is not a valid value
-		// note: recursion with this package is almost 'allocation-free', and it is fast
-		maxRecursionDepth: maxRecursionDepthLimit,
-		result:            &runResult{},
-		action:            action,
-		input:             b,
-	}
-	if withSteps {
-		r.result.Steps = Steps{}
-	}
-
+func (s *Solver) runBasicChecks(b *boards.Game) Status {
 	if !b.IsValid() {
-		return r.result.complete(StatusNoSolution)
+		return StatusError
 	}
 	if b.IsSolved() {
-		// fast track the result generation for board that is already solved (e.g. Solution)
-		r.result.Solutions = r.result.Solutions.Append(boards.NewSolution(b))
-		return r.result.complete(StatusSucceeded)
+		return StatusSucceeded
 	}
-
-	// basic checks first, do them once, there is no point in repeating them each recursion
 	if b.FreeCellCount() > MaxFreeCellsForValidBoard {
 		// Boards with less than 17 values are mathematically proven to be wrong.
-		return r.result.complete(StatusLessThan17)
+		return StatusLessThan17
 	}
 
 	var valueCounts [boards.SequenceSize]int
@@ -149,11 +114,53 @@ func (s *Solver) run(ctx context.Context, b *boards.Game, action Action, withSte
 	}
 	if missingValues >= 2 {
 		// There is no point to try solving boards with two or more values missing.
-		return r.result.complete(StatusTwoOrMoreValuesMissing)
+		return StatusTwoOrMoreValuesMissing
+	}
+	return StatusUnknown
+}
+
+func (s *Solver) run(ctx context.Context, b *boards.Game, action Action, withSteps bool) *runResult {
+	status := s.runBasicChecks(b)
+	if status != StatusUnknown {
+		rr := &runResult{}
+		if status == StatusSucceeded {
+			rr.Solutions = rr.Solutions.Append(boards.NewSolution(b))
+		}
+		return (&runResult{}).complete(status)
+	}
+
+	var algorithms []Algorithm
+	switch action {
+	case ActionSolve:
+		algorithms = s.solveAlgorithms
+	case ActionSolveFast:
+		algorithms = s.fastSolveAlgorithms
+	case ActionProve:
+		algorithms = s.proveAlgorithms
+	default:
+		panic(fmt.Sprintf("unknown action: %s", action))
+	}
+
+	// before we modify the input board, we must clone it into Play mode
+	play := b.Clone(boards.Play)
+
+	r := &runner{
+		action:                action,
+		input:                 b,
+		play:                  play,
+		algorithms:            algorithms,
+		withSteps:             withSteps,
+		currentRecursionDepth: 0,
+
+		// without recursion it is virtually impossible to solve many boards,
+		// zero is not a valid value
+		// note: recursion with this package is almost 'allocation-free', and it is fast
+		maxRecursionDepth: maxRecursionDepthLimit,
 	}
 
 	// must run inside nested func to catch panic from run only
 	// and guarantee result ref is returned
+	var rr *runResult
 	func() {
 		defer func() {
 			msg := recover()
@@ -167,16 +174,17 @@ func (s *Solver) run(ctx context.Context, b *boards.Game, action Action, withSte
 			} else {
 				err = fmt.Errorf("panic: %w\n%s\n", err, stack)
 			}
-			r.result.completeErr(err)
+			rr = &runResult{}
+			rr.completeErr(err)
 		}()
-		r.start(ctx)
+		rr = r.start(ctx)
 	}()
 
-	if len(r.result.Solutions) > 1 && r.result.Status == StatusSucceeded {
+	if len(rr.Solutions) > 1 && rr.Status == StatusSucceeded {
 		// if we got two solutions we must guarantee a different status
-		r.result.complete(StatusMoreThanOneSolution)
+		rr.complete(StatusMoreThanOneSolution)
 	}
 
 	// if run panics, we want to return both the error and the partial result
-	return r.result
+	return rr
 }

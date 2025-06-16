@@ -8,67 +8,70 @@ import (
 )
 
 type runner struct {
-	action Action
-	input  *boards.Game
-
-	play                  *boards.Game // the board to be solved, in Play mode
+	action                Action
+	input                 *boards.Game
+	play                  *boards.Game
 	parent                *Solver
 	currentRecursionDepth int8
 	maxRecursionDepth     int8
-	result                *runResult
 	algorithms            []Algorithm
+	withSteps             bool
 }
 
-func (r *runner) start(ctx context.Context) {
+func (r *runner) newRunResult() *runResult {
+	rr := &runResult{}
+	if r.withSteps {
+		rr.Steps = make(Steps)
+	}
+	return rr
+}
+
+func (r *runner) start(ctx context.Context) *runResult {
 	if !r.Action().LevelRequested() || r.maxRecursionDepth < 2 {
-		r.runWithCache(ctx)
-		return
+		return r.runWithCache(ctx)
 	}
 
 	// For accurate leveling, use layer recursion: start with the recursion depth of 1 and slowly
 	// increase it until we reach the max recursion or the board is solved.
+	var rr *runResult
 	maxRecursionOriginal := r.maxRecursionDepth
 	for maxRecursionCurrent := int8(1); maxRecursionCurrent <= maxRecursionOriginal; maxRecursionCurrent++ {
 		r.maxRecursionDepth = maxRecursionCurrent
-		r.runWithCache(ctx)
-		if r.result.Status != StatusUnknown {
-			return
-		}
-		// since we are about to increase the recursion depth, we will re-run same steps again
-		if maxRecursionCurrent < maxRecursionOriginal {
-			r.result.reset()
+		rr = r.runWithCache(ctx)
+		if rr.Status != StatusUnknown {
+			return rr
 		}
 	}
+	return rr
 }
 
-func (r *runner) runWithCache(ctx context.Context) {
+func (r *runner) runWithCache(ctx context.Context) *runResult {
 	if ctx.Err() != nil {
-		r.result.completeErr(ctx.Err())
-		return
+		return r.newRunResult().completeErr(ctx.Err())
 	}
 	b := r.Board()
 	if !b.IsValid() {
-		r.result.complete(StatusError)
-		return
+		return r.newRunResult().complete(StatusError)
 	}
 
 	// cache removed temporarily - need to check if it is beneficial
-	r.runAlgos(ctx)
-	return
+	return r.runAlgos(ctx)
 }
 
-func (r *runner) runAlgos(ctx context.Context) {
+func (r *runner) runAlgos(ctx context.Context) *runResult {
+	runnerState := &runnerState{
+		runner:    r,
+		runResult: r.newRunResult(),
+	}
 	b := r.Board()
 	for b.FreeCellCount() > 0 {
 		if ctx.Err() != nil {
-			r.result.completeErr(ctx.Err())
-			return
+			return runnerState.completeErr(ctx.Err())
 		}
 
-		status := r.tryAlgorithms(ctx)
+		status := runnerState.tryAlgorithms(ctx)
 		if status != StatusSucceeded {
-			r.result.complete(status)
-			return
+			return runnerState.complete(status)
 		}
 	}
 
@@ -80,25 +83,29 @@ func (r *runner) runAlgos(ctx context.Context) {
 
 	// algos do not report solutions
 	sol := boards.NewSolution(b)
-	r.result.Solutions = r.result.Solutions.Append(sol)
+	runnerState.Solutions = runnerState.Solutions.Append(sol)
 	if boards.GetIntegrityChecks() {
 		if !boards.ContainsAll(sol, r.input) {
 			panic("solution does not match the board to be solved")
 		}
 	}
-	if len(r.result.Solutions) > 1 {
-		r.result.complete(StatusMoreThanOneSolution)
-	} else {
-		r.result.complete(StatusSucceeded)
+	if len(runnerState.Solutions) > 1 && runnerState.Status == StatusSucceeded {
+		return runnerState.complete(StatusMoreThanOneSolution)
 	}
+	return runnerState.complete(StatusSucceeded)
 }
 
-func (r *runner) tryAlgorithms(ctx context.Context) Status {
+type runnerState struct {
+	*runner
+	*runResult
+}
+
+func (r *runnerState) tryAlgorithms(ctx context.Context) Status {
 	eliminationOnly := false
 	b := r.Board()
 	for _, algo := range r.algorithms {
 		if ctx.Err() != nil {
-			r.result.completeErr(ctx.Err())
+			r.completeErr(ctx.Err())
 			return StatusError
 		}
 		var startBoard *boards.Game
@@ -122,12 +129,12 @@ func (r *runner) tryAlgorithms(ctx context.Context) Status {
 			}
 		}
 		if status != StatusUnknown {
-			if status == StatusError && r.result.Error == nil {
+			if status == StatusError && r.Error == nil {
 				// if the algo reports an error, we want to return it
 				if ctx.Err() != nil {
-					r.result.completeErr(ctx.Err())
+					r.completeErr(ctx.Err())
 				} else {
-					r.result.completeErr(fmt.Errorf("algo %s reported an error", algo))
+					r.completeErr(fmt.Errorf("algo %s reported an error", algo))
 				}
 			}
 			if status == StatusSucceeded &&
@@ -171,20 +178,20 @@ func (r *runner) CurrentRecursionDepth() int {
 func (r *runner) MaxRecursionDepth() int {
 	return int(r.maxRecursionDepth)
 }
-func (r *runner) AddStep(step Step, complexity StepComplexity, count int) {
-	r.result.addStep(step, complexity, count)
+func (r *runnerState) AddStep(step Step, complexity StepComplexity, count int) {
+	r.addStep(step, complexity, count)
 }
 
-func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) Status {
+func (r *runnerState) recursiveRun(ctx context.Context, b *boards.Game) Status {
 	result := r.recursiveRunNested(ctx, b)
 	// merge the sub-steps into the parent result
+	r.mergeStatsOnly(result)
 
 	// before we return, let's check the mode
 	if !r.Action().LevelRequested() {
 		// fast solvers do nto care about levels and can use very deep recursion
 		// for efficiency, hence it does not matter how deep we are
-		r.result.mergeStatsOnly(result)
-		r.result.addStep(trialAndErrorStepName, StepComplexityRecursion1, 1)
+		r.addStep(trialAndErrorStepName, StepComplexityRecursion1, 1)
 		return result.Status
 	}
 
@@ -221,12 +228,20 @@ func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) Status {
 			"Unexpected usedDepth %d, something is likely wrong with the Solve algorithm.\n%s.\n",
 			usedDepth, r.inputBoardAsString()))
 	}
-	r.result.mergeStatsOnly(result)
-	r.result.addStep(trialAndErrorStepName, complexity, 1)
+
+	r.addStep(trialAndErrorStepName, complexity, 1)
 	return result.Status
 }
 
 func (r *runner) recursiveRunNested(ctx context.Context, b *boards.Game) *runResult {
+	if ctx.Err() != nil {
+		return r.newRunResult().completeErr(ctx.Err())
+	}
+
+	if r.currentRecursionDepth >= r.maxRecursionDepth {
+		// shouldn't happen, but just in case
+		return r.newRunResult().complete(StatusUnknown)
+	}
 	nested := &runner{
 		action:                r.action,
 		input:                 r.input,
@@ -235,29 +250,14 @@ func (r *runner) recursiveRunNested(ctx context.Context, b *boards.Game) *runRes
 		algorithms:            r.algorithms,
 		currentRecursionDepth: r.currentRecursionDepth + 1,
 		maxRecursionDepth:     r.maxRecursionDepth,
-		result: &runResult{
-			// solutions are shared, do to clone them
-			Solutions: r.result.Solutions,
-			// input board is not needed, it is set below only if integrity checks are enabled
-		},
+		withSteps:             r.withSteps,
 	}
-
-	if ctx.Err() != nil {
-		return nested.result.completeErr(ctx.Err())
-	}
-
-	if r.currentRecursionDepth >= r.maxRecursionDepth {
-		// shouldn't happen, but just in case
-		return nested.result.complete(StatusUnknown)
-	}
-
 	if boards.GetIntegrityChecks() {
 		// we only need input board for recursive runs if the integrity checks are enabled
 		nested.input = b.Clone(boards.Immutable)
 	}
 
-	nested.runWithCache(ctx)
-	return nested.result
+	return nested.runWithCache(ctx)
 }
 
 // inputOrActiveBoard can be used for troubleshooting or logging abnormal cases
