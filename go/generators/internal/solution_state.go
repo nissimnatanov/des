@@ -14,12 +14,14 @@ type SolutionState struct {
 	solution *boards.Solution
 	rand     *random.Random
 	solver   *solver.Solver
+	cache    *solver.Cache
 }
 
 type SolutionStateArgs struct {
-	Solution *boards.Solution
-	Rand     *random.Random
-	Solver   *solver.Solver
+	Solution  *boards.Solution
+	Rand      *random.Random
+	Solver    *solver.Solver
+	WithCache bool // whether to use a cache for the solver
 }
 
 func NewSolutionState(args SolutionStateArgs) *SolutionState {
@@ -32,14 +34,23 @@ func NewSolutionState(args SolutionStateArgs) *SolutionState {
 	if args.Solver == nil {
 		args.Solver = solver.New()
 	}
+	var cache *solver.Cache
+	if args.WithCache {
+		cache = solver.NewCache()
+	}
 
 	return &SolutionState{
 		solver:   args.Solver,
 		solution: args.Solution,
 		rand:     args.Rand,
+		cache:    cache,
 	}
 }
 
 func (s *SolutionState) InitialBoardState(ctx context.Context, levelRange LevelRange) *BoardState {
 	return newSolutionBoardState(ctx, s, levelRange, s.solution)
+}
+
+func (s *SolutionState) Cache() *solver.Cache {
+	return s.cache
 }

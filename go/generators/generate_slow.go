@@ -45,7 +45,9 @@ func (g *Generator) generateSlow(ctx context.Context) []*solver.Result {
 	// candidates. If we start with harder boards, the generation becomes slower.
 	start := time.Now()
 
-	initState := g.newInitialBoardState(ctx)
+	// turn on use cache
+	initState := g.newInitialBoardState(ctx, true)
+	cacheStats := solver.CacheStats{}
 
 generationLoop:
 	for ctx.Err() == nil {
@@ -81,12 +83,15 @@ generationLoop:
 
 		if tries%25 == 0 {
 			// if we are stuck on the same solution for too long, try the next one
-			initState = g.newInitialBoardState(ctx)
+			// it also helps reducing the per-solution cache footprint
+			// TODO cache: .MergeAndDrain(initState.SolutionState().Cache().Stats())
+			initState = g.newInitialBoardState(ctx, true)
 		}
 	}
 
 	// return the results so far, even if ctx canceled in the middle
-	internal.Stats.ReportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats)
+	cacheStats.MergeAndDrain(initState.SolutionState().Cache().Stats())
+	internal.Stats.ReportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats, cacheStats)
 	if g.count > 0 {
 		finalCandidates.TrimSize(g.count)
 	}

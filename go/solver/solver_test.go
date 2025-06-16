@@ -1,7 +1,6 @@
 package solver_test
 
 import (
-	"encoding/json"
 	"slices"
 	"testing"
 
@@ -38,11 +37,125 @@ func TestSolveFastSanity(t *testing.T) {
 	testSanity(t, solver.ActionSolveFast, slices.Concat(benchBoards, otherBoards))
 }
 
-func testSanity(t *testing.T, action solver.Action, testBoards []testBoard, opts ...solver.Option) {
+func TestCacheProve(t *testing.T) {
+	cache := solver.NewCache()
+	var firstRun bool
+	var firstRunMissCount int64
+	allBoards := slices.Concat(benchBoards, otherBoards)
+	t.Run("all first", func(t *testing.T) {
+		testSanity(t, solver.ActionProve, allBoards, cache)
+		stats := cache.Stats()
+		// cache hits must be 0 for the first run since recursion algo does not solve same board twice
+		t.Log(stats)
+		firstRun = true
+		assert.Equal(t, stats.HitCount, int64(0), "expected no cache hits on proves")
+		firstRunMissCount = stats.MissCount
+		assert.Assert(t, firstRunMissCount > 0, "expected a lot of cache misses on first run for recursion")
+	})
+	t.Run("all second", func(t *testing.T) {
+		if !firstRun {
+			t.Skip("cannot run without the all first step")
+		}
+		cache.ResetStats()
+		// running with cache again should not change the results
+		testSanity(t, solver.ActionProve, allBoards, cache)
+		stats := cache.Stats()
+		t.Log(stats)
+		assert.Equal(t, stats.MissCount, int64(0), "expected no cache misses on second run")
+		// the cache hits must be > 0 since the cache is used, but they must be less than the misses
+		// in the first run since the recursion algo stops the recursion from going deeper hence
+		// saving many more recursive calls from even starting
+		assert.Assert(t, stats.HitCount > 0, "expected some cache hits on second run, got %d", stats.HitCount)
+		assert.Assert(t, stats.HitCount < firstRunMissCount,
+			"expected less cache hits on second run than misses on first run, but got %d new hits vs %d old misses",
+			stats.HitCount, firstRunMissCount)
+	})
+}
+
+func TestCacheSolve(t *testing.T) {
+	t.Run("al escargot", func(t *testing.T) {
+		cache := solver.NewCache()
+		var firstRun bool
+		var firstResult *solver.Result
+		var firstRunMissCount int64
+		alEscargotInd := slices.IndexFunc(benchBoards, func(tb testBoard) bool {
+			return tb.name == "al escargot"
+		})
+		assert.Assert(t, alEscargotInd >= 0, "al escargot board not found in benchBoards")
+		t.Run("first", func(t *testing.T) {
+			results := testSanity(t, solver.ActionSolve, benchBoards[alEscargotInd:alEscargotInd+1], cache)
+			stats := cache.Stats()
+			firstRun = true
+			// cache hits must be 0 for the first run since recursion algo does not solve same board twice
+			t.Log(stats)
+			assert.Equal(t, stats.HitCount, int64(0), "expected no cache hits on first run")
+			firstRunMissCount = stats.MissCount
+			assert.Assert(t, firstRunMissCount > 0, "expected a lot of cache misses on first run for recursion")
+			assert.Assert(t, len(results) == 1, "expected one result, got %d", len(results))
+			firstResult = results[0]
+		})
+		t.Run("second", func(t *testing.T) {
+			if !firstRun {
+				t.Skip("cannot run without the all first step")
+			}
+			cache.ResetStats()
+			// running with cache again should not change the results
+			secondResults := testSanity(t, solver.ActionSolve, benchBoards[alEscargotInd:alEscargotInd+1], cache)
+			stats := cache.Stats()
+			t.Log(stats)
+			assert.Equal(t, stats.MissCount, int64(0), "expected no cache misses on second run")
+			assert.Assert(t, stats.HitCount < firstRunMissCount,
+				"expected less cache hits on second run than misses on first run, but got %d new hits vs %d old misses",
+				stats.HitCount, firstRunMissCount)
+			if t.Failed() {
+				t.Logf("first non-cache result to compare:\n %+v", firstResult)
+				assert.Assert(t, len(secondResults) == 1, "expected one result, got %d", len(secondResults))
+				// diff them side-by-side
+				firstResString := firstResult.String()
+				secondResString := secondResults[0].String()
+				assert.Equal(t, firstResString, secondResString)
+			}
+		})
+	})
+	t.Run("all", func(t *testing.T) {
+		cache := solver.NewCache()
+		var firstRun bool
+		var firstRunMissCount int64
+		allBoards := slices.Concat(benchBoards, otherBoards)
+		t.Run("first", func(t *testing.T) {
+			testSanity(t, solver.ActionSolve, allBoards, cache)
+			stats := cache.Stats()
+			firstRun = true
+			// cache hits must be 0 for the first run since recursion algo does not solve same board twice
+			t.Log(stats)
+
+			assert.Equal(t, stats.HitCount, int64(0), "expected no cache hits on first run")
+			firstRunMissCount = stats.MissCount
+			assert.Assert(t, firstRunMissCount > 0, "expected a lot of cache misses on first run for recursion")
+		})
+		t.Run("second", func(t *testing.T) {
+			if !firstRun {
+				t.Skip("cannot run without the all first step")
+			}
+			cache.ResetStats()
+			// running with cache again should not change the results
+			testSanity(t, solver.ActionSolve, allBoards, cache)
+			stats := cache.Stats()
+			t.Log(stats)
+			assert.Equal(t, stats.MissCount, int64(0), "expected no cache misses on second run")
+			assert.Assert(t, stats.HitCount < firstRunMissCount,
+				"expected less cache hits on second run than misses on first run, but got %d new hits vs %d old misses",
+				stats.HitCount, firstRunMissCount)
+		})
+	})
+}
+
+func testSanity(t *testing.T, action solver.Action, testBoards []testBoard, opts ...solver.Option) []*solver.Result {
 	boards.SetIntegrityChecks(true)
 
 	ctx := t.Context()
 	s := solver.New()
+	allResults := make([]*solver.Result, 0, len(testBoards))
 	optsWithAction := slices.Concat([]solver.Option{action}, opts)
 	for _, sample := range testBoards {
 		t.Run(sample.name, func(t *testing.T) {
@@ -52,6 +165,7 @@ func testSanity(t *testing.T, action solver.Action, testBoards []testBoard, opts
 			// Solve the board
 			res := s.Run(ctx, b, optsWithAction...)
 			assert.NilError(t, res.Error)
+			allResults = append(allResults, res)
 
 			expected := solver.StatusSucceeded
 			if sample.expected != solver.StatusUnknown {
@@ -76,13 +190,12 @@ func testSanity(t *testing.T, action solver.Action, testBoards []testBoard, opts
 			}
 
 			if sample.failToLog || t.Failed() {
-				resJSON, err := json.MarshalIndent(res, "", "  ")
-				assert.NilError(t, err)
-				t.Log(string(resJSON))
+				t.Log(res.String())
 				t.Fail()
 			}
 		})
 	}
+	return allResults
 }
 
 // start: 			2    899252146 ns/op    840329088 B/op   3602781 allocs/op
@@ -180,6 +293,9 @@ func testSanity(t *testing.T, action solver.Action, testBoards []testBoard, opts
 // Improve the constraint algorithms:
 // - first only		727	   1595624 ns/op	  293023 B/op	    1109 allocs/op
 // - all			444	   2685913 ns/op	  440461 B/op	    1683 allocs/op
+// Cache and bug fix in layered recursion calculations:
+// - first only		664	   1671817 ns/op	  330448 B/op	    2180 allocs/op
+// - all			410	   2812257 ns/op	  495262 B/op	    3270 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
 	benchRun(b, solver.ActionProve, 1)
@@ -229,6 +345,11 @@ func BenchmarkProveAll(b *testing.B) {
 // - all			30	  38299142 ns/op	 1390153 B/op	   12756 allocs/op
 // - fast first		1311    794930 ns/op	  146608 B/op	     560 allocs/op
 // - fast all		825	   1336013 ns/op	  219549 B/op	     854 allocs/op
+// Cache and bug fix in layered recursion calculations:
+// - first only		123	   9647324 ns/op	  743451 B/op	    9532 allocs/op
+// - all			28	  38178159 ns/op	 2055890 B/op	   30729 allocs/op
+// - fast first		1441    829220 ns/op	  164023 B/op	    1092 allocs/op
+// - fast all		848	   1417896 ns/op	  246973 B/op	    1659 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, solver.ActionSolve, 1)

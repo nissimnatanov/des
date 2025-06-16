@@ -1,5 +1,10 @@
 package solver
 
+import (
+	"maps"
+	"slices"
+)
+
 type runResult struct {
 	Status     Status         `json:"status"`
 	Count      int64          `json:"count"`
@@ -18,6 +23,21 @@ func (rr *runResult) completeErr(err error) *runResult {
 	rr.Status = StatusError
 	rr.Error = err
 	return rr
+}
+
+func (rr *runResult) clone() *runResult {
+	c := *rr
+	if len(rr.Steps) != 0 {
+		c.Steps = make(map[Step]map[StepComplexity]int, len(rr.Steps))
+		for step, complexityMap := range rr.Steps {
+			// values of the nested maps are values, shallow clone is good
+			c.Steps[step] = maps.Clone(complexityMap)
+		}
+	}
+	if len(c.Solutions) != 0 {
+		c.Solutions = slices.Clone(c.Solutions)
+	}
+	return &c
 }
 
 func (rr *runResult) addStep(step Step, complexity StepComplexity, count int) {

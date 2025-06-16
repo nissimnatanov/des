@@ -87,11 +87,12 @@ type Options struct {
 	OnNewResult func(*solver.Result)
 }
 
-func (g *Generator) newInitialBoardState(ctx context.Context) *internal.BoardState {
+func (g *Generator) newInitialBoardState(ctx context.Context, withCache bool) *internal.BoardState {
 	state := internal.NewSolutionState(internal.SolutionStateArgs{
-		Solution: g.solProvider(),
-		Rand:     g.r,
-		Solver:   g.solver,
+		Solution:  g.solProvider(),
+		Rand:      g.r,
+		Solver:    g.solver,
+		WithCache: withCache,
 	})
 	return state.InitialBoardState(ctx, g.lr)
 }
@@ -101,7 +102,8 @@ func (g *Generator) Generate(ctx context.Context) []*solver.Result {
 		return g.generateSlow(ctx)
 	}
 
-	initState := g.newInitialBoardState(ctx)
+	// cache degrades generation performance for fast boards
+	initState := g.newInitialBoardState(ctx, false)
 	count := g.count
 	if count == 0 {
 		count = 1 // default to 1 for fast generation
@@ -144,7 +146,7 @@ func (g *Generator) generateFast(ctx context.Context, initState *internal.BoardS
 
 		stageStats.Report(1, stage)
 		elapsed := time.Since(start)
-		internal.Stats.ReportGeneration(1, elapsed, int64(tries), stageStats)
+		internal.Stats.ReportGeneration(1, elapsed, int64(tries), stageStats, initState.SolutionState().Cache().Stats())
 		return bs
 	}
 

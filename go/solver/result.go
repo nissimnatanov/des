@@ -1,6 +1,8 @@
 package solver
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/nissimnatanov/des/go/boards"
@@ -37,8 +39,9 @@ func (r *Result) completeWith(runRes *runResult) *Result {
 	if r.Count != 0 || r.Complexity != 0 {
 		panic("result should not have any partial count nor complexity reported, they are override below")
 	}
-	if runRes == nil || runRes.Status == StatusUnknown {
-		panic("solver returned nil or unknown status")
+	if runRes.Status == StatusUnknown {
+		// could prob panic here since solver is really bullet proof and should never return
+		panic("solver returned unknown status")
 	}
 
 	r.Status = runRes.Status
@@ -48,9 +51,18 @@ func (r *Result) completeWith(runRes *runResult) *Result {
 	r.Solutions = r.Solutions.With(runRes.Solutions)
 	if r.Status == StatusSucceeded {
 		r.Level = LevelFromComplexity(r.Complexity)
+		r.Steps.Merge(runRes.Steps)
 	}
-	r.Steps.Merge(runRes.Steps)
 	// Note: AllSteps might already have some results, we should always merge with them
 	r.AllSteps.Merge(runRes.Steps)
 	return r
+}
+
+// String returns a human-readable string representation of the result, as JSON
+func (r *Result) String() string {
+	resJSON, err := json.MarshalIndent(r, "", "  ")
+	if err != nil {
+		return fmt.Sprintf("error marshaling result to JSON: %v", err)
+	}
+	return string(resJSON)
 }

@@ -57,6 +57,10 @@ func TestGeneratorRangeWithSlowMax(t *testing.T) {
 // * 26	  44879917 ns/op	13663641 B/op	   68303 allocs/op
 // * Generations: 2600, ~Elapsed: 448.108µs, ~Retries: 1.000,
 //   Stages: [{2600 645 0} {1955 1575 0} {380 380 0}]
+// Cache and bug fix in layered recursion calculations:
+// * 20	  55638904 ns/op	19075226 B/op	  147718 allocs/op
+// * Generations: 2000, ~Elapsed: 552.749µs, ~Retries: 1.000,
+//   Stages: [{2000 426 0} {1574 1222 0} {352 352 0}]
 
 func BenchmarkEasyOrMedium(b *testing.B) {
 	runBenchmark(b, solver.LevelEasy, solver.LevelMedium, 100)
@@ -70,6 +74,10 @@ func BenchmarkEasyOrMedium(b *testing.B) {
 // * 27	  49116306 ns/op	13561052 B/op	   63190 allocs/op
 // * Generations: 270, ~Elapsed: 4.90605ms, ~Retries: 2.367,
 //   Stages: [{270 0 0} {270 52 3} {218 218 6}]
+// Cache and bug fix in layered recursion calculations:
+// * 20	  53990679 ns/op	17271384 B/op	  136893 allocs/op
+// * Generations: 200, ~Elapsed: 5.391663ms, ~Retries: 2.305,
+//   Stages: [{200 1 0} {199 32 2} {167 167 10}]
 
 func BenchmarkHardOrVeryHard(b *testing.B) {
 	runBenchmark(b, solver.LevelHard, solver.LevelVeryHard, 10)
@@ -91,6 +99,11 @@ func BenchmarkHardOrVeryHard(b *testing.B) {
 // * 1	10674286042 ns/op	2678858688 B/op	13787793 allocs/op
 // * Generations: 204, ~Elapsed: 104.648522ms, ~Retries: 1.314,
 //   Stages: [{228 0 0} {228 14 0} {214 40 0} {174 174 0}]
+// Cache and bug fix in layered recursion calculations:
+// * 1	11643770166 ns/op	4602950616 B/op	37050719 allocs/op
+// * Generations: 100, ~Elapsed: 116.43767ms, ~Retries: 1.280,
+//   Stages: [{110 0 0} {110 4 0} {106 19 0} {87 87 0}]
+// * Solver Cache: hits=3715 (9.0%), unknown hits=18 (0.0%), misses=37525, sets=37525
 
 func BenchmarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelEvil, solver.LevelEvil, 100)
@@ -108,6 +121,11 @@ func BenchmarkEvil(b *testing.B) {
 // * 1	14836185834 ns/op	3555023984 B/op	17091575 allocs/op
 // * Generations: 20, ~Elapsed: 1.483607195s, ~Retries: 17.800,
 //   Stages: [{20 0 0} {20 2 0} {18 0 0} {18 18 0}]
+// Cache and bug fix in layered recursion calculations:
+// * 1	28215436834 ns/op	11097599904 B/op	89392167 allocs/op
+// * Generations: 10, ~Elapsed: 2.821543495s, ~Retries: 30.200,
+//   Stages: [{10 0 0} {10 1 0} {9 0 0} {9 9 0}]
+// * Solver Cache: hits=3018 (10.9%), unknown hits=100 (0.4%), misses=24487, sets=24489
 
 func BenchmarkDarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelDarkEvil, solver.LevelDarkEvil, 10)
@@ -145,4 +163,5 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 	}
 	b.Log(internal.Stats.Game().String())
 	b.Log(internal.Stats.Solution().String())
+	b.Log(internal.Stats.Cache().String())
 }

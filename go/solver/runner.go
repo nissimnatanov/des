@@ -11,11 +11,11 @@ type runner struct {
 	action                Action
 	input                 *boards.Game
 	play                  *boards.Game
-	parent                *Solver
 	currentRecursionDepth int8
 	maxRecursionDepth     int8
 	algorithms            []Algorithm
 	withSteps             bool
+	cache                 *Cache
 }
 
 func (r *runner) newRunResult() *runResult {
@@ -26,52 +26,77 @@ func (r *runner) newRunResult() *runResult {
 	return rr
 }
 
-func (r *runner) start(ctx context.Context) *runResult {
-	if !r.Action().LevelRequested() || r.maxRecursionDepth < 2 {
-		return r.runWithCache(ctx)
+func (r *runner) run(ctx context.Context) *runResult {
+	if !r.Action().LevelRequested() || (r.maxRecursionDepth-r.currentRecursionDepth) < 2 {
+		return r.runAlgorithms(ctx, runAll)
 	}
 
-	// For accurate leveling, use layer recursion: start with the recursion depth of 1 and slowly
+	rr := r.runAlgorithms(ctx, runNonRecursiveOnly)
+	if rr.Status != StatusUnknown {
+		// got the result without recursion, return it
+		return rr
+	}
+
+	// For accurate leveling, use layer recursion: start with the recursion depth of current+1 and slowly
 	// increase it until we reach the max recursion or the board is solved.
-	var rr *runResult
 	maxRecursionOriginal := r.maxRecursionDepth
-	for maxRecursionCurrent := int8(1); maxRecursionCurrent <= maxRecursionOriginal; maxRecursionCurrent++ {
+	for maxRecursionCurrent := r.currentRecursionDepth + 1; maxRecursionCurrent <= maxRecursionOriginal; maxRecursionCurrent++ {
 		r.maxRecursionDepth = maxRecursionCurrent
-		rr = r.runWithCache(ctx)
-		if rr.Status != StatusUnknown {
-			return rr
+		// since we already tried and applied non-recursive algos, we can start with recursion
+		teResult := r.runAlgorithms(ctx, startWithRecursion)
+		if teResult.Status != StatusUnknown {
+			// merge the pre-recursion stats into the recursive result
+			teResult.mergeStatsOnly(rr)
+			return teResult
 		}
 	}
 	return rr
 }
 
-func (r *runner) runWithCache(ctx context.Context) *runResult {
+type runAlgorithmsMode int
+
+const (
+	runAll runAlgorithmsMode = iota
+	runNonRecursiveOnly
+	startWithRecursion
+)
+
+func (r *runner) runAlgorithms(ctx context.Context, mode runAlgorithmsMode) *runResult {
 	if ctx.Err() != nil {
 		return r.newRunResult().completeErr(ctx.Err())
 	}
 	b := r.Board()
 	if !b.IsValid() {
-		return r.newRunResult().complete(StatusError)
+		return r.newRunResult().completeErr(fmt.Errorf("input board is not valid"))
 	}
 
-	// cache removed temporarily - need to check if it is beneficial
-	return r.runAlgos(ctx)
-}
-
-func (r *runner) runAlgos(ctx context.Context) *runResult {
-	runnerState := &runnerState{
-		runner:    r,
-		runResult: r.newRunResult(),
+	var original *boards.Game
+	if boards.GetIntegrityChecks() {
+		// clone the original for integrity checks
+		original = b.Clone(boards.Immutable)
 	}
-	b := r.Board()
+	state := &runnerState{runner: r, runResult: r.newRunResult()}
+	algoState := AlgorithmState(state)
 	for b.FreeCellCount() > 0 {
 		if ctx.Err() != nil {
-			return runnerState.completeErr(ctx.Err())
+			return state.completeErr(ctx.Err())
+		}
+		var status Status
+		if mode != startWithRecursion {
+			status = state.tryNonRecursiveAlgorithms(ctx, algoState)
+		} else {
+			// only skip non-recursive algos once: after the first trial-and-error, go back to all algos
+			mode = runAll
+		}
+		if status == StatusUnknown && mode != runNonRecursiveOnly {
+			teResult := r.runTrialAndErrorWithCache(ctx)
+			// clone the stats into current runResult
+			state.mergeStatsOnly(teResult)
+			status = teResult.Status
 		}
 
-		status := runnerState.tryAlgorithms(ctx)
 		if status != StatusSucceeded {
-			return runnerState.complete(status)
+			return state.complete(status)
 		}
 	}
 
@@ -81,18 +106,19 @@ func (r *runner) runAlgos(ctx context.Context) *runResult {
 		panic("board has no free cells but is not solved")
 	}
 
-	// algos do not report solutions
+	// TODO: do not report same solution twice from trialAndErr, other algos do not report solutions
 	sol := boards.NewSolution(b)
-	runnerState.Solutions = runnerState.Solutions.Append(sol)
+	state.Solutions = state.Solutions.Append(sol)
 	if boards.GetIntegrityChecks() {
-		if !boards.ContainsAll(sol, r.input) {
+		if !boards.ContainsAll(sol, original) {
 			panic("solution does not match the board to be solved")
 		}
 	}
-	if len(runnerState.Solutions) > 1 && runnerState.Status == StatusSucceeded {
-		return runnerState.complete(StatusMoreThanOneSolution)
+	if len(state.Solutions) > 1 {
+		return state.complete(StatusMoreThanOneSolution)
 	}
-	return runnerState.complete(StatusSucceeded)
+	// success case
+	return state.complete(StatusSucceeded)
 }
 
 type runnerState struct {
@@ -100,21 +126,20 @@ type runnerState struct {
 	*runResult
 }
 
-func (r *runnerState) tryAlgorithms(ctx context.Context) Status {
+func (r *runner) tryNonRecursiveAlgorithms(ctx context.Context, algoState AlgorithmState) Status {
 	eliminationOnly := false
 	b := r.Board()
+	if ctx.Err() != nil {
+		return StatusError
+	}
 	for _, algo := range r.algorithms {
-		if ctx.Err() != nil {
-			r.completeErr(ctx.Err())
-			return StatusError
-		}
 		var startBoard *boards.Game
 		if boards.GetIntegrityChecks() {
 			startBoard = b.Clone(boards.Immutable)
 		}
 
 		freeBefore := b.FreeCellCount()
-		status := algo.Run(ctx, r)
+		status := algo.Run(ctx, algoState)
 
 		if boards.GetIntegrityChecks() {
 			if !boards.ContainsAll(b, startBoard) {
@@ -128,26 +153,18 @@ func (r *runnerState) tryAlgorithms(ctx context.Context) Status {
 					algo, startBoard, b))
 			}
 		}
+		if status == StatusSucceeded &&
+			b.FreeCellCount() == freeBefore &&
+			!r.action.LevelRequested() &&
+			b.Hint01() < 0 {
+			// If we do not need an accurate level, it is proven to be faster if we
+			// try harder algorithms if the current one was only able to eliminate some
+			// choices without finding a new value. The algos that eliminate only need to
+			// check for the zero-or-one allowed left in the cell post elimination.
+			eliminationOnly = true
+			continue
+		}
 		if status != StatusUnknown {
-			if status == StatusError && r.Error == nil {
-				// if the algo reports an error, we want to return it
-				if ctx.Err() != nil {
-					r.completeErr(ctx.Err())
-				} else {
-					r.completeErr(fmt.Errorf("algo %s reported an error", algo))
-				}
-			}
-			if status == StatusSucceeded &&
-				b.FreeCellCount() == freeBefore &&
-				!r.Action().LevelRequested() &&
-				b.Hint01() < 0 {
-				// If we do not need an accurate level, it is proven to be faster if we
-				// try harder algorithms if the current one was only able to eliminate some
-				// choices without finding a new value. The algos that eliminate only need to
-				// check for the zero-or-one allowed left in the cell post elimination.
-				eliminationOnly = true
-				continue
-			}
 			return status
 		}
 		// with unknown status all algos must retain the board as is
@@ -162,8 +179,12 @@ func (r *runnerState) tryAlgorithms(ctx context.Context) Status {
 	if eliminationOnly {
 		return StatusSucceeded
 	}
+
+	// all traditional algos failed, return back to allow caller try trial-and-error
 	return StatusUnknown
 }
+
+var _ AlgorithmState = &runnerState{}
 
 func (r *runner) Action() Action {
 	return r.action
@@ -183,16 +204,17 @@ func (r *runnerState) AddStep(step Step, complexity StepComplexity, count int) {
 }
 
 func (r *runnerState) recursiveRun(ctx context.Context, b *boards.Game) Status {
-	result := r.recursiveRunNested(ctx, b)
-	// merge the sub-steps into the parent result
-	r.mergeStatsOnly(result)
+	if ctx.Err() != nil {
+		return StatusError
+	}
+	status := r.recursiveRunNested(ctx, b)
 
 	// before we return, let's check the mode
 	if !r.Action().LevelRequested() {
-		// fast solvers do nto care about levels and can use very deep recursion
+		// prover and fast solvers do not care about level and can use very deep recursion
 		// for efficiency, hence it does not matter how deep we are
 		r.addStep(trialAndErrorStepName, StepComplexityRecursion1, 1)
-		return result.Status
+		return status
 	}
 
 	// Solve uses layered recursion to calculate the level, starting from maxRecursionDepth of 1
@@ -228,36 +250,120 @@ func (r *runnerState) recursiveRun(ctx context.Context, b *boards.Game) Status {
 			"Unexpected usedDepth %d, something is likely wrong with the Solve algorithm.\n%s.\n",
 			usedDepth, r.inputBoardAsString()))
 	}
-
-	r.addStep(trialAndErrorStepName, complexity, 1)
-	return result.Status
+	r.AddStep(trialAndErrorStepName, complexity, 1)
+	return status
 }
 
-func (r *runner) recursiveRunNested(ctx context.Context, b *boards.Game) *runResult {
-	if ctx.Err() != nil {
-		return r.newRunResult().completeErr(ctx.Err())
-	}
-
+func (r *runnerState) recursiveRunNested(ctx context.Context, b *boards.Game) Status {
 	if r.currentRecursionDepth >= r.maxRecursionDepth {
-		// shouldn't happen, but just in case
-		return r.newRunResult().complete(StatusUnknown)
+		return StatusUnknown
 	}
 	nested := &runner{
 		action:                r.action,
 		input:                 r.input,
 		play:                  b,
-		parent:                r.parent,
 		algorithms:            r.algorithms,
 		currentRecursionDepth: r.currentRecursionDepth + 1,
 		maxRecursionDepth:     r.maxRecursionDepth,
+		cache:                 r.cache,
 		withSteps:             r.withSteps,
 	}
-	if boards.GetIntegrityChecks() {
-		// we only need input board for recursive runs if the integrity checks are enabled
-		nested.input = b.Clone(boards.Immutable)
+
+	rr := nested.run(ctx)
+
+	// since the nested run result can be cached, we must not modify it,
+	// hence, first merge the steps then report the trialAndError status only
+	r.mergeStatsOnly(rr)
+	return rr.Status
+}
+
+var trialAndErrorAlgo = trialAndError{}
+
+func (r *runner) runTrialAndErrorWithCache(ctx context.Context) *runResult {
+	var maxRecursionDepthTried int
+	if r.action.LevelRequested() {
+		maxRecursionDepthTried = int(r.maxRecursionDepth - r.currentRecursionDepth)
+	}
+	needIntegrityCheck := boards.GetIntegrityChecks() &&
+		r.action == ActionSolve && r.cache != nil &&
+		maxRecursionDepthTried == 0
+	var originalPlay *boards.Game
+	if needIntegrityCheck {
+		originalPlay = r.play.Clone(boards.Edit)
 	}
 
-	return nested.runWithCache(ctx)
+	cv, key := r.cache.get(r.Board(), r.action, maxRecursionDepthTried)
+	if cv.result != nil {
+		if needIntegrityCheck {
+			_ = originalPlay
+			tmpCache := r.cache
+			r.cache = nil
+			tmpPlay := r.play
+			r.play = originalPlay
+
+			// to use cache, fork a new runnerState with dedicated runResult
+			tmpState := &runnerState{runner: r, runResult: r.newRunResult()}
+			tmpStatus := trialAndErrorAlgo.Run(ctx, tmpState)
+			if tmpState.Status != StatusUnknown {
+				panic("algos should not set the status directly")
+			}
+			tmpState.runResult.Status = tmpStatus
+
+			// restore prev state before checking the rest
+			r.cache = tmpCache
+			r.play = tmpPlay
+			r.checkCacheRes(cv.result, tmpState.runResult)
+		}
+		if cv.result.Status != StatusUnknown {
+			// we must update existing board in-place rather than replacing it (lots of code
+			// captures the board as b locally)
+			cv.board.CloneInto(boards.Play, r.play)
+		}
+		return cv.result
+	}
+
+	teState := &runnerState{runner: r, runResult: r.newRunResult()}
+	teStatus := trialAndErrorAlgo.Run(ctx, teState)
+	if teState.Status != StatusUnknown {
+		// recursive runs only report steps and use mergeStatsOnly to update the stats
+		panic("algos should not set the result status directly")
+	}
+	rr := teState.runResult
+	rr.Status = teStatus
+
+	// Do not cache if:
+	// - the cache is not enabled (key is empty)
+	// - the result is an error status
+	//
+	// Note: unknown (unresolved) boards are cached since we are also caching the max recursion depth with it.
+	if key != NoCache && rr.Status != StatusError {
+		// even if it is Prove or SolveFast, we still cache it, allowing it to be
+		// reused for algos that can rely on those results, see tryCache
+		// cache the result, always pass the next board (cache may ignore it for unknown)
+		r.cache.set(key, r.action, CacheValue{result: rr, board: r.play}, maxRecursionDepthTried)
+	}
+
+	return rr
+}
+
+func (r *runner) checkCacheRes(cacheRes, noCacheRes *runResult) {
+	// exception: cache with non-unknown result is allowed to be reused
+	// in any recursion depth
+	if noCacheRes.Status == StatusUnknown && cacheRes.Status != StatusUnknown {
+		// allow it
+		return
+	}
+
+	if noCacheRes.Status != cacheRes.Status ||
+		noCacheRes.Complexity != cacheRes.Complexity ||
+		noCacheRes.Count != cacheRes.Count {
+		// if the result is different between cache and non-cache, it will ruin generation quality
+		diff := fmt.Sprintf(
+			"cache result is different from the run result, this should not happen:\nCache: %s %v\nRun: %s %v",
+			cacheRes.Status, cacheRes.Steps, noCacheRes.Status, noCacheRes.Steps,
+		)
+		panic(diff)
+	}
 }
 
 // inputOrActiveBoard can be used for troubleshooting or logging abnormal cases

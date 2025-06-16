@@ -31,9 +31,9 @@ type Solver struct {
 
 func New() *Solver {
 	return &Solver{
-		solveAlgorithms:     getAlgorithms(ActionSolve),
-		proveAlgorithms:     getAlgorithms(ActionProve),
-		fastSolveAlgorithms: getAlgorithms(ActionSolveFast),
+		solveAlgorithms:     solveAlgos,
+		proveAlgorithms:     proveOrSolveFastAlgos,
+		fastSolveAlgorithms: proveOrSolveFastAlgos,
 	}
 }
 
@@ -41,6 +41,7 @@ type options struct {
 	actionSet bool
 	action    Action
 	withSteps bool
+	cache     *Cache
 }
 
 type Option interface {
@@ -56,12 +57,20 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game, os ...Option) *Result 
 		o.applySolverOptions(&opts)
 	}
 	opts.withSteps = opts.withSteps || boards.GetIntegrityChecks()
+	return s.runOpts(ctx, b, opts)
+}
+
+func (s *Solver) runOpts(ctx context.Context, b *boards.Game, opts options) *Result {
 	action := opts.action
 	// prevent input from being modified
 	b = b.Clone(boards.Immutable)
 	result := &Result{
 		Action: action,
 		Input:  b,
+	}
+	if opts.withSteps {
+		result.Steps = Steps{}
+		result.AllSteps = Steps{}
 	}
 
 	start := time.Now()
@@ -74,15 +83,17 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game, os ...Option) *Result 
 		// if the board has more than one solution Solve can take
 		// really long time to run. Hence, we do not allow level calculation
 		// on an unproven board.
-		proofRes := s.Run(ctx, b, ActionProve)
+		proveOpts := opts
+		proveOpts.action = ActionProve
+		proofRes := s.runOpts(ctx, b, proveOpts)
 		if proofRes.Status != StatusSucceeded {
-			proofRes.Action = action
+			proofRes.Action = ActionSolve
 			return proofRes
 		}
-		result.addNonLevelSteps(proofRes.Steps)
+		result.addNonLevelSteps(proofRes.AllSteps)
 	}
 
-	runRes := s.run(ctx, b, action, opts.withSteps)
+	runRes := s.run(ctx, b, opts)
 	result.completeWith(runRes)
 	logResult(result)
 	return result
@@ -119,7 +130,7 @@ func (s *Solver) runBasicChecks(b *boards.Game) Status {
 	return StatusUnknown
 }
 
-func (s *Solver) run(ctx context.Context, b *boards.Game, action Action, withSteps bool) *runResult {
+func (s *Solver) run(ctx context.Context, b *boards.Game, opts options) *runResult {
 	status := s.runBasicChecks(b)
 	if status != StatusUnknown {
 		rr := &runResult{}
@@ -130,7 +141,7 @@ func (s *Solver) run(ctx context.Context, b *boards.Game, action Action, withSte
 	}
 
 	var algorithms []Algorithm
-	switch action {
+	switch opts.action {
 	case ActionSolve:
 		algorithms = s.solveAlgorithms
 	case ActionSolveFast:
@@ -138,19 +149,20 @@ func (s *Solver) run(ctx context.Context, b *boards.Game, action Action, withSte
 	case ActionProve:
 		algorithms = s.proveAlgorithms
 	default:
-		panic(fmt.Sprintf("unknown action: %s", action))
+		panic(fmt.Sprintf("unknown action: %s", opts.action))
 	}
 
 	// before we modify the input board, we must clone it into Play mode
 	play := b.Clone(boards.Play)
 
 	r := &runner{
-		action:                action,
+		action:                opts.action,
 		input:                 b,
 		play:                  play,
 		algorithms:            algorithms,
-		withSteps:             withSteps,
+		withSteps:             opts.withSteps,
 		currentRecursionDepth: 0,
+		cache:                 opts.cache,
 
 		// without recursion it is virtually impossible to solve many boards,
 		// zero is not a valid value
@@ -177,7 +189,7 @@ func (s *Solver) run(ctx context.Context, b *boards.Game, action Action, withSte
 			rr = &runResult{}
 			rr.completeErr(err)
 		}()
-		rr = r.start(ctx)
+		rr = r.run(ctx)
 	}()
 
 	if len(rr.Solutions) > 1 && rr.Status == StatusSucceeded {

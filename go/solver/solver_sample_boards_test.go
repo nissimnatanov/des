@@ -34,14 +34,14 @@ var benchBoards = []testBoard{
 		board:              "6D894A9D61C7B4D2B61J2C89B2G6C5G3A8D16B",
 		solution:           "62_5_1_7_8943_94_8_3_2_615_7_3_71_9_45_8_6_2_25_7_619_3_8_4_4_6_3_5_8_7_29_1_1_894_3_25_7_6_7_9_2_8_63_4_1_55_1_6_2_9_4_7_38_83_4_7_5_162_9_",
 		expectedLevel:      solver.LevelBlackHole,
-		expectedComplexity: 200038,
+		expectedComplexity: 200138,
 	},
 	{
 		name:               "al escargot",
 		board:              "1D7A9B3B2C8B96B5D53B9C1B8C26D4C3F1B4F7B7C3B",
 		solution:           "16_2_8_5_74_93_5_34_1_29_6_7_87_8_964_3_52_1_4_7_531_2_98_6_9_13_5_86_7_4_262_8_7_9_41_3_5_35_6_4_7_8_2_19_2_41_9_3_5_8_6_78_9_72_6_1_35_4_",
 		expectedLevel:      solver.LevelBlackHole,
-		expectedComplexity: 139168,
+		expectedComplexity: 139173,
 	},
 	{
 		name:     "Arto Inkala",
@@ -103,7 +103,7 @@ var otherBoards = []testBoard{
 		board:              "B1A6A5B4A8B16C5E12B4E3C9F3B7B6A2C3C1A156C7A8B7E",
 		solution:           "7_2_13_68_54_9_49_82_5_163_7_6_53_4_9_7_8_125_7_48_2_6_1_9_31_8_6_94_3_7_2_5_9_32_1_75_4_68_26_7_5_34_9_8_13_1568_9_2_74_84_9_71_2_3_5_6_",
 		expectedLevel:      solver.LevelBlackHole,
-		expectedComplexity: 163053,
+		expectedComplexity: 163173,
 	},
 	{
 		name:     "my board 2",
@@ -115,7 +115,7 @@ var otherBoards = []testBoard{
 		board:              "B3A85C6B1G27C5E17A8B6B3A51F6B7A9A3A86B1C7F5C8B",
 		solution:           "7_1_34_852_6_9_65_8_19_2_7_4_3_9_4_276_3_1_58_5_3_9_2_174_86_4_67_8_39_512_8_2_1_5_4_69_3_72_94_35_867_1_18_6_9_74_3_2_5_3_7_56_2_1_89_4_",
 		expectedLevel:      solver.LevelBlackHole,
-		expectedComplexity: 151408,
+		expectedComplexity: 151638,
 	},
 	{
 		name:               "my board 4",

@@ -31,7 +31,7 @@ func newBoardState(
 	ctx context.Context, state *SolutionState, levelRange LevelRange, srcBoard *boards.Game,
 ) (*BoardState, *solver.Result) {
 	// we could prob create fake result for solutions, but it does not matter much
-	res := state.solver.Run(ctx, srcBoard, solver.ActionSolve)
+	res := state.solver.Run(ctx, srcBoard, solver.ActionSolve, state.cache)
 	if res.Status != solver.StatusSucceeded {
 		return nil, res
 	}
@@ -55,7 +55,7 @@ func newSolutionBoardState(
 ) *BoardState {
 	// we could prob create fake result for solutions, but it does not matter much
 	editBoard := sol.Clone(boards.Edit)
-	res := state.solver.Run(ctx, editBoard, solver.ActionSolve)
+	res := state.solver.Run(ctx, editBoard, solver.ActionSolve, state.cache)
 	if res.Status != solver.StatusSucceeded {
 		panic("failed to solve a solution")
 	}
@@ -308,7 +308,7 @@ func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int)
 	}
 
 	if boards.GetIntegrityChecks() {
-		res := bs.solState.solver.Run(ctx, bs.board(), solver.ActionProve)
+		res := bs.solState.solver.Run(ctx, bs.board(), solver.ActionProve, bs.solState.cache)
 		if res.Status != solver.StatusSucceeded {
 			panic("do not use invalid boards as an input here")
 		}
