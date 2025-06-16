@@ -1,24 +1,29 @@
 package solver
 
-import "github.com/nissimnatanov/des/go/boards"
+import (
+	"slices"
 
-type Solutions struct {
-	all []*boards.Solution
-}
+	"github.com/nissimnatanov/des/go/boards"
+)
 
-func (s *Solutions) Add(newSol *boards.Solution) {
-	for _, sol := range s.all {
+type Solutions []*boards.Solution
+
+func (s Solutions) Append(newSol *boards.Solution) Solutions {
+	for _, sol := range s {
 		if boards.Equivalent(sol, newSol) {
-			return
+			return s
 		}
 	}
-	s.all = append(s.all, newSol)
+	return append(s, newSol)
 }
 
-func (s *Solutions) Size() int {
-	return len(s.all)
-}
-
-func (s *Solutions) At(i int) *boards.Solution {
-	return s.all[i]
+func (s Solutions) With(other Solutions) Solutions {
+	if len(s) == 0 {
+		// assuming other is already unique
+		return slices.Clone(other)
+	}
+	for _, sol := range other {
+		s = s.Append(sol)
+	}
+	return s
 }

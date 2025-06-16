@@ -96,7 +96,7 @@ func (bs *BoardState) SolutionState() *SolutionState {
 }
 
 func (bs *BoardState) Complexity() solver.StepComplexity {
-	return bs.res.Steps.Complexity
+	return bs.res.Complexity
 }
 
 func (bs *BoardState) Result() *solver.Result {
@@ -108,7 +108,7 @@ func (bs *BoardState) Progress() Progress {
 }
 
 func (bs *BoardState) BoardLevel() solver.Level {
-	return bs.res.Steps.Level
+	return bs.res.Level
 }
 
 func (bs *BoardState) DesiredLevelRange() LevelRange {

@@ -24,7 +24,7 @@ func TestGeneratorFast(t *testing.T) {
 				for _, res := range rs {
 					assert.Assert(t, res != nil)
 					assert.Equal(t, res.Status, solver.StatusSucceeded)
-					assert.Check(t, res.Steps.Level == level, "expected level %s, got %s", level, res.Steps.Level)
+					assert.Check(t, res.Level == level, "expected level %s, got %s", level, res.Level)
 				}
 			}
 		})
@@ -43,8 +43,8 @@ func TestGeneratorRangeWithSlowMax(t *testing.T) {
 		for _, res := range rs {
 			assert.Assert(t, res != nil)
 			assert.Equal(t, res.Status, solver.StatusSucceeded)
-			assert.Check(t, res.Steps.Level >= min && res.Steps.Level <= max,
-				"expected level between %s and %s, got %s", min, max, res.Steps.Level)
+			assert.Check(t, res.Level >= min && res.Level <= max,
+				"expected level between %s and %s, got %s", min, max, res.Level)
 		}
 	}
 }
@@ -138,8 +138,8 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 			if res.Status != solver.StatusSucceeded {
 				b.Fatalf("failed to generate board at result %d: %s", ri, res.Error)
 			}
-			if res.Steps.Level >= solver.LevelNightmare {
-				b.Logf("generated[%s][%d]: %s. %s", res.Steps.Level, ri, boards.Serialize(res.Input), &res.Steps)
+			if res.Level >= solver.LevelNightmare {
+				b.Logf("generated[%s][%d]: %s. %s", res.Level, ri, boards.Serialize(res.Input), &res.Steps)
 			}
 		}
 	}

@@ -38,11 +38,11 @@ func (lr LevelRange) shouldContinue(r *random.Random, board *boards.Game, res *s
 		return TooEarly
 	}
 
-	if res.Steps.Level < lr.Min {
+	if res.Level < lr.Min {
 		return BelowMinLevel
 	}
 
-	if res.Steps.Level > lr.Max {
+	if res.Level > lr.Max {
 		// Overflow, stop.
 		return AboveMaxLevel
 	}

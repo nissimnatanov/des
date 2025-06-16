@@ -40,6 +40,7 @@ func New() *Solver {
 type options struct {
 	actionSet bool
 	action    Action
+	withSteps bool
 }
 
 type Option interface {
@@ -54,7 +55,20 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game, os ...Option) *Result 
 	for _, o := range os {
 		o.applySolverOptions(&opts)
 	}
+	opts.withSteps = opts.withSteps || boards.GetIntegrityChecks()
 	action := opts.action
+	// prevent input from being modified
+	b = b.Clone(boards.Immutable)
+	result := &Result{
+		Action: action,
+		Input:  b,
+	}
+
+	start := time.Now()
+	defer func() {
+		result.Elapsed = time.Since(start)
+	}()
+
 	if action == ActionSolve {
 		// ActionSolve uses layered recursion to calculate the level,
 		// if the board has more than one solution Solve can take
@@ -83,7 +97,6 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game, os ...Option) *Result 
 
 	r := &runner{
 		play:                  play,
-		parent:                s,
 		algorithms:            algorithms,
 		currentRecursionDepth: 0,
 		// without recursion it is virtually impossible to solve many boards,
@@ -95,21 +108,16 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game, os ...Option) *Result 
 			Input:  b,
 			// solutions are shared so that we can deduplicate them and
 			// stop once two solutions are found
-			Solutions: &Solutions{},
+			Solutions: Solutions{},
 		},
 	}
-
-	start := time.Now()
-	defer func() {
-		r.result.Elapsed = time.Since(start)
-	}()
 
 	if !b.IsValid() {
 		return r.result.complete(StatusNoSolution)
 	}
 	if b.IsSolved() {
 		// fast track the result generation for board that is already solved (e.g. Solution)
-		r.result.Solutions.Add(boards.NewSolution(b))
+		result.Solutions = result.Solutions.Append(boards.NewSolution(b))
 		return r.result.complete(StatusSucceeded)
 	}
 
@@ -156,11 +164,11 @@ func (s *Solver) Run(ctx context.Context, b *boards.Game, os ...Option) *Result 
 		r.start(ctx)
 	}()
 
-	if r.result.Solutions.Size() > 1 && r.Action().ProofRequested() && r.result.Status == StatusSucceeded {
-		// if we got two solutions yet proof was requested, we must guarantee a different status
+	if len(result.Solutions) > 1 && result.Status == StatusSucceeded {
+		// if we got two solutions we must guarantee a different status
 		r.result.complete(StatusMoreThanOneSolution)
 	}
-	logResult(r.result)
+	logResult(result)
 
 	// if run panics, we want to return both the error and the partial result
 	return r.result
@@ -192,8 +200,7 @@ func (r *runner) start(ctx context.Context) {
 		}
 		// since we are about to increase the recursion depth, we will re-run same steps again
 		if maxRecursionCurrent < maxRecursionOriginal {
-			r.result.Error = nil
-			r.result.Steps.reset()
+			r.result.reset()
 		}
 	}
 }
@@ -237,13 +244,13 @@ func (r *runner) runAlgos(ctx context.Context) {
 
 	// algos do not report solutions
 	sol := boards.NewSolution(b)
-	r.result.Solutions.Add(sol)
+	r.result.Solutions = r.result.Solutions.Append(sol)
 	if boards.GetIntegrityChecks() {
 		if !boards.ContainsAll(sol, r.result.Input) {
 			panic("solution does not match the board to be solved")
 		}
 	}
-	if r.result.Solutions.Size() > 1 {
+	if len(r.result.Solutions) > 1 {
 		r.result.complete(StatusMoreThanOneSolution)
 	} else {
 		r.result.complete(StatusSucceeded)
@@ -329,7 +336,7 @@ func (r *runner) MaxRecursionDepth() int {
 	return int(r.maxRecursionDepth)
 }
 func (r *runner) AddStep(step Step, complexity StepComplexity, count int) {
-	r.result.Steps.AddStep(step, complexity, count)
+	r.result.AddStep(step, complexity, count)
 }
 
 func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) Status {
@@ -340,8 +347,8 @@ func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) Status {
 	if !r.Action().LevelRequested() {
 		// fast solvers do nto care about levels and can use very deep recursion
 		// for efficiency, hence it does not matter how deep we are
-		r.result.Steps.Merge(&result.Steps)
-		r.result.Steps.AddStep(trialAndErrorStepName, StepComplexityRecursion1, 1)
+		r.result.Merge(result)
+		r.result.AddStep(trialAndErrorStepName, StepComplexityRecursion1, 1)
 		return result.Status
 	}
 
@@ -378,8 +385,8 @@ func (r *runner) recursiveRun(ctx context.Context, b *boards.Game) Status {
 			"Unexpected usedDepth %d, something is likely wrong with the Solve algorithm.\n%s.\n",
 			usedDepth, r.inputBoardAsString()))
 	}
-	r.result.Steps.Merge(&result.Steps)
-	r.result.Steps.AddStep(trialAndErrorStepName, complexity, 1)
+	r.result.Merge(result)
+	r.result.AddStep(trialAndErrorStepName, complexity, 1)
 	return result.Status
 }
 

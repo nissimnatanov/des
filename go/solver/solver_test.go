@@ -22,6 +22,10 @@ func TestMoreThanOneSolution(t *testing.T) {
 	testSanity(t, solver.ActionSolve, []testBoard{tb})
 }
 
+func TestSolveSpecificBoard(t *testing.T) {
+	testSanity(t, solver.ActionSolve, otherBoards[7:8])
+}
+
 func TestSolveSanity(t *testing.T) {
 	testSanity(t, solver.ActionSolve, slices.Concat(benchBoards, otherBoards))
 }
@@ -57,15 +61,15 @@ func testSanity(t *testing.T, action solver.Action, testBoards []testBoard, opts
 			if expected == solver.StatusSucceeded {
 				if action == solver.ActionSolve {
 					if sample.expectedLevel != solver.LevelUnknown {
-						assert.Check(t, cmp.Equal(res.Steps.Level, sample.expectedLevel))
+						assert.Check(t, cmp.Equal(res.Level, sample.expectedLevel))
 					}
 					if sample.expectedComplexity > 0 {
-						assert.Check(t, cmp.Equal(res.Steps.Complexity, sample.expectedComplexity))
+						assert.Check(t, cmp.Equal(res.Complexity, sample.expectedComplexity))
 					}
 				}
 
-				assert.Equal(t, res.Solutions.Size(), 1)
-				sol := res.Solutions.At(0)
+				assert.Equal(t, len(res.Solutions), 1)
+				sol := res.Solutions[0]
 
 				solStr := boards.Serialize(sol)
 				assert.Check(t, cmp.Equal(solStr, sample.solution))
@@ -268,9 +272,9 @@ func benchRun(b *testing.B, action solver.Action, numBoards int) {
 			assert.NilError(b, res.Error)
 			assert.Equal(b, res.Status, solver.StatusSucceeded)
 			if action.LevelRequested() {
-				assert.Assert(b, res.Steps.Level >= solver.LevelDarkEvil)
+				assert.Assert(b, res.Level >= solver.LevelDarkEvil)
 			}
-			assert.Equal(b, res.Solutions.Size(), 1)
+			assert.Equal(b, len(res.Solutions), 1)
 		}
 	}
 }

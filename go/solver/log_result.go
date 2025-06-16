@@ -48,7 +48,7 @@ func logResult(res *Result) {
 	if disableNLog {
 		return
 	}
-	if res.Steps.Level < LevelNightmare || res.Action != ActionSolve || res.Status != StatusSucceeded {
+	if res.Level < LevelNightmare || res.Action != ActionSolve || res.Status != StatusSucceeded {
 		return
 	}
 	serialized := boards.Serialize(res.Input)
@@ -90,8 +90,8 @@ func logResult(res *Result) {
 	if err == nil {
 		_, err = fmt.Fprintf(nl,
 			"Solver reached level %s with complexity %d: %s\n%s\n",
-			res.Steps.Level,
-			res.Steps.Complexity,
+			res.Level,
+			res.Complexity,
 			boards.Serialize(res.Input),
 			res.Input.String())
 		nl.Close()

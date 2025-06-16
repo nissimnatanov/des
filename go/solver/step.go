@@ -2,8 +2,6 @@ package solver
 
 import (
 	"encoding/json"
-
-	"github.com/nissimnatanov/des/go/boards"
 )
 
 // Steps are reported by each algorithm
@@ -22,16 +20,15 @@ const (
 	StepComplexityRecursion4 StepComplexity = 1000000 // fourth-level recursion and beyond
 )
 
-type StepStats struct {
-	Count      int64          `json:"count"`
-	Complexity StepComplexity `json:"complexity"`
-	Level      Level          `json:"level"`
+// Steps are captured only if board's integrity checks are enabled
+type Steps map[Step]map[StepComplexity]int
 
-	// Steps are captured only if board's integrity checks are enabled
-	Steps map[Step]map[StepComplexity]int `json:"steps,omitempty"`
-}
+func (s Steps) Add(step Step, complexity StepComplexity, count int) {
+	// Steps is allocated only if requested
+	if s == nil {
+		return
+	}
 
-func (s *StepStats) AddStep(step Step, complexity StepComplexity, count int) {
 	switch {
 	case count <= 0:
 		panic("count must be > 0")
@@ -41,25 +38,19 @@ func (s *StepStats) AddStep(step Step, complexity StepComplexity, count int) {
 		panic("step must not be empty")
 	}
 
-	s.Count += int64(count)
-	s.Complexity += complexity * StepComplexity(count)
-	s.Level = LevelFromComplexity(s.Complexity)
-	if !boards.GetIntegrityChecks() {
-		return
+	if _, ok := s[step]; !ok {
+		s[step] = map[StepComplexity]int{}
 	}
-	if s.Steps == nil {
-		s.Steps = map[Step]map[StepComplexity]int{}
+	if _, ok := s[step][complexity]; !ok {
+		s[step][complexity] = 0
 	}
-	if _, ok := s.Steps[step]; !ok {
-		s.Steps[step] = map[StepComplexity]int{}
-	}
-	if _, ok := s.Steps[step][complexity]; !ok {
-		s.Steps[step][complexity] = 0
-	}
-	s.Steps[step][complexity]++
+	s[step][complexity]++
 }
 
-func (s *StepStats) String() string {
+func (s Steps) String() string {
+	if s == nil {
+		return "{}"
+	}
 	str, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		panic(err)
@@ -68,34 +59,21 @@ func (s *StepStats) String() string {
 	return string(str)
 }
 
-func (s *StepStats) Merge(other *StepStats) {
-	if other == nil {
+func (s Steps) Merge(other Steps) {
+	if s == nil || len(other) == 0 {
 		return
 	}
-	s.Count += other.Count
-	s.Complexity += other.Complexity
-	s.Level = LevelFromComplexity(s.Complexity)
-	if !boards.GetIntegrityChecks() || len(other.Steps) == 0 {
-		return
-	}
-	if s.Steps == nil {
-		s.Steps = map[Step]map[StepComplexity]int{}
-	}
-	for step, complexityMap := range other.Steps {
-		if _, ok := s.Steps[step]; !ok {
-			s.Steps[step] = map[StepComplexity]int{}
+	for step, complexityMap := range other {
+		if _, ok := s[step]; !ok {
+			s[step] = map[StepComplexity]int{}
 		}
 		for complexity, count := range complexityMap {
-			s.Steps[step][complexity] += count
+			s[step][complexity] += count
 		}
 	}
 }
 
-func (s *StepStats) reset() {
-	s.Count = 0
-	s.Complexity = 0
-	s.Level = Level(0)
-	if s.Steps != nil {
-		clear(s.Steps)
-	}
+// WithSteps can be added to the Solver as an option to capture the step stats
+func WithSteps(opts *options) {
+	opts.withSteps = true
 }
