@@ -185,7 +185,7 @@ func (bs *BoardState) Remove(ctx context.Context, args RemoveArgs) *BoardState {
 
 // RemoveOneByOne tries to remove indexes one by one, until the board reaches the desired level
 // or the number of free cells is less than MaxFreeCellsForValidBoard.
-func (bs *BoardState) RemoveOneByOne(ctx context.Context) *BoardState {
+func (bs *BoardState) RemoveOneByOne(ctx context.Context, freeCells int) *BoardState {
 	if bs.progress == InRangeStop || bs.progress == AboveMaxLevel {
 		// we already overflowed the level, no point in removing anything
 		panic("do not use RemoveOneByOne if already reached the desired level or overflowed it")
@@ -201,23 +201,21 @@ func (bs *BoardState) RemoveOneByOne(ctx context.Context) *BoardState {
 		return nil
 	}
 
-	return bs.RemoveCandidatesOneByOne(ctx, candidates)
-}
-
-func (bs *BoardState) RemoveCandidatesOneByOne(ctx context.Context, candidates []int) *BoardState {
 	defer bs.checkIntegrity()
 
 	r := bs.solState.rand
 	random.Shuffle(r, candidates)
-	removedOnce := false
 	next := bs
 	for ci := range candidates {
+		if next.board().FreeCellCount() >= freeCells {
+			return bs
+		}
+
 		{
 			nextRemoved := next.tryRemoveCandidates(ctx, candidates[ci:ci+1])
 			if nextRemoved == nil {
 				continue
 			}
-			removedOnce = true
 			next = nextRemoved
 		}
 		// tryRemoveOne does not overflow the level
@@ -226,7 +224,7 @@ func (bs *BoardState) RemoveCandidatesOneByOne(ctx context.Context, candidates [
 			// keep removing more
 		case InRangeStop:
 			// we are done
-			return next
+			break
 		case AboveMaxLevel:
 			panic("tryRemoveOne should not overflow the level")
 		default:
@@ -234,16 +232,13 @@ func (bs *BoardState) RemoveCandidatesOneByOne(ctx context.Context, candidates [
 		}
 	}
 	// if we tried all the candidates and reached the level, we can stop
-	if next.progress == InRangeKeepGoing {
+	if next.progress == InRangeKeepGoing || next.progress == InRangeStop {
 		next.progress = InRangeStop
 		return next
 	}
-	if !removedOnce {
-		// return what we have so far
-		return nil
-	}
 
-	return next
+	// no more candidates to remove and and we did not reach the desired level
+	return nil
 }
 
 func (bs *BoardState) tryRemove(ctx context.Context, args *RemoveArgs) *BoardState {

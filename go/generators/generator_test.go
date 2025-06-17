@@ -104,6 +104,12 @@ func BenchmarkHardOrVeryHard(b *testing.B) {
 // * Generations: 100, ~Elapsed: 101.498177ms, ~Retries: 1.100,
 //   Stages: [{115 0 0} {115 3 0} {112 24 0} {88 88 0}]
 // * Solver Cache: hits=183488 (12.45%), unknown hits=1714 (0.12%), misses=1288829, sets=1288861
+// Generation layering and other improvements:
+// * 1	3800123250 ns/op	1583798840 B/op	 9499364 allocs/op
+// * Generations: 102, ~Elapsed: 37.256077ms, ~Retries: 0.098, Stages:
+//   [{102 0 0} {102 3 0} {99 99 0}]
+// * Solver Cache: hits=120559 (23.64%), unknown hits=1376 (0.27%), misses=387987,
+//   sets=388001, unknown sets=4221 (1.09%)
 
 func BenchmarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelEvil, solver.LevelEvil, 100)
@@ -126,13 +132,19 @@ func BenchmarkEvil(b *testing.B) {
 // * Generations: 10, ~Elapsed: 2.821543495s, ~Retries: 30.200,
 //   Stages: [{10 0 0} {10 1 0} {9 0 0} {9 9 0}]
 // * Solver Cache: hits=3018 (10.9%), unknown hits=100 (0.4%), misses=24487, sets=24489
+// Generation layering and other improvements:
+// * 1	16818874958 ns/op	6950772096 B/op	41741684 allocs/op
+// * Generations: 10, ~Elapsed: 1.6818873s, ~Retries: 4.000,
+//   Stages: [{10 0 0} {10 0 0} {10 10 0}]
+// * Solver Cache: hits=534845 (23.61%), unknown hits=4985 (0.22%), misses=1725744,
+//   sets=1725850, unknown sets=18245
 
 func BenchmarkDarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelDarkEvil, solver.LevelDarkEvil, 10)
 }
 
 func BenchmarkNightmareOrBlackHole(b *testing.B) {
-	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole, 1)
+	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole, 5)
 }
 
 func runBenchmark(b *testing.B, min, max solver.Level, count int) {

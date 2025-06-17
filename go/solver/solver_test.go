@@ -88,7 +88,9 @@ func TestCacheSolve(t *testing.T) {
 			firstRun = true
 			// cache hits must be 0 for the first run since recursion algo does not solve same board twice
 			t.Log(stats)
-			assert.Equal(t, stats.HitCount, int64(0), "expected no cache hits on first run")
+			// all hits on the first run are unknown hits
+			assert.Equal(t, stats.HitCount, stats.UnknownHitCount,
+				"expected only unknown cache hits on first run")
 			firstRunMissCount = stats.MissCount
 			assert.Assert(t, firstRunMissCount > 0, "expected a lot of cache misses on first run for recursion")
 			assert.Assert(t, len(results) == 1, "expected one result, got %d", len(results))
@@ -129,7 +131,7 @@ func TestCacheSolve(t *testing.T) {
 			// cache hits must be 0 for the first run since recursion algo does not solve same board twice
 			t.Log(stats)
 
-			assert.Equal(t, stats.HitCount, int64(0), "expected no cache hits on first run")
+			assert.Equal(t, stats.HitCount, stats.UnknownHitCount, "expected only unknown cache hits on first run")
 			firstRunMissCount = stats.MissCount
 			assert.Assert(t, firstRunMissCount > 0, "expected a lot of cache misses on first run for recursion")
 		})

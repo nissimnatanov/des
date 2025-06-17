@@ -54,6 +54,10 @@ func logResult(res *Result) {
 	if res.Level < LevelNightmare || res.Action != ActionSolve || res.Status != StatusSucceeded {
 		return
 	}
+	// already have enough logged below 80K
+	if res.Complexity < 80000 {
+		return
+	}
 	serialized := boards.Serialize(res.Input)
 	if registered, ok := registeredCache[serialized]; ok && registered {
 		return // already registered

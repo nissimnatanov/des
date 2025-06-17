@@ -75,7 +75,9 @@ func generate(f *GenerateFlags) {
 		MaxLevel: f.MaxLevel,
 		Count:    f.Count,
 		OnNewResult: func(res *solver.Result) {
-			fmt.Printf("Generated %s board: %s\n%s\n", res.Level, boards.Serialize(res.Input), res.Input.String())
+			fmt.Printf(
+				"Generated %s board, complexity %d: %s\n%s\n", res.Level, res.Complexity,
+				boards.Serialize(res.Input), res.Input.String())
 		},
 	})
 	fmt.Printf("Generating boards with levels from %s to %s...\n", f.MinLevel, f.MaxLevel)

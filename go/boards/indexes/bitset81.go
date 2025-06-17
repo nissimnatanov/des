@@ -80,6 +80,10 @@ func (bs BitSet81) First() int {
 	return -1
 }
 
+func (bs BitSet81) Size() int {
+	return bits.OnesCount64(bs.low) + bits.OnesCount32(bs.high)
+}
+
 func (bs BitSet81) Indexes(yield func(int) bool) {
 	low := bs.low
 	var index int

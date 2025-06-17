@@ -186,7 +186,7 @@ func (g *Generator) tryGenerateFastOnce(ctx context.Context, initState *internal
 
 	stage++
 	// we have not reached the desired level yet, from this point remove one by one
-	bs = bs.RemoveOneByOne(ctx)
+	bs = bs.RemoveOneByOne(ctx, solver.MaxFreeCellsForValidBoard)
 	if bs == nil {
 		return nil, stage
 	}
