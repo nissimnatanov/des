@@ -5,10 +5,14 @@ import (
 	"github.com/nissimnatanov/des/go/boards/values"
 )
 
-type Base interface {
+type Board interface {
 	Get(i int) values.Value
 	IsReadOnly(i int) bool
-	IsValidCell(i int) bool
+
+	// Game exposes these methods as public, but Solution does not
+
+	isValidCell(i int) bool
+	getDisallowedByUser(i int) values.Set
 }
 
 type base struct {

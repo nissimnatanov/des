@@ -293,9 +293,9 @@ func testSanity(t *testing.T, action solver.Action, testBoards []testBoard, opts
 // Improve the constraint algorithms:
 // - first only		727	   1595624 ns/op	  293023 B/op	    1109 allocs/op
 // - all			444	   2685913 ns/op	  440461 B/op	    1683 allocs/op
-// Cache and bug fix in layered recursion calculations:
-// - first only		664	   1671817 ns/op	  330448 B/op	    2180 allocs/op
-// - all			410	   2812257 ns/op	  495262 B/op	    3270 allocs/op
+// Perf improvements:
+// - first only		704	   1645071 ns/op	  423112 B/op	    2180 allocs/op
+// - all			422	   2777256 ns/op	  634270 B/op	    3270 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
 	benchRun(b, solver.ActionProve, 1)
@@ -350,6 +350,11 @@ func BenchmarkProveAll(b *testing.B) {
 // - all			28	  38178159 ns/op	 2055890 B/op	   30729 allocs/op
 // - fast first		1441    829220 ns/op	  164023 B/op	    1092 allocs/op
 // - fast all		848	   1417896 ns/op	  246973 B/op	    1659 allocs/op
+// Perf improvements:
+// - first only		128	   9225894 ns/op	  841715 B/op	    9532 allocs/op
+// - all			32	  36221208 ns/op	 2224411 B/op	   30729 allocs/op
+// - fast first		1281	    821332 ns/op	  209845 B/op	    1092 allocs/op
+// - fast all		860	   1386738 ns/op	  315825 B/op	    1659 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
 	benchRun(b, solver.ActionSolve, 1)

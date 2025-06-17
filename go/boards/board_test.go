@@ -1,7 +1,6 @@
 package boards_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/nissimnatanov/des/go/boards"
@@ -79,7 +78,10 @@ func assertSampleBoard(t *testing.T, b *boards.Game) {
 func TestValidBoard(t *testing.T) {
 	b := newSampleBoard()
 	// cspell:disable-next-line
-	boards.Write(b, boards.NewWriter(func(s string) { t.Log(strings.ReplaceAll(s, "\n", "")) }), "vt")
+	bs := boards.Format(b, "vt")
+	t.Log("\n" + bs)
+	t.Fail()
+
 	assertSampleBoard(t, b)
 
 	b.Set(40, values.Value(5))

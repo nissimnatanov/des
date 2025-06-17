@@ -81,10 +81,10 @@ generationLoop:
 			candidates = combineCandidates(newCandidates, slowStages[stage].SelectBest)
 		}
 
-		if tries%25 == 0 {
+		if tries%100 == 0 {
 			// if we are stuck on the same solution for too long, try the next one
 			// it also helps reducing the per-solution cache footprint
-			// TODO cache: .MergeAndDrain(initState.SolutionState().Cache().Stats())
+			cacheStats.MergeAndDrain(initState.SolutionState().Cache().Stats())
 			initState = g.newInitialBoardState(ctx, true)
 		}
 	}

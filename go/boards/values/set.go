@@ -38,7 +38,7 @@ func NewSet(vs ...Value) Set {
 
 // Values of this set, do not modify the return slice.
 func (vs Set) Values() Values {
-	return setInfoCache[vs].values
+	return setValues[vs]
 }
 
 // First value is useful when set has exactly one value and
@@ -47,7 +47,7 @@ func (vs Set) First() Value {
 	if vs == 0 {
 		return 0
 	}
-	return setInfoCache[vs].values[0]
+	return setValues[vs][0]
 }
 
 func (vs Set) IsEmpty() bool {
@@ -80,11 +80,11 @@ func (vs Set) Contains(v Value) bool {
 }
 
 func (vs Set) Size() int {
-	return len(setInfoCache[vs].values)
+	return setSize[vs]
 }
 
 func (vs Set) Combined() int {
-	return setInfoCache[vs].combined
+	return setCombined[vs]
 }
 
 func (vs Set) String() string {
@@ -95,12 +95,7 @@ func (vs Set) String() string {
 	return strconv.Itoa(combined)
 }
 
-type setInfo struct {
-	values   []Value
-	combined int
-}
-
-func newSetInfo(mask int) setInfo {
+func initValueSet(mask int) {
 	combined := 0
 	values := []Value{}
 
@@ -111,15 +106,18 @@ func newSetInfo(mask int) setInfo {
 			combined = combined*10 + v
 		}
 	}
-	return setInfo{values, combined}
+	setSize[mask] = len(values)
+	setValues[mask] = values
+	setCombined[mask] = combined
 }
 
-func initSetInfo() []setInfo {
-	var valueSets []setInfo
-	for mask := range 0x1FF + 1 {
-		valueSets = append(valueSets, newSetInfo(mask))
+const setMaskCacheSize = 0x200 // 512, enough for 9 bits
+var setSize [setMaskCacheSize]int
+var setValues [setMaskCacheSize][]Value
+var setCombined [setMaskCacheSize]int
+
+func init() {
+	for mask := range setMaskCacheSize {
+		initValueSet(mask)
 	}
-	return valueSets
 }
-
-var setInfoCache = initSetInfo()

@@ -1,7 +1,6 @@
 package boards
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -49,17 +48,18 @@ func (sol *Solution) validateAndLock() error {
 	sol.base.mode = Immutable
 	return nil
 }
-func (b *Solution) IsValidCell(index int) bool {
-	// solutions are pre-validated as long as they are not nil
-	if b == nil {
-		panic("solution is nil")
-	}
+
+func (b *Solution) isValidCell(index int) bool {
 	return true
+}
+
+func (b *Solution) getDisallowedByUser(index int) values.Set {
+	return values.EmptySet
 }
 
 func (b *Solution) String() string {
 	var sb strings.Builder
-	WriteValues(b, bufio.NewWriter(&sb))
+	writeValues(b, &sb)
 	return sb.String()
 }
 

@@ -1,7 +1,6 @@
 package boards
 
 import (
-	"bufio"
 	"fmt"
 	"strings"
 
@@ -9,122 +8,143 @@ import (
 	"github.com/nissimnatanov/des/go/boards/values"
 )
 
-type write2log struct {
-	log func(s string)
-}
-
-func (w2l *write2log) Write(p []byte) (int, error) {
-	w2l.log(string(p))
-	return len(p), nil
-}
-
-func NewWriter(log func(s string)) *bufio.Writer {
-	// 1024 is large enough per board row or other log line, each line is flushed separately
-	return bufio.NewWriterSize(&write2log{log}, 1024)
-}
-
-func Write(b Base, bw *bufio.Writer, fmt string) {
+func Format(b Board, fmt string) string {
 	if len(fmt) == 0 {
 		fmt = "v"
 	}
-
+	var sb strings.Builder
 	for _, f := range fmt {
 		switch f {
 		case 'v', 'V':
-			WriteValues(b, bw)
+			writeValues(b, &sb)
 		case 't', 'T':
-			bw.WriteString("Serialized: ")
-			writeSerialized(b, bw)
-			bw.WriteRune('\n')
-			bw.Flush()
+			sb.WriteString("Serialized: ")
+			writeSerialized(b, false, &sb)
+			sb.WriteByte('\n')
 		default:
-			bw.WriteString("Unsupported format: ")
-			bw.WriteRune(f)
-			bw.WriteRune('\n')
-			bw.Flush()
+			sb.WriteString("Unsupported format: ")
+			sb.WriteRune(f)
+			sb.WriteByte('\n')
 		}
 	}
+	return sb.String()
 }
 
-func WriteValues(b Base, bw *bufio.Writer) {
-	bw.WriteString("╔═══════╦═══════╦═══════╗\n")
-	bw.Flush()
+func writeValues(b Board, w writer) {
+	w.WriteString("╔═══════╦═══════╦═══════╗\n")
 	for row := range SequenceSize {
 		if row != 0 && (row%3) == 0 {
-			bw.WriteString("╠═══════╬═══════╬═══════╣\n")
-			bw.Flush()
+			w.WriteString("╠═══════╬═══════╬═══════╣\n")
 		}
 		for col := range SequenceSize {
 			if col%3 == 0 {
-				bw.WriteString("║ ")
+				w.WriteString("║ ")
 			}
 			i := indexes.IndexFromCoordinates(row, col)
-			c := rune('0' + b.Get(i))
-			bw.WriteRune(c)
+			c := byte('0' + b.Get(i))
+			w.WriteByte(c)
 
 			if b.IsReadOnly(i) {
-				if b.IsValidCell(i) {
+				if b.isValidCell(i) {
 					c = ' '
 				} else {
 					c = 'X'
 				}
 			} else {
-				if b.IsValidCell(i) {
+				if b.isValidCell(i) {
 					c = '.'
 				} else {
 					c = '!'
 				}
 			}
 
-			bw.WriteRune(c)
+			w.WriteByte(c)
 		}
-		bw.WriteString("║\n")
-		bw.Flush()
+		w.WriteString("║\n")
 	}
 
-	bw.WriteString("╚═══════╩═══════╩═══════╝\n")
-	bw.Flush()
+	w.WriteString("╚═══════╩═══════╩═══════╝\n")
 }
 
-func writeEmpty(count int, bw *bufio.Writer) {
+func writeEmpty(count int, w writer) {
 	for count >= 26 {
 		count -= 26
-		bw.WriteRune('Z')
+		w.WriteByte('Z')
 	}
 	if count == 0 {
 		return
 	}
 
 	// A -> 1 empty cell; B -> 2; ... Z -> 26
-	c := rune('A' + (count - 1))
-	bw.WriteRune(c)
+	c := byte('A' + (count - 1))
+	w.WriteByte(c)
 }
 
-func writeSerialized(b Base, bw *bufio.Writer) {
+type writer interface {
+	WriteByte(c byte) error
+	WriteString(s string) (int, error)
+}
+
+func writeSerialized(b Board, asKey bool, w *strings.Builder) {
 	empty := 0
 	for i := range Size {
 		v := b.Get(i)
 		if v == 0 {
-			empty++
-		} else {
-			writeEmpty(empty, bw)
-			empty = 0
-			c := rune('0' + v)
-			bw.WriteRune(c)
-			if !b.IsReadOnly(i) {
-				// provided by the player
-				bw.WriteRune('_')
+			disallowed := b.getDisallowedByUser(i)
+			if disallowed.IsEmpty() {
+				empty++
+				continue
 			}
+			// we have to treat each disallowed value as a separate empty cell
+			writeEmpty(empty, w)
+			empty = 0
+			// we do not need to write '0', presence of [] indicates that the cell is empty
+			w.WriteByte('[')
+			for _, d := range disallowed.Values() {
+				w.WriteByte('0' + byte(d))
+			}
+			w.WriteByte(']')
+			continue
+		}
+
+		writeEmpty(empty, w)
+		empty = 0
+		c := byte('0' + v)
+		w.WriteByte(c)
+		if !asKey && !b.IsReadOnly(i) {
+			// provided by the player
+			w.WriteByte('_')
 		}
 	}
-	writeEmpty(empty, bw)
+	writeEmpty(empty, w)
 }
 
-func Serialize(b Base) string {
+type writerCounter int
+
+func (wc *writerCounter) WriteByte(c byte) error {
+	*wc++
+	return nil
+}
+
+func (wc *writerCounter) WriteString(s string) (int, error) {
+	*wc += writerCounter(len(s))
+	return len(s), nil
+}
+
+func Serialize(b Board) string {
 	var sb strings.Builder
-	bw := bufio.NewWriter(&sb)
-	writeSerialized(b, bw)
-	bw.Flush()
+	// regular serialization needs more space since it also marks read-write cells
+	sb.Grow(Size * 2)
+	writeSerialized(b, false, &sb)
+	return sb.String()
+}
+
+func SerializeAsKey(b Board) string {
+	// Serialize is also used for cache key calculation
+	var sb strings.Builder
+	// optimizing for the board generators here - they won't need more than 81 bytes
+	sb.Grow(Size)
+	writeSerialized(b, true, &sb)
 	return sb.String()
 }
 

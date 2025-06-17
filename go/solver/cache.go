@@ -2,7 +2,6 @@ package solver
 
 import (
 	"fmt"
-	"strings"
 	"sync/atomic"
 
 	"github.com/nissimnatanov/des/go/boards"
@@ -52,9 +51,10 @@ func NewCache() *Cache {
 type Cache struct {
 	m map[CacheKey]*cacheValue
 
-	hitCount  atomic.Int64
-	missCount atomic.Int64
-	setCount  atomic.Int64
+	hitCount        atomic.Int64
+	missCount       atomic.Int64
+	setCount        atomic.Int64
+	unknownSetCount atomic.Int64
 
 	// hits for unknown results, only for Solve
 	unknownHitCount atomic.Int64
@@ -67,6 +67,7 @@ type CacheStats struct {
 
 	// for Solve with unknown results only
 	UnknownHitCount int64
+	UnknownSetCount int64
 }
 
 func (s CacheStats) String() string {
@@ -77,8 +78,12 @@ func (s CacheStats) String() string {
 		hitPercent = float64(s.HitCount) / float64(total) * 100.0
 		unknownHitPercent = float64(s.UnknownHitCount) / float64(total) * 100.0
 	}
-	return fmt.Sprintf("Solver Cache: hits=%d (%.1f%%), unknown hits=%d (%.1f%%), misses=%d, sets=%d",
-		s.HitCount, hitPercent, s.UnknownHitCount, unknownHitPercent, s.MissCount, s.SetCount)
+	unknownSetPercent := 0.0
+	if s.SetCount > 0 {
+		unknownSetPercent = float64(s.UnknownSetCount) / float64(s.SetCount) * 100.0
+	}
+	return fmt.Sprintf("Solver Cache: hits=%d (%.2f%%), unknown hits=%d (%.2f%%), misses=%d, sets=%d, unknown sets=%d (%.2f%%)",
+		s.HitCount, hitPercent, s.UnknownHitCount, unknownHitPercent, s.MissCount, s.SetCount, s.UnknownSetCount, unknownSetPercent)
 }
 
 func (s *CacheStats) MergeAndDrain(other CacheStats) {
@@ -86,32 +91,20 @@ func (s *CacheStats) MergeAndDrain(other CacheStats) {
 	s.MissCount += other.MissCount
 	s.SetCount += other.SetCount
 	s.UnknownHitCount += other.UnknownHitCount
+	s.UnknownSetCount += other.UnknownSetCount
 	other.HitCount = 0
 	other.MissCount = 0
 	other.SetCount = 0
 	other.UnknownHitCount = 0
+	other.UnknownSetCount = 0
 }
 
 func (c *Cache) makeKey(b *boards.Game) CacheKey {
 	if c == nil {
 		return NoCache
 	}
-	sb := strings.Builder{}
-	for i, v := range b.AllValues {
-		sb.WriteRune('0' + rune(v))
-		if v != 0 {
-			continue
-		}
-		disallowedByUser := b.DisallowedByUser(i)
-		if !disallowedByUser.IsEmpty() {
-			sb.WriteRune('[')
-			for _, d := range disallowedByUser.Values() {
-				sb.WriteRune('0' + rune(d))
-			}
-			sb.WriteRune(']')
-		}
-	}
-	return CacheKey(sb.String())
+	return CacheKey(boards.SerializeAsKey(b))
+
 }
 
 func (c *Cache) get(b *boards.Game, action Action, maxRecursionDepthRemained int) (CacheValue, CacheKey) {
@@ -135,6 +128,9 @@ func (c *Cache) get(b *boards.Game, action Action, maxRecursionDepthRemained int
 		// to emulate human solving
 		if r.proveCV.IsPresent() {
 			c.hitCount.Add(1)
+			if r.proveCV.result.Status == StatusUnknown {
+				c.unknownHitCount.Add(1)
+			}
 			return r.proveCV.clone(), key
 		}
 		// do not try using unknown results for proving since they have limited recursion depth
@@ -149,10 +145,9 @@ func (c *Cache) get(b *boards.Game, action Action, maxRecursionDepthRemained int
 		return CacheValue{}, key
 	}
 	cv := r.solveCVs[maxRecursionDepthRemained]
+	c.hitCount.Add(1)
 	if cv.result.Status == StatusUnknown {
 		c.unknownHitCount.Add(1)
-	} else {
-		c.hitCount.Add(1)
 	}
 	return cv.clone(), key
 }
@@ -169,6 +164,9 @@ func (c *Cache) set(key CacheKey, action Action, cv CacheValue, maxRecursionDept
 		return
 	}
 	c.setCount.Add(1)
+	if cv.result.Status == StatusUnknown {
+		c.unknownSetCount.Add(1)
+	}
 	r := c.m[key]
 	if r == nil {
 		r = &cacheValue{}
@@ -205,6 +203,7 @@ func (c *Cache) Stats() CacheStats {
 		MissCount:       c.missCount.Load(),
 		SetCount:        c.setCount.Load(),
 		UnknownHitCount: c.unknownHitCount.Load(),
+		UnknownSetCount: c.unknownSetCount.Load(),
 	}
 }
 
@@ -216,6 +215,7 @@ func (c *Cache) ResetStats() {
 	c.missCount.Store(0)
 	c.setCount.Store(0)
 	c.unknownHitCount.Store(0)
+	c.unknownSetCount.Store(0)
 }
 
 func (c *Cache) applySolverOptions(opts *options) {

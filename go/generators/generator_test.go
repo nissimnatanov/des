@@ -99,11 +99,11 @@ func BenchmarkHardOrVeryHard(b *testing.B) {
 // * 1	10674286042 ns/op	2678858688 B/op	13787793 allocs/op
 // * Generations: 204, ~Elapsed: 104.648522ms, ~Retries: 1.314,
 //   Stages: [{228 0 0} {228 14 0} {214 40 0} {174 174 0}]
-// Cache and bug fix in layered recursion calculations:
-// * 1	11643770166 ns/op	4602950616 B/op	37050719 allocs/op
-// * Generations: 100, ~Elapsed: 116.43767ms, ~Retries: 1.280,
-//   Stages: [{110 0 0} {110 4 0} {106 19 0} {87 87 0}]
-// * Solver Cache: hits=3715 (9.0%), unknown hits=18 (0.0%), misses=37525, sets=37525
+// Cache and bug fix in layered recursion calculations, perf improvements:
+// * 1	10149820459 ns/op	4704790160 B/op	27352226 allocs/op
+// * Generations: 100, ~Elapsed: 101.498177ms, ~Retries: 1.100,
+//   Stages: [{115 0 0} {115 3 0} {112 24 0} {88 88 0}]
+// * Solver Cache: hits=183488 (12.45%), unknown hits=1714 (0.12%), misses=1288829, sets=1288861
 
 func BenchmarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelEvil, solver.LevelEvil, 100)

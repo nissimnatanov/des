@@ -1,6 +1,6 @@
 package boards
 
-func Equivalent(b1, b2 Base) bool {
+func Equivalent(b1, b2 Board) bool {
 	for i := range Size {
 		if b1.Get(i) != b2.Get(i) {
 			return false
@@ -9,7 +9,7 @@ func Equivalent(b1, b2 Base) bool {
 	return true
 }
 
-func EquivalentReadOnly(b1, b2 Base) bool {
+func EquivalentReadOnly(b1, b2 Board) bool {
 	for i := range Size {
 		readOnly := b1.IsReadOnly(i)
 		if readOnly != b2.IsReadOnly(i) {
@@ -23,7 +23,7 @@ func EquivalentReadOnly(b1, b2 Base) bool {
 }
 
 // ContainsAll checks if all values in b2 are present in b1
-func ContainsAll(b1, b2 Base) bool {
+func ContainsAll(b1, b2 Board) bool {
 	for i := range Size {
 		v := b2.Get(i)
 		if v != 0 && b1.Get(i) != v {
@@ -35,7 +35,7 @@ func ContainsAll(b1, b2 Base) bool {
 
 // ContainsReadOnly checks if all read-only values in b2 are present in b1,
 // ignoring edited values on both sides
-func ContainsReadOnly(b1, b2 Base) bool {
+func ContainsReadOnly(b1, b2 Board) bool {
 	for i := range Size {
 		if b2.IsReadOnly(i) && b1.Get(i) != b2.Get(i) {
 			return false
