@@ -1,4 +1,4 @@
-package internal
+package stats
 
 import (
 	"fmt"
@@ -6,35 +6,35 @@ import (
 	"time"
 )
 
-// SolutionStats holds a snapshot of the solution generation statistics.
-type SolutionStats struct {
+// Solution holds a snapshot of the solution generation statistics.
+type Solution struct {
 	Count   int64
 	Retries int64
 	Elapsed time.Duration
 }
 
-func (s SolutionStats) AverageElapsed() time.Duration {
+func (s Solution) AverageElapsed() time.Duration {
 	if s.Count == 0 {
 		return 0
 	}
 	return s.Elapsed / time.Duration(s.Count)
 }
 
-func (s SolutionStats) AverageRetries() float64 {
+func (s Solution) AverageRetries() float64 {
 	if s.Count == 0 {
 		return 0
 	}
 	return math.Round(float64(s.Retries)*10/float64(s.Count)) / 10
 }
 
-func (s SolutionStats) String() string {
+func (s Solution) String() string {
 	return fmt.Sprintf("Solutions: %d, ~Elapsed: %s, ~Retries: %.3f",
 		s.Count,
 		s.AverageElapsed(),
 		s.AverageRetries())
 }
 
-func (s *SolutionStats) reportOne(elapsed time.Duration, retries int64) {
+func (s *Solution) reportOne(elapsed time.Duration, retries int64) {
 	s.Count++
 	s.Elapsed += elapsed
 	s.Retries += retries

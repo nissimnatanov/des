@@ -64,13 +64,13 @@ func shouldContinueAtLevel(desiredLevel solver.Level, r *random.Random) bool {
 		return r.PercentProbability(95)
 	case solver.LevelMedium:
 		// For medium games - keep trying a bit less.
-		return r.PercentProbability(75)
-	case solver.LevelHard:
+		return r.PercentProbability(85)
+	case solver.LevelHard, solver.LevelVeryHard:
 		// For hard games - continue in half of the cases..
-		return r.PercentProbability(50)
-	case solver.LevelVeryHard:
-		// For very hard games - make it even harder, but stop sometimes.
 		return r.PercentProbability(75)
+	case solver.LevelEvil:
+		// For evil games - make it even harder
+		return r.PercentProbability(85)
 	default:
 		// For harder games, keep going until overflows...
 		return true

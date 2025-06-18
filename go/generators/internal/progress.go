@@ -31,3 +31,7 @@ func (p Progress) String() string {
 		return fmt.Sprintf("UnknownProgress(%d)", p)
 	}
 }
+
+func (p Progress) InRange() bool {
+	return p == InRangeKeepGoing || p == InRangeStop
+}

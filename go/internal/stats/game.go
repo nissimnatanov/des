@@ -1,4 +1,4 @@
-package internal
+package stats
 
 import (
 	"fmt"
@@ -7,23 +7,25 @@ import (
 
 // we currently only have ~8 stages in slow generators, so we can use a fixed size array
 // with an extra capacity for future stages
-type GamePerStageStats [12]GameStageStats
+type GameStages [12]GameStage
 
-func (stages *GamePerStageStats) Report(count int, stage int) {
+func (stages *GameStages) Report(count int, stage int) {
 	if stage < 0 || stage >= len(*stages) {
 		panic("negative stage")
-	}
-	for s := range stage + 1 {
-		(*stages)[s].Total += count
 	}
 	if count > 0 {
 		(*stages)[stage].Succeeded += count
 	} else {
 		(*stages)[stage].Failed++
+		// failed loop also counts towards total
+		count = 1
+	}
+	for s := range stage + 1 {
+		(*stages)[s].Total += count
 	}
 }
 
-func (stages *GamePerStageStats) merge(other GamePerStageStats) {
+func (stages *GameStages) merge(other GameStages) {
 	for i := range other {
 		(*stages)[i].Total += other[i].Total
 		(*stages)[i].Succeeded += other[i].Succeeded
@@ -31,7 +33,7 @@ func (stages *GamePerStageStats) merge(other GamePerStageStats) {
 	}
 }
 
-func (stages GamePerStageStats) String() string {
+func (stages GameStages) String() string {
 	// trim down zero stages
 	last := len(stages) - 1
 	for last >= 0 && stages[last].Total == 0 {
@@ -40,7 +42,7 @@ func (stages GamePerStageStats) String() string {
 	return fmt.Sprint(stages[:last+1])
 }
 
-type GameStageStats struct {
+type GameStage struct {
 	Total     int
 	Succeeded int
 	Failed    int
@@ -50,7 +52,7 @@ type GameStats struct {
 	Count      int64
 	Retries    int64
 	Elapsed    time.Duration
-	StageStats GamePerStageStats
+	StageStats GameStages
 }
 
 func (gs GameStats) clone() GameStats {
@@ -71,11 +73,11 @@ func (gs GameStats) AverageRetries() float64 {
 }
 
 func (gs GameStats) String() string {
-	return fmt.Sprintf("Generations: %d, ~Elapsed: %s, ~Retries: %.3f, Stages: %v",
+	return fmt.Sprintf("Game stats:\n* Generations: %d, ~Elapsed: %s, ~Retries: %.3f\n* Stages: %s",
 		gs.Count, gs.AverageElapsed(), gs.AverageRetries(), gs.StageStats)
 }
 
-func (gs *GameStats) report(count int, elapsed time.Duration, retries int64, stageStats GamePerStageStats) {
+func (gs *GameStats) report(count int, elapsed time.Duration, retries int64, stageStats GameStages) {
 	gs.Count += int64(count)
 	gs.Elapsed += elapsed
 	gs.Retries += retries

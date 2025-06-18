@@ -6,6 +6,7 @@ import (
 
 	"github.com/nissimnatanov/des/go/boards/indexes"
 	"github.com/nissimnatanov/des/go/generators/internal"
+	"github.com/nissimnatanov/des/go/internal/stats"
 	"github.com/nissimnatanov/des/go/solver"
 )
 
@@ -40,7 +41,8 @@ func (g *Generator) generateSlow(ctx context.Context) []*solver.Result {
 
 	candidates := internal.NewSortedBoardStates()
 	finalCandidates := internal.NewSortedBoardStates()
-	var stageStats internal.GamePerStageStats
+	finalCandidatesReportedToStats := 0
+	var stageStats stats.GameStages
 
 	// Start with basic boards in a easy range, so we can generate and sort a lot of
 	// candidates. If we start with harder boards, the generation becomes slower.
@@ -50,14 +52,13 @@ func (g *Generator) generateSlow(ctx context.Context) []*solver.Result {
 	// prefer to keep it longer to benefit more from the cache
 	replaceSolutionEvery := 10
 	if g.lr.Min >= solver.LevelNightmare {
-		replaceSolutionEvery = 500
+		replaceSolutionEvery = 50
 	} else if g.lr.Min >= solver.LevelDarkEvil {
-		replaceSolutionEvery = 100
+		replaceSolutionEvery = 25
 	}
 
 	// turn on use cache
 	initState := g.newInitialBoardState(ctx, true)
-	cacheStats := solver.CacheStats{}
 
 generationLoop:
 	for ctx.Err() == nil {
@@ -94,17 +95,25 @@ generationLoop:
 			candidates = combineCandidates(newCandidates, stage.SelectBest, stage.PreserveAtLeastOne)
 		}
 
-		if tries%replaceSolutionEvery == 0 {
+		if tries >= replaceSolutionEvery {
 			// if we are stuck on the same solution for too long, try the next one
 			// it also helps reducing the per-solution cache footprint
-			cacheStats.MergeAndDrain(initState.SolutionState().Cache().Stats())
+			cacheStats := initState.SolutionState().Cache().Stats()
+			newFinalCandidatesToReport := finalCandidates.Size() - finalCandidatesReportedToStats
+			finalCandidatesReportedToStats = finalCandidates.Size()
+			stats.Stats.ReportGeneration(newFinalCandidatesToReport,
+				time.Since(start), int64(tries), stageStats, cacheStats)
 			initState = g.newInitialBoardState(ctx, true)
+			tries = 0
+			stageStats = stats.GameStages{}
+			start = time.Now()
 		}
 	}
 
 	// return the results so far, even if ctx canceled in the middle
-	cacheStats.MergeAndDrain(initState.SolutionState().Cache().Stats())
-	internal.Stats.ReportGeneration(finalCandidates.Size(), time.Since(start), int64(tries), stageStats, cacheStats)
+	cacheStats := initState.SolutionState().Cache().Stats()
+	newFinalCandidatesToReport := finalCandidates.Size() - finalCandidatesReportedToStats
+	stats.Stats.ReportGeneration(newFinalCandidatesToReport, time.Since(start), int64(tries), stageStats, cacheStats)
 	if g.count > 0 {
 		finalCandidates.TrimSize(g.count)
 	}
@@ -123,7 +132,7 @@ func (g *Generator) generateSlowStage(
 		switch bs.Candidates().Size() {
 		case 0:
 			// this board can no longer be enhanced
-			if bs.Progress() >= internal.InRangeKeepGoing && bs.Progress() <= internal.InRangeStop {
+			if bs.Progress().InRange() {
 				finalCandidates.Add(bs)
 			}
 			// throw this candidate away, it is below the desired level
@@ -132,7 +141,7 @@ func (g *Generator) generateSlowStage(
 			// last candidate, forking is useless - just try to remove it
 			bs = bs.RemoveOneByOne(ctx, stage.FreeCells)
 			if bs != nil {
-				if bs.Progress() == internal.InRangeKeepGoing || bs.Progress() == internal.InRangeStop {
+				if bs.Progress().InRange() {
 					finalCandidates.Add(bs)
 				}
 			}
@@ -141,7 +150,7 @@ func (g *Generator) generateSlowStage(
 		for range stage.GeneratePerCandidate {
 			if bs.Candidates() == indexes.MinBitSet81 {
 				// no more candidates to remove, we can stop
-				if bs.Progress() >= internal.InRangeKeepGoing && bs.Progress() <= internal.InRangeStop {
+				if bs.Progress().InRange() {
 					finalCandidates.Add(bs)
 				}
 				break

@@ -7,8 +7,8 @@ import (
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/boards/indexes"
 	"github.com/nissimnatanov/des/go/boards/values"
-	"github.com/nissimnatanov/des/go/generators/internal"
 	"github.com/nissimnatanov/des/go/internal/random"
+	"github.com/nissimnatanov/des/go/internal/stats"
 )
 
 // Generate a new solution for the Sudoku board.
@@ -155,7 +155,7 @@ retryLoop:
 	sol := boards.NewSolution(board)
 	// capture the stats
 	elapsed := time.Since(start)
-	internal.Stats.ReportOneSolution(elapsed, retries)
+	stats.Stats.ReportOneSolution(elapsed, retries)
 	return sol
 }
 

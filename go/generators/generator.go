@@ -9,6 +9,7 @@ import (
 	"github.com/nissimnatanov/des/go/generators/internal"
 	"github.com/nissimnatanov/des/go/generators/solution"
 	"github.com/nissimnatanov/des/go/internal/random"
+	"github.com/nissimnatanov/des/go/internal/stats"
 	"github.com/nissimnatanov/des/go/solver"
 )
 
@@ -135,7 +136,7 @@ func (g *Generator) Enhance(ctx context.Context, board *boards.Game, level solve
 func (g *Generator) generateFast(ctx context.Context, initState *internal.BoardState) *internal.BoardState {
 	tries := 0
 	start := time.Now()
-	var stageStats internal.GamePerStageStats
+	var stageStats stats.GameStages
 	for ctx.Err() == nil {
 		tries++
 		bs, stage := g.tryGenerateFastOnce(ctx, initState)
@@ -146,7 +147,7 @@ func (g *Generator) generateFast(ctx context.Context, initState *internal.BoardS
 
 		stageStats.Report(1, stage)
 		elapsed := time.Since(start)
-		internal.Stats.ReportGeneration(1, elapsed, int64(tries), stageStats, initState.SolutionState().Cache().Stats())
+		stats.Stats.ReportGeneration(1, elapsed, int64(tries), stageStats, initState.SolutionState().Cache().Stats())
 		return bs
 	}
 
@@ -190,7 +191,7 @@ func (g *Generator) tryGenerateFastOnce(ctx context.Context, initState *internal
 	if bs == nil {
 		return nil, stage
 	}
-	if bs.Progress() == internal.InRangeKeepGoing || bs.Progress() == internal.InRangeStop {
+	if bs.Progress().InRange() {
 		return bs, stage
 	}
 

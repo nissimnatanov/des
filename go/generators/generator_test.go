@@ -7,6 +7,7 @@ import (
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/generators"
 	"github.com/nissimnatanov/des/go/generators/internal"
+	"github.com/nissimnatanov/des/go/internal/stats"
 	"github.com/nissimnatanov/des/go/solver"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/assert/cmp"
@@ -148,7 +149,7 @@ func BenchmarkNightmareOrBlackHole(b *testing.B) {
 }
 
 func runBenchmark(b *testing.B, min, max solver.Level, count int) {
-	internal.Stats.Reset()
+	stats.Stats.Reset()
 	ctx := b.Context()
 	g := generators.New(&generators.Options{MinLevel: min, MaxLevel: max, Count: count})
 	defer func() {
@@ -173,7 +174,7 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 			}
 		}
 	}
-	b.Log(internal.Stats.Game().String())
-	b.Log(internal.Stats.Solution().String())
-	b.Log(internal.Stats.Cache().String())
+	b.Log(stats.Stats.Game().String())
+	b.Log(stats.Stats.Solution().String())
+	b.Log(stats.Stats.Cache().String())
 }

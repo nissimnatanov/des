@@ -232,7 +232,7 @@ func (bs *BoardState) RemoveOneByOne(ctx context.Context, freeCells int) *BoardS
 		}
 	}
 	// if we tried all the candidates and reached the level, we can stop
-	if next.progress == InRangeKeepGoing || next.progress == InRangeStop {
+	if next.progress.InRange() {
 		next.progress = InRangeStop
 		return next
 	}

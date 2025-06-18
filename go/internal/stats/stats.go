@@ -1,58 +1,56 @@
-package internal
+package stats
 
 import (
 	"sync"
 	"time"
-
-	"github.com/nissimnatanov/des/go/solver"
 )
 
-var Stats stats
+var Stats all
 
-type stats struct {
+type all struct {
 	// lock is shared for now, we can split it later if needed
 	rw sync.RWMutex
 
-	solution SolutionStats
+	solution Solution
 	game     GameStats
-	cache    solver.CacheStats
+	cache    Cache
 }
 
-func (s *stats) Reset() {
+func (s *all) Reset() {
 	s.rw.Lock()
 	defer s.rw.Unlock()
-	s.solution = SolutionStats{}
+	s.solution = Solution{}
 	s.game = GameStats{}
-	s.cache = solver.CacheStats{}
+	s.cache = Cache{}
 }
 
-func (s *stats) Solution() SolutionStats {
+func (s *all) Solution() Solution {
 	s.rw.RLock()
 	defer s.rw.RUnlock()
 	return s.solution
 }
 
-func (s *stats) Game() GameStats {
+func (s *all) Game() GameStats {
 	s.rw.RLock()
 	defer s.rw.RUnlock()
 	return s.game.clone()
 }
 
-func (s *stats) Cache() solver.CacheStats {
+func (s *all) Cache() Cache {
 	s.rw.RLock()
 	defer s.rw.RUnlock()
 	return s.cache
 }
 
-func (s *stats) ReportOneSolution(elapsed time.Duration, retries int64) {
+func (s *all) ReportOneSolution(elapsed time.Duration, retries int64) {
 	s.rw.Lock()
 	defer s.rw.Unlock()
 	s.solution.reportOne(elapsed, retries)
 }
 
-func (s *stats) ReportGeneration(
+func (s *all) ReportGeneration(
 	count int, elapsed time.Duration, retries int64,
-	stageStats GamePerStageStats, cacheStats solver.CacheStats,
+	stageStats GameStages, cacheStats Cache,
 ) {
 	s.rw.Lock()
 	defer s.rw.Unlock()
