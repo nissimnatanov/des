@@ -2,12 +2,36 @@ package stats
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
 // we currently only have ~8 stages in slow generators, so we can use a fixed size array
 // with an extra capacity for future stages
 type GameStages [12]GameStage
+
+func (stages *GameStages) ReportCandidateCount(stage int, count int) {
+	if stage < 0 || stage >= len(*stages) {
+		panic("negative stage")
+	}
+	if count < 0 {
+		panic("negative count")
+	}
+	(*stages)[stage].CandidateCount += 1
+	(*stages)[stage].Candidate += int64(count)
+}
+
+func (stages *GameStages) ReportBestComplexity(stage int, complexity int64) {
+	if stage < 0 || stage >= len(*stages) {
+		panic("negative stage")
+	}
+	if complexity < 0 {
+		panic("negative complexity")
+	}
+	(*stages)[stage].AveComplexity += complexity
+	(*stages)[stage].BestComplexity = max((*stages)[stage].BestComplexity, complexity)
+	(*stages)[stage].ComplexityCount++
+}
 
 func (stages *GameStages) Report(count int, stage int) {
 	if stage < 0 || stage >= len(*stages) {
@@ -30,6 +54,11 @@ func (stages *GameStages) merge(other GameStages) {
 		(*stages)[i].Total += other[i].Total
 		(*stages)[i].Succeeded += other[i].Succeeded
 		(*stages)[i].Failed += other[i].Failed
+		(*stages)[i].AveComplexity += other[i].AveComplexity
+		(*stages)[i].ComplexityCount += other[i].ComplexityCount
+		(*stages)[i].BestComplexity = max((*stages)[i].BestComplexity, other[i].BestComplexity)
+		(*stages)[i].Candidate += other[i].Candidate
+		(*stages)[i].CandidateCount += other[i].CandidateCount
 	}
 }
 
@@ -39,13 +68,46 @@ func (stages GameStages) String() string {
 	for last >= 0 && stages[last].Total == 0 {
 		last--
 	}
-	return fmt.Sprint(stages[:last+1])
+	var sb strings.Builder
+	sb.WriteString("[")
+	complexities := make([]string, 0, last+1)
+	for si, s := range stages[:last+1] {
+		if s.ComplexityCount > 0 {
+			complexityAve := float64(s.AveComplexity) / float64(s.ComplexityCount)
+			complexities = append(complexities, fmt.Sprintf("%d/%.01f", s.BestComplexity, complexityAve))
+		} else {
+			complexities = append(complexities, "0")
+		}
+		if s.Succeeded == 0 && s.Failed == 0 {
+			// skip non-productive stages
+			continue
+		}
+		var successAve, failAve, candidateAve float64
+		if s.Total > 0 {
+			successAve = float64(s.Succeeded) / float64(s.Total) * 100
+			failAve = float64(s.Failed) / float64(s.Total) * 100
+		}
+		if s.CandidateCount > 0 {
+			candidateAve = float64(s.Candidate) / float64(s.CandidateCount)
+		}
+
+		sb.WriteString(fmt.Sprintf("\n  [%d] Total: %d, Success: %d(%.02f%%), Failed: %d(%.02f%%), ~Candidates: %.01f",
+			si, s.Total, s.Succeeded, successAve, s.Failed, failAve, candidateAve))
+	}
+	sb.WriteString("\n], Complexities: ")
+	sb.WriteString(strings.Join(complexities, " "))
+	return sb.String()
 }
 
 type GameStage struct {
-	Total     int
-	Succeeded int
-	Failed    int
+	Total           int
+	Succeeded       int
+	Failed          int
+	AveComplexity   int64
+	BestComplexity  int64 // best complexity for this stage
+	ComplexityCount int
+	Candidate       int64
+	CandidateCount  int64
 }
 
 type GameStats struct {
@@ -73,7 +135,7 @@ func (gs GameStats) AverageRetries() float64 {
 }
 
 func (gs GameStats) String() string {
-	return fmt.Sprintf("Game stats:\n* Generations: %d, ~Elapsed: %s, ~Retries: %.3f\n* Stages: %s",
+	return fmt.Sprintf("Game Generations: %d, ~Elapsed: %s, ~Retries: %.3f. Stages: %s",
 		gs.Count, gs.AverageElapsed(), gs.AverageRetries(), gs.StageStats)
 }
 

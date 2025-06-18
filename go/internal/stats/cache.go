@@ -20,12 +20,8 @@ func (s Cache) String() string {
 		hitPercent = float64(s.HitCount) / float64(total) * 100.0
 		unknownHitPercent = float64(s.UnknownHitCount) / float64(total) * 100.0
 	}
-	unknownSetPercent := 0.0
-	if s.SetCount > 0 {
-		unknownSetPercent = float64(s.UnknownSetCount) / float64(s.SetCount) * 100.0
-	}
-	return fmt.Sprintf("Solver Cache:\n* hits=%d (%.2f%%), unknown hits=%d (%.2f%%), misses=%d\n* sets=%d, unknown sets=%d (%.2f%%)",
-		s.HitCount, hitPercent, s.UnknownHitCount, unknownHitPercent, s.MissCount, s.SetCount, s.UnknownSetCount, unknownSetPercent)
+	return fmt.Sprintf("Solver Cache: hits=%d (%.2f%%, unknown=%.2f%%), misses=%d, sets=%d (unknown=%d)",
+		s.HitCount, hitPercent, unknownHitPercent, s.MissCount, s.SetCount, s.UnknownSetCount)
 }
 
 func (s *Cache) MergeAndDrain(other Cache) {

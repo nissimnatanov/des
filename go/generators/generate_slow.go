@@ -13,7 +13,6 @@ import (
 type slowStage struct {
 	GeneratePerCandidate int // how many candidates to fork from each
 	SelectBest           int
-	PreserveAtLeastOne   bool // preserve at least one candidate from each base
 	FreeCells            int
 	MinToRemove          int
 	MaxToRemove          int
@@ -21,12 +20,12 @@ type slowStage struct {
 
 var slowStages = []slowStage{
 	// at first we only have one candidate (e.g. solution), we can create many best forks
-	{FreeCells: 40, MinToRemove: 10, MaxToRemove: 15, GeneratePerCandidate: 10, SelectBest: 10},
-	{FreeCells: 45, MinToRemove: 2, MaxToRemove: 5, GeneratePerCandidate: 10, SelectBest: 20, PreserveAtLeastOne: true},
-	{FreeCells: 50, MinToRemove: 1, MaxToRemove: 3, GeneratePerCandidate: 5, SelectBest: 25, PreserveAtLeastOne: true},
-	{FreeCells: 55, MinToRemove: 1, MaxToRemove: 2, GeneratePerCandidate: 10, SelectBest: 10, PreserveAtLeastOne: false},
+	{FreeCells: 42, MinToRemove: 10, MaxToRemove: 15, GeneratePerCandidate: 100, SelectBest: 20},
+	{FreeCells: 49, MinToRemove: 2, MaxToRemove: 5, GeneratePerCandidate: 35, SelectBest: 50},
+	{FreeCells: 55, MinToRemove: 2, MaxToRemove: 3, GeneratePerCandidate: 35, SelectBest: 40},
+	{FreeCells: 60, MinToRemove: 1, MaxToRemove: 2, GeneratePerCandidate: 35, SelectBest: 30},
 	// this is the last stage, we can throw away the candidates that did not make the cut
-	{FreeCells: solver.MaxFreeCellsForValidBoard, MinToRemove: 1, MaxToRemove: 1, GeneratePerCandidate: 20},
+	{FreeCells: solver.MaxFreeCellsForValidBoard, MinToRemove: 1, MaxToRemove: 2, GeneratePerCandidate: 20},
 }
 
 func hasEnoughFinalCandidates(finalCandidates *internal.SortedBoardStates, requestedCount int) bool {
@@ -71,8 +70,13 @@ generationLoop:
 
 		// enhance the candidates to the desired level
 		for si := 0; si < len(slowStages) && ctx.Err() == nil; si++ {
+			stageStats.ReportCandidateCount(si, candidates.Size())
 			stage := slowStages[si]
-			newFinal, newCandidates := g.generateSlowStage(ctx, candidates, stage)
+			newFinal, newCandidates, bestComplexity := g.generateSlowStage(ctx, candidates, stage)
+			if bestComplexity > 0 {
+				// report the complexity of the candidates per stage
+				stageStats.ReportBestComplexity(si, int64(bestComplexity))
+			}
 			if newFinal.Size() == 0 && (len(newCandidates) == 0 || si == len(slowStages)-1) {
 				// if we got no finals and we are at the last stage or no new candidates left,
 				// report this stage as empty
@@ -92,7 +96,7 @@ generationLoop:
 				// stop once we have at least one if count was requested
 				break generationLoop
 			}
-			candidates = combineCandidates(newCandidates, stage.SelectBest, stage.PreserveAtLeastOne)
+			candidates = combineCandidates(newCandidates, stage.SelectBest)
 		}
 
 		if tries >= replaceSolutionEvery {
@@ -124,7 +128,11 @@ func (g *Generator) generateSlowStage(
 	ctx context.Context,
 	candidates *internal.SortedBoardStates,
 	stage slowStage,
-) (finalCandidates *internal.SortedBoardStates, newCandidates []*internal.SortedBoardStates) {
+) (
+	finalCandidates *internal.SortedBoardStates,
+	newCandidates []*internal.SortedBoardStates,
+	bestComplexity solver.StepComplexity,
+) {
 	finalCandidates = internal.NewSortedBoardStates()
 	// refine the candidates to the desired level
 	for bs := range candidates.Boards {
@@ -134,6 +142,9 @@ func (g *Generator) generateSlowStage(
 			// this board can no longer be enhanced
 			if bs.Progress().InRange() {
 				finalCandidates.Add(bs)
+				if bs.Complexity() > bestComplexity {
+					bestComplexity = bs.Complexity()
+				}
 			}
 			// throw this candidate away, it is below the desired level
 			continue
@@ -144,6 +155,11 @@ func (g *Generator) generateSlowStage(
 				if bs.Progress().InRange() {
 					finalCandidates.Add(bs)
 				}
+				// even if we about to throw this candidate away, we still want to report
+				// its best complexity
+				if bs.Complexity() > bestComplexity {
+					bestComplexity = bs.Complexity()
+				}
 			}
 			continue
 		}
@@ -152,26 +168,40 @@ func (g *Generator) generateSlowStage(
 				// no more candidates to remove, we can stop
 				if bs.Progress().InRange() {
 					finalCandidates.Add(bs)
+					if bs.Complexity() > bestComplexity {
+						bestComplexity = bs.Complexity()
+					}
+				}
+				if bs.Complexity() > bestComplexity {
+					bestComplexity = bs.Complexity()
 				}
 				break
 			}
 			if bs.Progress() == internal.InRangeStop {
 				// we can stop with this candidate if it is already at the desired level
 				finalCandidates.Add(bs)
+				if bs.Complexity() > bestComplexity {
+					bestComplexity = bs.Complexity()
+				}
 				break
 			}
 			var bsForked *internal.BoardState
 			// can refine more, try random first
-			if stage.MaxToRemove > 1 {
-				bsForked = bs.Remove(ctx, internal.RemoveArgs{
-					FreeCells:        stage.FreeCells,
-					BatchMinToRemove: stage.MinToRemove,
-					BatchMaxToRemove: stage.MaxToRemove,
-					BatchMaxTries:    5,
-				})
+			//if stage.MaxToRemove > 1 {
+			bsForked = bs.Remove(ctx, internal.RemoveArgs{
+				FreeCells:        stage.FreeCells,
+				BatchMinToRemove: stage.MinToRemove,
+				BatchMaxToRemove: stage.MaxToRemove,
+				BatchMaxTries:    5,
+			})
+			if bsForked != nil && bsForked.Complexity() > bestComplexity {
+				bestComplexity = bsForked.Complexity()
 			}
 			if bsForked == nil {
 				bsForked = bs.RemoveOneByOne(ctx, stage.FreeCells)
+				if bsForked != nil && bsForked.Complexity() > bestComplexity {
+					bestComplexity = bsForked.Complexity()
+				}
 			}
 			if bsForked == nil {
 				// try another removal combination of the same board
@@ -202,7 +232,6 @@ func (g *Generator) generateSlowStage(
 func combineCandidates(
 	newCandidates []*internal.SortedBoardStates,
 	selectBest int,
-	preserveAtLeastOne bool,
 ) *internal.SortedBoardStates {
 	switch {
 	case len(newCandidates) == 0 || selectBest <= 0:
@@ -214,15 +243,6 @@ func combineCandidates(
 
 	sbs := internal.NewSortedBoardStates()
 	indexes := make([]int, len(newCandidates))
-	if preserveAtLeastOne {
-		// preserve at least one best candidate from each base
-		for i, bs := range newCandidates {
-			if bs.Size() > 0 {
-				sbs.Add(bs.Get(0))
-				indexes[i]++
-			}
-		}
-	}
 	// in case we overflow in the first loop, remove the excess
 	sbs.TrimSize(selectBest)
 	for sbs.Size() < selectBest {

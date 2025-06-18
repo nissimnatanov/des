@@ -1,10 +1,12 @@
 package generators_test
 
 import (
+	"context"
+	"errors"
 	"runtime/debug"
 	"testing"
+	"time"
 
-	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/generators"
 	"github.com/nissimnatanov/des/go/generators/internal"
 	"github.com/nissimnatanov/des/go/internal/stats"
@@ -111,6 +113,15 @@ func BenchmarkHardOrVeryHard(b *testing.B) {
 //   [{102 0 0} {102 3 0} {99 99 0}]
 // * Solver Cache: hits=120559 (23.64%), unknown hits=1376 (0.27%), misses=387987,
 //   sets=388001, unknown sets=4221 (1.09%)
+// Tune generation parameters:
+// * 1	1047977750 ns/op	416294920 B/op	 2482588 allocs/op
+// * Solutions: 1, ~Elapsed: 73.792µs, ~Retries: 0.000
+// * Solver Cache: hits=37911 (29.59%, unknown=0.37%), misses=89727, sets=89734 (unknown=1581)
+// * Game Generations: 106, ~Elapsed: 9.500251ms, ~Retries: 0.047. Stages: [
+// *   [3] Total: 114, Success: 20(17.54%), Failed: 0(0.00%)
+// *   [4] Total: 94, Success: 39(41.49%), Failed: 0(0.00%)
+// *   [5] Total: 55, Success: 55(100.00%), Failed: 0(0.00%)
+// * ], Complexities: 166 | 149.5; 1205 | 690.0; 4334 | 1973.4; 8699 | 4382.6; 9670 | 5496.1; 9670 | 5157.5
 
 func BenchmarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelEvil, solver.LevelEvil, 100)
@@ -139,9 +150,18 @@ func BenchmarkEvil(b *testing.B) {
 //   Stages: [{10 0 0} {10 0 0} {10 10 0}]
 // * Solver Cache: hits=534845 (23.61%), unknown hits=4985 (0.22%), misses=1725744,
 //   sets=1725850, unknown sets=18245
+// Tune generation parameters:
+// * 1	12090348292 ns/op	4873126480 B/op	28898735 allocs/op
+// * Solutions: 3, ~Elapsed: 40.069µs, ~Retries: 0.000
+// * Solver Cache: hits=458344 (29.78%, unknown=0.50%), misses=1072972, sets=1073128 (unknown=21607)
+// * Game Generations: 25, ~Elapsed: 483.609035ms, ~Retries: 2.280. Stages: [
+// *   [3] Total: 80, Success: 3(3.75%), Failed: 0(0.00%)
+// *   [4] Total: 77, Success: 15(19.48%), Failed: 0(0.00%)
+// *   [5] Total: 62, Success: 11(17.74%), Failed: 51(82.26%)
+// * ], Complexities: 443 | 184.0; 900 | 619.4; 2750 | 1691.1; 29082 | 8323.8; 29087 | 9585.3; 29087 | 9101.6
 
 func BenchmarkDarkEvil(b *testing.B) {
-	runBenchmark(b, solver.LevelDarkEvil, solver.LevelDarkEvil, 10)
+	runBenchmark(b, solver.LevelDarkEvil, solver.LevelDarkEvil, 25)
 }
 
 func BenchmarkNightmareOrBlackHole(b *testing.B) {
@@ -150,7 +170,11 @@ func BenchmarkNightmareOrBlackHole(b *testing.B) {
 
 func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 	stats.Stats.Reset()
-	ctx := b.Context()
+
+	// force stop to print stats after 2 minutes
+	ctx, cancel := context.WithTimeout(b.Context(), time.Minute)
+	defer cancel()
+
 	g := generators.New(&generators.Options{MinLevel: min, MaxLevel: max, Count: count})
 	defer func() {
 		// TODO: we can move recover to the generator itself
@@ -162,19 +186,19 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 	}()
 	for b.Loop() {
 		res := g.Generate(ctx)
-		if len(res) == 0 {
+		if len(res) == 0 && ctx.Err() == nil {
 			b.Fatalf("failed to generate any result")
 		}
 		for ri, res := range res {
 			if res.Status != solver.StatusSucceeded {
-				b.Fatalf("failed to generate board at result %d: %s", ri, res.Error)
-			}
-			if res.Level >= solver.LevelNightmare {
-				b.Logf("generated[%s][%d]: %s. %s", res.Level, ri, boards.Serialize(res.Input), &res.Steps)
+				if res.Status != solver.StatusError || errors.Is(res.Error, context.Canceled) {
+					assert.Check(b, false,
+						"failed to generate board at result %d: %s", ri, res.Error)
+				}
 			}
 		}
 	}
-	b.Log(stats.Stats.Game().String())
 	b.Log(stats.Stats.Solution().String())
 	b.Log(stats.Stats.Cache().String())
+	b.Log(stats.Stats.Game().String())
 }
