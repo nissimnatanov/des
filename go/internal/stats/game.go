@@ -28,7 +28,7 @@ func (stages *GameStages) ReportBestComplexity(stage int, complexity int64) {
 	if complexity < 0 {
 		panic("negative complexity")
 	}
-	(*stages)[stage].AveComplexity += complexity
+	(*stages)[stage].TotalComplexity += complexity
 	(*stages)[stage].BestComplexity = max((*stages)[stage].BestComplexity, complexity)
 	(*stages)[stage].ComplexityCount++
 }
@@ -54,7 +54,7 @@ func (stages *GameStages) merge(other GameStages) {
 		(*stages)[i].Total += other[i].Total
 		(*stages)[i].Succeeded += other[i].Succeeded
 		(*stages)[i].Failed += other[i].Failed
-		(*stages)[i].AveComplexity += other[i].AveComplexity
+		(*stages)[i].TotalComplexity += other[i].TotalComplexity
 		(*stages)[i].ComplexityCount += other[i].ComplexityCount
 		(*stages)[i].BestComplexity = max((*stages)[i].BestComplexity, other[i].BestComplexity)
 		(*stages)[i].Candidate += other[i].Candidate
@@ -73,10 +73,10 @@ func (stages GameStages) String() string {
 	complexities := make([]string, 0, last+1)
 	for si, s := range stages[:last+1] {
 		if s.ComplexityCount > 0 {
-			complexityAve := float64(s.AveComplexity) / float64(s.ComplexityCount)
-			complexities = append(complexities, fmt.Sprintf("%d/%.01f", s.BestComplexity, complexityAve))
+			complexityAve := s.TotalComplexity / int64(s.ComplexityCount)
+			complexities = append(complexities, fmt.Sprintf("[%d] %d/%d", si, s.BestComplexity, complexityAve))
 		} else {
-			complexities = append(complexities, "0")
+			complexities = append(complexities, fmt.Sprintf("[%d] 0", si))
 		}
 		if s.Succeeded == 0 && s.Failed == 0 {
 			// skip non-productive stages
@@ -103,7 +103,7 @@ type GameStage struct {
 	Total           int
 	Succeeded       int
 	Failed          int
-	AveComplexity   int64
+	TotalComplexity int64
 	BestComplexity  int64 // best complexity for this stage
 	ComplexityCount int
 	Candidate       int64

@@ -3,7 +3,10 @@ package generators_test
 import (
 	"context"
 	"errors"
+	"os"
+	"os/signal"
 	"runtime/debug"
+	"syscall"
 	"testing"
 	"time"
 
@@ -122,34 +125,49 @@ func BenchmarkHardOrVeryHard(b *testing.B) {
 // *   [4] Total: 94, Success: 39(41.49%), Failed: 0(0.00%)
 // *   [5] Total: 55, Success: 55(100.00%), Failed: 0(0.00%)
 // * ], Complexities: 166 | 149.5; 1205 | 690.0; 4334 | 1973.4; 8699 | 4382.6; 9670 | 5496.1; 9670 | 5157.5
+// TopN and more improvements:
+// * 3	 432520445 ns/op	163305234 B/op	  958904 allocs/op
+// * Solutions: 3, ~Elapsed: 41.638µs, ~Retries: 0.000
+// * Solver Cache: hits=65489 (43.16%, unknown=0.57%), misses=85384, sets=85398 (unknown=2690)
+// * Game Generations: 300, ~Elapsed: 4.32518ms, ~Retries: 0.013. Stages: [
+// *   [2] Total: 369, Success: 125(33.88%), Failed: 0(0.00%), ~Candidates: 100.0
+// *   [3] Total: 244, Success: 153(62.70%), Failed: 0(0.00%), ~Candidates: 50.0
+// *.  [4] Total: 91, Success: 76(83.52%), Failed: 0(0.00%), ~Candidates: 40.0
+// *   [5] Total: 15, Success: 15(100.00%), Failed: 0(0.00%), ~Candidates: 28.0
+// * ], Complexities: [0] 344/203 [1] 1332/1117 [2] 7179/6479 [3] 7108/6266 [4] 6742/5845 [5] 4949/4949
 
 func BenchmarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelEvil, solver.LevelEvil, 100)
 }
 
 // Initial state (bulks of 10):
-// * 1	41888266875 ns/op	4805446688 B/op	32630397 allocs/op
-// * Generations: 20, ~Elapsed: 4.188811889s, ~Retries: 50.000,
-//   Stages: [{20 0 0} {20 0 0} {20 0 10674} {20 0 0} {20 0 0} {20 0 0} {20 6 0} {14 14 6}]
+//   - 1	41888266875 ns/op	4805446688 B/op	32630397 allocs/op
+//   - Generations: 20, ~Elapsed: 4.188811889s, ~Retries: 50.000,
+//     Stages: [{20 0 0} {20 0 0} {20 0 10674} {20 0 0} {20 0 0} {20 0 0} {20 6 0} {14 14 6}]
+//
 // Fixes:
-// * 1	16119979791 ns/op	1435290304 B/op	10328974 allocs/op
-// * Generations: 20, ~Elapsed: 1.611989s, ~Retries: 15.900,
-//   Stages: [{20 0 0} {20 0 0} {20 4 0} {16 16 0}]
+//   - 1	16119979791 ns/op	1435290304 B/op	10328974 allocs/op
+//   - Generations: 20, ~Elapsed: 1.611989s, ~Retries: 15.900,
+//     Stages: [{20 0 0} {20 0 0} {20 4 0} {16 16 0}]
+//
 // Improve the only choice in sequence and trial-and-error:
-// * 1	14836185834 ns/op	3555023984 B/op	17091575 allocs/op
-// * Generations: 20, ~Elapsed: 1.483607195s, ~Retries: 17.800,
-//   Stages: [{20 0 0} {20 2 0} {18 0 0} {18 18 0}]
+//   - 1	14836185834 ns/op	3555023984 B/op	17091575 allocs/op
+//   - Generations: 20, ~Elapsed: 1.483607195s, ~Retries: 17.800,
+//     Stages: [{20 0 0} {20 2 0} {18 0 0} {18 18 0}]
+//
 // Cache and bug fix in layered recursion calculations:
-// * 1	28215436834 ns/op	11097599904 B/op	89392167 allocs/op
-// * Generations: 10, ~Elapsed: 2.821543495s, ~Retries: 30.200,
-//   Stages: [{10 0 0} {10 1 0} {9 0 0} {9 9 0}]
-// * Solver Cache: hits=3018 (10.9%), unknown hits=100 (0.4%), misses=24487, sets=24489
+//   - 1	28215436834 ns/op	11097599904 B/op	89392167 allocs/op
+//   - Generations: 10, ~Elapsed: 2.821543495s, ~Retries: 30.200,
+//     Stages: [{10 0 0} {10 1 0} {9 0 0} {9 9 0}]
+//   - Solver Cache: hits=3018 (10.9%), unknown hits=100 (0.4%), misses=24487, sets=24489
+//
 // Generation layering and other improvements:
-// * 1	16818874958 ns/op	6950772096 B/op	41741684 allocs/op
-// * Generations: 10, ~Elapsed: 1.6818873s, ~Retries: 4.000,
-//   Stages: [{10 0 0} {10 0 0} {10 10 0}]
-// * Solver Cache: hits=534845 (23.61%), unknown hits=4985 (0.22%), misses=1725744,
-//   sets=1725850, unknown sets=18245
+//   - 1	16818874958 ns/op	6950772096 B/op	41741684 allocs/op
+//   - Generations: 10, ~Elapsed: 1.6818873s, ~Retries: 4.000,
+//     Stages: [{10 0 0} {10 0 0} {10 10 0}]
+//   - Solver Cache: hits=534845 (23.61%), unknown hits=4985 (0.22%), misses=1725744,
+//     sets=1725850, unknown sets=18245
+//
 // Tune generation parameters:
 // * 1	12090348292 ns/op	4873126480 B/op	28898735 allocs/op
 // * Solutions: 3, ~Elapsed: 40.069µs, ~Retries: 0.000
@@ -159,9 +177,18 @@ func BenchmarkEvil(b *testing.B) {
 // *   [4] Total: 77, Success: 15(19.48%), Failed: 0(0.00%)
 // *   [5] Total: 62, Success: 11(17.74%), Failed: 51(82.26%)
 // * ], Complexities: 443 | 184.0; 900 | 619.4; 2750 | 1691.1; 29082 | 8323.8; 29087 | 9585.3; 29087 | 9101.6
+// TopN and more improvements:
+// * 1	3219336041 ns/op	1179418072 B/op	 7052071 allocs/op
+// * Solutions: 1, ~Elapsed: 43.208µs, ~Retries: 0.000
+// * Solver Cache: hits=187246 (46.49%, unknown=0.72%), misses=212643, sets=212662 (unknown=6674)
+// * Game Generations: 100, ~Elapsed: 32.193332ms, ~Retries: 0.090. Stages: [
+// *   [3] Total: 116, Success: 15(12.93%), Failed: 0(0.00%), ~Candidates: 50.0
+// *   [4] Total: 101, Success: 75(74.26%), Failed: 0(0.00%), ~Candidates: 40.0
+// *   [5] Total: 26, Success: 22(84.62%), Failed: 4(15.38%), ~Candidates: 25.3
+// * ], Complexities: [0] 564/249 [1] 2902/1611 [2] 22255/9662 [3] 22270/11442 [4] 22270/11437 [5] 22270/15730
 
 func BenchmarkDarkEvil(b *testing.B) {
-	runBenchmark(b, solver.LevelDarkEvil, solver.LevelDarkEvil, 25)
+	runBenchmark(b, solver.LevelDarkEvil, solver.LevelDarkEvil, 100)
 }
 
 func BenchmarkNightmareOrBlackHole(b *testing.B) {
@@ -170,9 +197,13 @@ func BenchmarkNightmareOrBlackHole(b *testing.B) {
 
 func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 	stats.Stats.Reset()
+	ctx := b.Context()
+	ctx, sygCancel := signal.NotifyContext(ctx, os.Interrupt, os.Kill, syscall.SIGTERM)
+	defer sygCancel()
 
-	// force stop to print stats after 2 minutes
-	ctx, cancel := context.WithTimeout(b.Context(), time.Minute)
+	// force stop to print stats after 8 minutes
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, time.Minute*8)
 	defer cancel()
 
 	g := generators.New(&generators.Options{MinLevel: min, MaxLevel: max, Count: count})

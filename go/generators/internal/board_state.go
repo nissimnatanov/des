@@ -380,3 +380,77 @@ func (bs *BoardState) RemoveVal(ctx context.Context, v values.Value, count int) 
 	}
 	return next
 }
+
+type TopNArgs struct {
+	In         *SortedBoardStates
+	TopN       int
+	FreeCells  int
+	SelectBest int
+}
+
+type TopNResult struct {
+	Next  *SortedBoardStates
+	Ready *SortedBoardStates
+}
+
+func TopN(ctx context.Context, args *TopNArgs) TopNResult {
+	if args.In == nil || args.In.Size() == 0 {
+		panic("In must be provided for TopN")
+	}
+	result := TopNResult{
+		Next:  NewSortedBoardStates(args.SelectBest),
+		Ready: NewSortedBoardStates(args.SelectBest),
+	}
+
+	next := args.In
+	nextPerCandidate := NewSortedBoardStates(args.TopN)
+	for next.Size() > 0 {
+		cur := next
+		next = NewSortedBoardStates(args.SelectBest)
+		for bi := range cur.Size() {
+			bs := cur.Get(bi)
+			if bs.Progress() == InRangeKeepGoing && bs.Candidates() == indexes.MinBitSet81 {
+				bs.progress = InRangeStop
+			}
+			switch {
+			case bs.progress == AboveMaxLevel:
+				continue
+			case bs.progress == InRangeStop:
+				// reached the level
+				result.Ready.Add(bs)
+				continue
+			case bs.board().FreeCellCount() >= args.FreeCells:
+				// reached the desired free cell
+				result.Next.Add(bs)
+				continue
+			}
+
+			// try the remained indexes one by one
+			nextPerCandidate.Reset()
+			for index := range bs.candidates.Indexes {
+				removed := bs.tryRemoveCandidates(ctx, []int{index})
+				if removed == nil {
+					continue
+				}
+				if removed.progress == InRangeStop {
+					// we reached the desired level, return it as a ready board
+					result.Ready.Add(removed)
+					continue
+				}
+				nextPerCandidate.Add(removed)
+				next.Add(removed)
+			}
+			if nextPerCandidate.Size() == 0 && bs.progress == InRangeKeepGoing {
+				// if the board in range and we could not enhance it further, capture as ready
+				bs.progress = InRangeStop
+				result.Ready.Add(bs)
+			}
+			for nbs := range nextPerCandidate.Boards {
+				// if we tried to remove the candidate index from parent and it lead to a failure,
+				// we should remove it from the child state as well
+				nbs.candidates = nbs.candidates.Intersect(bs.candidates)
+			}
+		}
+	}
+	return result
+}

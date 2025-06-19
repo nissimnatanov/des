@@ -165,6 +165,13 @@ var otherBoards = []testBoard{
 		expectedLevel:      solver.LevelNightmare,
 		expectedComplexity: 84350,
 	},
+	{
+		name:               "my board 10",
+		board:              "9E3C4B2B59B5A8C23B65I8B3B93B5C3B6A4C8C7E74B2B",
+		solution:           "92_8_5_7_4_31_6_7_43_1_26_8_591_6_59_83_7_4_237_2_651_9_8_4_4_5_6_7_9_81_2_38_1_934_2_56_7_2_31_8_69_47_5_5_84_2_3_76_9_1_6_9_741_5_23_8_",
+		expectedLevel:      solver.LevelNightmare,
+		expectedComplexity: 98298,
+	},
 	/*
 			    "B1D4C9A4A5A14C2A83B4B32A7A6B4C8A7G4A8A37B2E6A7E2A8C", // 27270
 		    "5A12B3A4G6A3H1E5D5A2C3A4A5B1A6C47F61E4B396B5",        // 26471

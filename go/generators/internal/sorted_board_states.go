@@ -9,16 +9,18 @@ import (
 
 // SortedBoards are sorted by complexity and deduplicated
 type SortedBoardStates struct {
-	sorted []*BoardState
+	maxSize int
+	sorted  []*BoardState
 }
 
-func NewSortedBoardStates(bs ...*BoardState) *SortedBoardStates {
-	// TODO: can optimize
-	sbs := &SortedBoardStates{}
-	for _, b := range bs {
-		sbs.Add(b)
+func NewSortedBoardStates(maxSize int) *SortedBoardStates {
+	if maxSize <= 0 {
+		panic("maxSize must be greater than 0")
 	}
-	return sbs
+	return &SortedBoardStates{
+		sorted:  make([]*BoardState, 0, maxSize),
+		maxSize: maxSize,
+	}
 }
 
 func (sbs *SortedBoardStates) Reset() {
@@ -31,13 +33,6 @@ func (sbs *SortedBoardStates) Size() int {
 
 func (sbs *SortedBoardStates) Get(index int) *BoardState {
 	return sbs.sorted[index]
-}
-
-func (sbs *SortedBoardStates) TrimSize(limit int) {
-	if len(sbs.sorted) < limit {
-		return
-	}
-	sbs.sorted = slices.Delete(sbs.sorted, limit, len(sbs.sorted))
 }
 
 func (sbs *SortedBoardStates) Boards(yield func(*BoardState) bool) {
@@ -55,6 +50,15 @@ func (sbs *SortedBoardStates) Add(newBoard *BoardState) bool {
 }
 
 func (sbs *SortedBoardStates) addInternal(newBoard *BoardState, from int) (int, bool) {
+	if len(sbs.sorted) == sbs.maxSize {
+		if sbs.sorted[sbs.maxSize-1].Complexity() >= newBoard.Complexity() {
+			// do not add boards that are below the current min complexity if at capacity
+			return -1, false
+		}
+		// at capacity, adding new boards will require removing the last one
+		sbs.sorted = sbs.sorted[:sbs.maxSize-1]
+	}
+
 	insertIndex := len(sbs.sorted)
 sortingLoop:
 	for i := from; i < len(sbs.sorted); i++ {

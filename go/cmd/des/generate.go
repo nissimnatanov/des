@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"sync/atomic"
 	"time"
 
@@ -126,7 +127,9 @@ func generate(f *GenerateFlags) {
 		},
 	})
 	fmt.Printf("Generating boards with levels from %s to %s...\n", f.MinLevel, f.MaxLevel)
-	ctx := context.Background()
+	ctx, sygCancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer sygCancel()
+
 	var cancel context.CancelFunc
 	if f.Timeout > 0 {
 		ctx, cancel = context.WithTimeout(ctx, f.Timeout)
