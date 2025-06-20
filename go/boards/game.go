@@ -51,6 +51,10 @@ func (b *Game) Hint01() int {
 	return b.hints01.First()
 }
 
+func (b *Game) Hints01() indexes.BitSet81 {
+	return b.hints01
+}
+
 func (b *Game) AllAllowedValues(yield func(int, values.Set) bool) {
 	for i := range Size {
 		if b.values[i] == 0 && !yield(i, b.AllowedValues(i)) {

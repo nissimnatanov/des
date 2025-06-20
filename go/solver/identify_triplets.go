@@ -30,7 +30,7 @@ func (a identifyTriplets) Run(ctx context.Context, state AlgorithmState) Status 
 		}
 
 		// found enough peers
-		status := a.tryEliminate(b, index, peers, allowed, indexes.RowFromIndex, indexes.RowSequence)
+		status := a.tryEliminate(state, index, peers, allowed, indexes.RowFromIndex, indexes.RowSequence)
 		if status == StatusSucceeded {
 			eliminationCount++
 			// do not stop yet if we found a solution, let's check other peers
@@ -38,7 +38,7 @@ func (a identifyTriplets) Run(ctx context.Context, state AlgorithmState) Status 
 			return status
 		}
 
-		status = a.tryEliminate(b, index, peers, allowed, indexes.ColumnFromIndex, indexes.ColumnSequence)
+		status = a.tryEliminate(state, index, peers, allowed, indexes.ColumnFromIndex, indexes.ColumnSequence)
 		if status == StatusSucceeded {
 			eliminationCount++
 			// do not stop yet if we found a solution, let's check other peers
@@ -46,7 +46,7 @@ func (a identifyTriplets) Run(ctx context.Context, state AlgorithmState) Status 
 			return status
 		}
 
-		status = a.tryEliminate(b, index, peers, allowed, indexes.SquareFromIndex, indexes.SquareSequence)
+		status = a.tryEliminate(state, index, peers, allowed, indexes.SquareFromIndex, indexes.SquareSequence)
 		if status == StatusSucceeded {
 			eliminationCount++
 			// do not stop yet if we found a solution, let's check other peers
@@ -60,7 +60,6 @@ func (a identifyTriplets) Run(ctx context.Context, state AlgorithmState) Status 
 		}
 	}
 	if eliminationCount > 0 {
-		state.AddStep(Step(a.String()), a.Complexity(), eliminationCount)
 		return StatusSucceeded
 	}
 
@@ -68,7 +67,7 @@ func (a identifyTriplets) Run(ctx context.Context, state AlgorithmState) Status 
 }
 
 func (a identifyTriplets) tryEliminate(
-	board *boards.Game, index int, peers []int,
+	state AlgorithmState, index int, peers []int,
 	allowed values.Set,
 	seqNumFromIndex func(int) int,
 	indexesFromSeq func(int) indexes.Sequence,
@@ -91,20 +90,22 @@ func (a identifyTriplets) tryEliminate(
 		}
 		// we already found two peers in the same sequence, this is third which means there are
 		// 4 cells with same triplet of values
+		state.AddStep(Step(a.String()), a.Complexity(), 1)
 		return StatusNoSolution
 	}
 	if seqPeer1 == -1 || seqPeer2 == -1 {
 		// we didn't find two peers in the same sequence
 		return StatusUnknown
 	}
-	return a.tryEliminateSeq(board, [3]int{index, seqPeer1, seqPeer2}, allowed, indexesFromSeq(seqNum))
+	return a.tryEliminateSeq(state, [3]int{index, seqPeer1, seqPeer2}, allowed, indexesFromSeq(seqNum))
 }
 
 func (a identifyTriplets) tryEliminateSeq(
-	board *boards.Game, peers [3]int,
+	state AlgorithmState, peers [3]int,
 	toEliminate values.Set, seq indexes.Sequence,
 ) Status {
 	status := StatusUnknown
+	board := state.Board()
 	for _, index := range seq {
 		if index == peers[0] || index == peers[1] || index == peers[2] || !board.IsEmpty(index) {
 			continue
@@ -117,7 +118,8 @@ func (a identifyTriplets) tryEliminateSeq(
 		}
 
 		// found a cell that we can remove values - turn them off
-		board.DisallowValues(index, toEliminate)
+		state.AddStep(Step(a.String()), a.Complexity(), 1)
+		status = StatusSucceeded
 
 		// since we are here, we can now easily check if we have only one allowed value left
 		tempAllowed = tempAllowed.Without(toEliminate)
@@ -127,12 +129,10 @@ func (a identifyTriplets) tryEliminateSeq(
 			return StatusNoSolution
 		case 1:
 			// only one allowed value left, let's set it
-			for _, v := range tempAllowed.Values() {
-				// we can safely assume that this is the only value left
-				board.Set(index, v)
-			}
+			board.Set(index, tempAllowed.First())
+		default:
+			board.DisallowValues(index, toEliminate)
 		}
-		status = StatusSucceeded
 	}
 
 	return status

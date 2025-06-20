@@ -22,7 +22,7 @@ func TestMoreThanOneSolution(t *testing.T) {
 }
 
 func TestSolveSpecificBoard(t *testing.T) {
-	testSanity(t, solver.ActionSolve, otherBoards[7:8])
+	testSanity(t, solver.ActionSolve, benchBoards[:1])
 }
 
 func TestSolveSanity(t *testing.T) {
@@ -300,11 +300,11 @@ func testSanity(t *testing.T, action solver.Action, testBoards []testBoard, opts
 // - all			422	   2777256 ns/op	  634270 B/op	    3270 allocs/op
 
 func BenchmarkProveFirstOnly(b *testing.B) {
-	benchRun(b, solver.ActionProve, 1)
+	benchRun(b, solver.ActionProve, benchBoards[:1])
 }
 
 func BenchmarkProveAll(b *testing.B) {
-	benchRun(b, solver.ActionProve, len(benchBoards))
+	benchRun(b, solver.ActionProve, benchBoards)
 }
 
 // start: with hint01 and bitset improvements:
@@ -355,54 +355,56 @@ func BenchmarkProveAll(b *testing.B) {
 // Perf improvements:
 // - first only		128	   9225894 ns/op	  841715 B/op	    9532 allocs/op
 // - all			32	  36221208 ns/op	 2224411 B/op	   30729 allocs/op
-// - fast first		1281	    821332 ns/op	  209845 B/op	    1092 allocs/op
+// - fast first		1281    821332 ns/op	  209845 B/op	    1092 allocs/op
 // - fast all		860	   1386738 ns/op	  315825 B/op	    1659 allocs/op
 
 func BenchmarkSolveFirstOnly(b *testing.B) {
-	benchRun(b, solver.ActionSolve, 1)
+	benchRun(b, solver.ActionSolve, benchBoards[:1])
 }
 
 func BenchmarkSolveAll(b *testing.B) {
-	benchRun(b, solver.ActionSolve, len(benchBoards))
+	benchRun(b, solver.ActionSolve, benchBoards)
 }
 
 func BenchmarkSolveFastFirstOnly(b *testing.B) {
-	benchRun(b, solver.ActionSolveFast, 1)
+	benchRun(b, solver.ActionSolveFast, benchBoards[:1])
 }
 
 func BenchmarkSolveFastAll(b *testing.B) {
-	benchRun(b, solver.ActionSolveFast, len(benchBoards))
+	benchRun(b, solver.ActionSolveFast, benchBoards)
 }
 
-func benchRun(b *testing.B, action solver.Action, numBoards int) {
+func benchRun(b *testing.B, action solver.Action, testBoards []testBoard) {
 	prev := solver.DisableNLog(true) // disable logging in benchmarks
 	defer solver.DisableNLog(prev)
 
 	ctx := b.Context()
 
 	var parsed []*boards.Game
-	for _, sample := range benchBoards {
+	for _, sample := range testBoards {
 		bd, err := boards.Deserialize(sample.board)
 		assert.NilError(b, err)
 		parsed = append(parsed, bd)
-		numBoards--
-		if numBoards <= 0 {
-			break
-		}
 	}
 
 	// Create a new solver
 	s := solver.New()
 
 	for b.Loop() {
-		for _, bd := range parsed {
-			res := s.Run(ctx, bd.Clone(boards.Play), action)
-			assert.NilError(b, res.Error)
-			assert.Equal(b, res.Status, solver.StatusSucceeded)
-			if action.LevelRequested() {
-				assert.Assert(b, res.Level >= solver.LevelDarkEvil)
+		for i, bd := range parsed {
+			res := s.Run(ctx, bd, action)
+			expected := testBoards[i].expected
+			if expected == solver.StatusUnknown {
+				expected = solver.StatusSucceeded
 			}
-			assert.Equal(b, len(res.Solutions), 1)
+			assert.NilError(b, res.Error)
+			assert.Equal(b, res.Status, expected)
+			if expected == solver.StatusSucceeded {
+				if action.LevelRequested() {
+					assert.Assert(b, res.Level >= solver.LevelDarkEvil)
+				}
+				assert.Equal(b, len(res.Solutions), 1)
+			}
 		}
 	}
 }

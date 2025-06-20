@@ -2,6 +2,8 @@ package solver
 
 import (
 	"context"
+
+	"github.com/nissimnatanov/des/go/boards/indexes"
 )
 
 type theOnlyAllowedValueInCell struct {
@@ -9,22 +11,37 @@ type theOnlyAllowedValueInCell struct {
 
 func (a theOnlyAllowedValueInCell) Run(ctx context.Context, state AlgorithmState) Status {
 	b := state.Board()
-	found := 0
-	for index := b.Hint01(); index >= 0; index = b.Hint01() {
+	if state.Action().LevelRequested() {
+		index := b.Hint01()
+		if index < 0 {
+			return StatusUnknown
+		}
 		allowed := b.AllowedValues(index).Values()
 		switch len(allowed) {
 		case 0:
 			return StatusNoSolution
 		case 1:
 			b.Set(index, allowed[0])
-			found++
-		default:
-			panic("Hint returned more than one allowed value")
+			state.AddStep(Step(a.String()), a.Complexity(), 1)
+			return StatusSucceeded
 		}
-		// for accurate leveling, we have to bail out now - otherwise this algorithm will count
-		// "Single in Sequence" hits (with complexity 1) as its own with complexity 5.
-		if found > 0 && state.Action().LevelRequested() {
-			break
+
+		panic("Hint returned more than one allowed value")
+	}
+
+	found := 0
+	for hints := b.Hints01(); hints != indexes.MinBitSet81; hints = b.Hints01() {
+		for index := range b.Hints01().Indexes {
+			allowed := b.AllowedValues(index).Values()
+			switch len(allowed) {
+			case 0:
+				return StatusNoSolution
+			case 1:
+				b.Set(index, allowed[0])
+				found++
+			default:
+				panic("Hint returned more than one allowed value")
+			}
 		}
 	}
 	if found == 0 {

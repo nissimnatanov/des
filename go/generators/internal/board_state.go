@@ -32,6 +32,9 @@ func newBoardState(
 ) (*BoardState, *solver.Result) {
 	// we could prob create fake result for solutions, but it does not matter much
 	res := state.solver.Run(ctx, srcBoard, solver.ActionSolve, state.cache)
+	// capture all, including unsolved (those also contribute to the slow generation)
+	SlowBoards.Add(res)
+
 	if res.Status != solver.StatusSucceeded {
 		return nil, res
 	}

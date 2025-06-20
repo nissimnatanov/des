@@ -66,7 +66,7 @@ const (
 	// aligned with the second recursion step complexity
 	LevelDarkEvilBar LevelComplexityBar = 40000
 	// seen only few puzzles with complexity above this level
-	LevelNightmareBar LevelComplexityBar = 100000
+	LevelNightmareBar LevelComplexityBar = 120000
 )
 
 // LevelFromComplexity returns the level of the Sudoku puzzle based on its complexity

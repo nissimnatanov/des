@@ -229,6 +229,9 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 			}
 		}
 	}
+	// log the slow boards
+	slowBoards := internal.SlowBoards.Log()
+	b.Log(slowBoards)
 	b.Log(stats.Stats.Solution().String())
 	b.Log(stats.Stats.Cache().String())
 	b.Log(stats.Stats.Game().String())

@@ -34,14 +34,14 @@ var benchBoards = []testBoard{
 		board:              "6D894A9D61C7B4D2B61J2C89B2G6C5G3A8D16B",
 		solution:           "62_5_1_7_8943_94_8_3_2_615_7_3_71_9_45_8_6_2_25_7_619_3_8_4_4_6_3_5_8_7_29_1_1_894_3_25_7_6_7_9_2_8_63_4_1_55_1_6_2_9_4_7_38_83_4_7_5_162_9_",
 		expectedLevel:      solver.LevelBlackHole,
-		expectedComplexity: 200138,
+		expectedComplexity: 230194,
 	},
 	{
 		name:               "al escargot",
 		board:              "1D7A9B3B2C8B96B5D53B9C1B8C26D4C3F1B4F7B7C3B",
 		solution:           "16_2_8_5_74_93_5_34_1_29_6_7_87_8_964_3_52_1_4_7_531_2_98_6_9_13_5_86_7_4_262_8_7_9_41_3_5_35_6_4_7_8_2_19_2_41_9_3_5_8_6_78_9_72_6_1_35_4_",
 		expectedLevel:      solver.LevelBlackHole,
-		expectedComplexity: 139173,
+		expectedComplexity: 145014,
 	},
 	{
 		name:     "Arto Inkala",
@@ -95,7 +95,7 @@ var otherBoards = []testBoard{
 		board:              "B4B7C5D9D1A6B5B6B1A8A4A38F1D2E37D25B89C63E29B",
 		solution:           "8_9_43_5_76_1_2_56_3_2_1_97_8_4_7_12_68_4_53_9_62_5_19_83_47_389_7_4_6_2_5_14_7_1_5_23_8_9_6_9_378_6_1_4_252_4_897_5_1_631_5_6_4_3_297_8_",
 		expectedLevel:      solver.LevelNightmare,
-		expectedComplexity: 41428,
+		expectedComplexity: 43141,
 	},
 	{
 		// hardest so far created by me (with C++ solver)
@@ -103,7 +103,7 @@ var otherBoards = []testBoard{
 		board:              "B1A6A5B4A8B16C5E12B4E3C9F3B7B6A2C3C1A156C7A8B7E",
 		solution:           "7_2_13_68_54_9_49_82_5_163_7_6_53_4_9_7_8_125_7_48_2_6_1_9_31_8_6_94_3_7_2_5_9_32_1_75_4_68_26_7_5_34_9_8_13_1568_9_2_74_84_9_71_2_3_5_6_",
 		expectedLevel:      solver.LevelBlackHole,
-		expectedComplexity: 163173,
+		expectedComplexity: 176657,
 	},
 	{
 		name:     "my board 2",
@@ -115,32 +115,32 @@ var otherBoards = []testBoard{
 		board:              "B3A85C6B1G27C5E17A8B6B3A51F6B7A9A3A86B1C7F5C8B",
 		solution:           "7_1_34_852_6_9_65_8_19_2_7_4_3_9_4_276_3_1_58_5_3_9_2_174_86_4_67_8_39_512_8_2_1_5_4_69_3_72_94_35_867_1_18_6_9_74_3_2_5_3_7_56_2_1_89_4_",
 		expectedLevel:      solver.LevelBlackHole,
-		expectedComplexity: 151638,
+		expectedComplexity: 152913,
 	},
 	{
 		name:               "my board 4",
 		board:              "F5E7A8A9I62A7A4A6B9F71A6A3B95B2495A8F2D1C8D",
 		solution:           "7_9_3_6_1_4_52_8_6_5_2_73_81_94_8_4_1_2_9_5_7_3_621_75_49_68_3_93_5_8_6_2_4_714_68_37_1_952_3_24956_81_7_5_8_6_1_27_3_4_9_17_9_4_83_2_6_5_",
 		expectedLevel:      solver.LevelNightmare,
-		expectedComplexity: 82744,
+		expectedComplexity: 99387,
 	},
 	{
 		/*
 			>>> Level: Nightmare
-			>>> Complexity: 70755
 		*/
-		name:     "my board 5",
-		board:    "B3A1B2D7A8A9E9A7D7B96J14A8D5C4A56C5B12A3B1G5",
-		solution: "7_9_36_14_5_28_6_5_2_73_81_94_8_4_1_2_95_73_6_2_1_75_4_968_3_9_3_5_8_6_2_4_7_146_83_7_1_9_52_3_2_49_568_1_7_58_6_127_34_9_17_9_4_8_3_2_6_5",
+		name:               "my board 5",
+		board:              "B3A1B2D7A8A9E9A7D7B96J14A8D5C4A56C5B12A3B1G5",
+		solution:           "7_9_36_14_5_28_6_5_2_73_81_94_8_4_1_2_95_73_6_2_1_75_4_968_3_9_3_5_8_6_2_4_7_146_83_7_1_9_52_3_2_49_568_1_7_58_6_127_34_9_17_9_4_8_3_2_6_5",
+		expectedComplexity: 69728,
 	},
 	{
 		/*
 			>>> Level: Nightmare
-			>>> Complexity: 73470
 		*/
-		name:     "my board 6",
-		board:    "A936B5C5B381B8H2A7C6C3F14F5E5B1C6A27A49C4E",
-		solution: "7_9361_4_52_8_6_52_7_3819_4_84_1_2_9_5_7_3_6_21_75_4_9_68_3_9_35_8_6_2_4_7_146_8_3_7_1_9_52_3_2_4_9_56_8_17_5_8_61_273_491_7_9_48_3_2_6_5_",
+		name:               "my board 6",
+		board:              "A936B5C5B381B8H2A7C6C3F14F5E5B1C6A27A49C4E",
+		solution:           "7_9361_4_52_8_6_52_7_3819_4_84_1_2_9_5_7_3_6_21_75_4_9_68_3_9_35_8_6_2_4_7_146_8_3_7_1_9_52_3_2_4_9_56_8_17_5_8_61_273_491_7_9_48_3_2_6_5_",
+		expectedComplexity: 79614,
 	},
 	{
 		/*
@@ -156,21 +156,21 @@ var otherBoards = []testBoard{
 		board:              "C6F5B3A1A4F7C1B4C3A35B2A7A4K95A8D612D17C3B5",
 		solution:           "7_9_3_61_4_5_2_8_6_52_7_38_19_48_4_1_2_9_5_73_6_2_17_5_49_6_8_39_358_6_24_71_46_8_3_7_1_9_5_2_3_2_4_956_81_7_5_8_6127_3_4_9_179_4_8_32_6_5",
 		expectedLevel:      solver.LevelNightmare,
-		expectedComplexity: 92401,
+		expectedComplexity: 106650,
 	},
 	{
 		name:               "my board 9",
 		board:              "A1A97B45E37D7E3C195D59I6B1B2B7F4A5C6B9634C7",
 		solution:           "3_18_972_6_459_2_5_4_6_378_1_4_6_78_5_1_9_2_36_3_4_1958_7_2_1_592_8_7_4_3_6_8_7_2_63_4_15_9_28_3_71_6_5_9_4_7_41_52_9_3_68_5_96348_2_1_7",
 		expectedLevel:      solver.LevelNightmare,
-		expectedComplexity: 84350,
+		expectedComplexity: 96227,
 	},
 	{
 		name:               "my board 10",
 		board:              "9E3C4B2B59B5A8C23B65I8B3B93B5C3B6A4C8C7E74B2B",
 		solution:           "92_8_5_7_4_31_6_7_43_1_26_8_591_6_59_83_7_4_237_2_651_9_8_4_4_5_6_7_9_81_2_38_1_934_2_56_7_2_31_8_69_47_5_5_84_2_3_76_9_1_6_9_741_5_23_8_",
 		expectedLevel:      solver.LevelNightmare,
-		expectedComplexity: 98298,
+		expectedComplexity: 101193,
 	},
 	/*
 			    "B1D4C9A4A5A14C2A83B4B32A7A6B4C8A7G4A8A37B2E6A7E2A8C", // 27270

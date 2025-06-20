@@ -29,7 +29,7 @@ func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 			continue
 		}
 
-		status := a.tryEliminate(b, index, peers, allowed, indexes.RowFromIndex, indexes.RowSequence)
+		status := a.tryEliminate(state, index, peers, allowed, indexes.RowFromIndex, indexes.RowSequence)
 		if status == StatusSucceeded {
 			eliminationCount++
 			// do not stop yet if we found a solution, let's check other peers
@@ -37,7 +37,7 @@ func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 			return status
 		}
 
-		status = a.tryEliminate(b, index, peers, allowed, indexes.ColumnFromIndex, indexes.ColumnSequence)
+		status = a.tryEliminate(state, index, peers, allowed, indexes.ColumnFromIndex, indexes.ColumnSequence)
 		if status == StatusSucceeded {
 			eliminationCount++
 			// do not stop yet if we found a solution, let's check other peers
@@ -45,7 +45,7 @@ func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 			return status
 		}
 
-		status = a.tryEliminate(b, index, peers, allowed, indexes.SquareFromIndex, indexes.SquareSequence)
+		status = a.tryEliminate(state, index, peers, allowed, indexes.SquareFromIndex, indexes.SquareSequence)
 		if status == StatusSucceeded {
 			eliminationCount++
 			// do not stop yet if we found a solution, let's check other peers
@@ -60,14 +60,13 @@ func (a identifyPairs) Run(ctx context.Context, state AlgorithmState) Status {
 	if eliminationCount > 0 {
 		// if we found at least one index that lead to elimination, let's stop
 		// and go back to cheaper algorithm such as theOnlyChoice
-		state.AddStep(Step(a.String()), a.Complexity(), eliminationCount)
 		return StatusSucceeded
 	}
 	return StatusUnknown
 }
 
 func (a identifyPairs) tryEliminate(
-	board *boards.Game, index int, peers []int,
+	state AlgorithmState, index int, peers []int,
 	allowed values.Set,
 	seqNumFromIndex func(int) int,
 	indexesFromSeq func(int) indexes.Sequence,
@@ -83,6 +82,7 @@ func (a identifyPairs) tryEliminate(
 			// we already found one peer in the same sequence, this is second
 			// in the same sequence which means there are
 			// 3 cells with same pair of values
+			state.AddStep(Step(a.String()), a.Complexity(), 1)
 			return StatusNoSolution
 		}
 		seqPeer = peer
@@ -92,14 +92,15 @@ func (a identifyPairs) tryEliminate(
 		return StatusUnknown
 	}
 
-	return a.tryEliminateSeq(board, index, seqPeer, allowed, indexesFromSeq(seqNum))
+	return a.tryEliminateSeq(state, index, seqPeer, allowed, indexesFromSeq(seqNum))
 }
 
 func (a identifyPairs) tryEliminateSeq(
-	board *boards.Game, p1, p2 int,
+	state AlgorithmState, p1, p2 int,
 	toEliminate values.Set, seq indexes.Sequence,
 ) Status {
 	status := StatusUnknown
+	board := state.Board()
 	for _, index := range seq {
 		if index == p1 || index == p2 || !board.IsEmpty(index) {
 			continue
@@ -112,7 +113,8 @@ func (a identifyPairs) tryEliminateSeq(
 		}
 
 		// found a cell that we can remove values - turn them off
-		board.DisallowValues(index, toEliminate)
+		state.AddStep(Step(a.String()), a.Complexity(), 1)
+		status = StatusSucceeded
 
 		// since we are here, we can now easily check if we have only one allowed value left
 		tempAllowed = tempAllowed.Without(toEliminate)
@@ -122,14 +124,10 @@ func (a identifyPairs) tryEliminateSeq(
 			return StatusNoSolution
 		case 1:
 			// only one allowed value left, let's set it
-			for _, v := range tempAllowed.Values() {
-				// we can safely assume that this is the only value left
-				board.Set(index, v)
-			}
-			// once we set a value, no need to continue this algorithm since we might
-			// get a lot cheaper ones now
+			board.Set(index, tempAllowed.First())
+		default:
+			board.DisallowValues(index, toEliminate)
 		}
-		status = StatusSucceeded
 	}
 
 	return status

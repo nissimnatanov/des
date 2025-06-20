@@ -72,6 +72,7 @@ func (a theOnlyChoiceInSequence) runSeq(
 
 	if !missingValues.IsEmpty() {
 		// we have values that are not covered anywhere
+		state.AddStep(Step(a.String()), StepComplexityMedium, 1)
 		return StatusNoSolution
 	}
 	if uniqueValues.IsEmpty() {
@@ -88,12 +89,13 @@ func (a theOnlyChoiceInSequence) runSeq(
 			continue
 		case 1:
 			b.Set(index, uniqueInCell.First())
+			state.AddStep(Step(a.String()), StepComplexityMedium, 1)
 		default:
 			// we cannot put two unique values in the same cell
+			state.AddStep(Step(a.String()), StepComplexityMedium, 1)
 			return StatusNoSolution
 		}
 	}
 
-	state.AddStep(Step(a.String()), StepComplexityMedium, uniqueValues.Size())
 	return StatusSucceeded
 }

@@ -5,7 +5,6 @@ import (
 
 	"github.com/nissimnatanov/des/go/boards"
 	"github.com/nissimnatanov/des/go/boards/indexes"
-	"github.com/nissimnatanov/des/go/boards/values"
 )
 
 type singleInSequence struct {
@@ -15,54 +14,45 @@ func (a singleInSequence) String() string {
 	return "Single in Sequence"
 }
 
-func (a singleInSequence) Run(ctx context.Context, state AlgorithmState) Status {
-	status := StatusUnknown
-	seqStatus := a.runSeqKind(state, indexes.RowSequence, (*boards.Game).RowValues)
-	if seqStatus != StatusUnknown {
-		return seqStatus
-	}
-	seqStatus = a.runSeqKind(state, indexes.ColumnSequence, (*boards.Game).ColumnValues)
-	if seqStatus != StatusUnknown {
-		return seqStatus
-	}
-	seqStatus = a.runSeqKind(state, indexes.SquareSequence, (*boards.Game).SquareValues)
-	if seqStatus != StatusUnknown {
-		return seqStatus
-	}
-	return status
-}
-
-func (a singleInSequence) runSeqKind(
-	state AlgorithmState,
-	seq func(seq int) indexes.Sequence,
-	seqValues func(b *boards.Game, seq int) values.Set,
-) Status {
-	for si := range boards.SequenceSize {
-		seqValues := seqValues(state.Board(), si)
-		if seqValues.Size() != (boards.SequenceSize - 1) {
-			continue
-		}
-		missingValue := seqValues.Complement().First()
-		status := a.setMissingValue(state, seq(si), missingValue)
-		if status != StatusUnknown {
-			return status
-		}
-	}
-	return StatusUnknown
-}
-
-func (a singleInSequence) setMissingValue(
-	state AlgorithmState,
-	seq indexes.Sequence,
-	missingValue values.Value) Status {
+func (a singleInSequence) Run(_ context.Context, state AlgorithmState) Status {
+	found := 0
 	b := state.Board()
-	for index, allowed := range b.AllowedValuesIn(seq) {
-		if !allowed.Contains(missingValue) {
-			return StatusNoSolution
+	for hints := b.Hints01(); hints != indexes.MinBitSet81; hints = b.Hints01() {
+		foundNow := false
+		for index := range b.Hints01().Indexes {
+			allowed := b.AllowedValues(index).Values()
+			switch len(allowed) {
+			case 0:
+				// found so far + 1 for No Solution detection
+				state.AddStep(Step(a.String()), StepComplexityEasy, found+1)
+				return StatusNoSolution
+			case 1:
+				if a.isSingleInAnySequence(b, index) {
+					b.Set(index, allowed[0])
+					found++
+					foundNow = true
+				}
+			default:
+				panic("Hint returned more than one allowed value")
+			}
 		}
-		b.Set(index, missingValue)
-		state.AddStep(Step(a.String()), StepComplexityEasy, 1)
-		return StatusSucceeded
+		if !foundNow {
+			break
+		}
 	}
-	return StatusError
+
+	if found == 0 {
+		return StatusUnknown
+	}
+
+	state.AddStep(Step(a.String()), StepComplexityEasy, found)
+	return StatusSucceeded
+}
+
+func (a singleInSequence) isSingleInAnySequence(b *boards.Game, index int) bool {
+	// Check if the missing value is the only allowed value in the row, column, or square
+	missingOne := boards.SequenceSize - 1
+	return b.RowValues(indexes.RowFromIndex(index)).Size() == missingOne ||
+		b.ColumnValues(indexes.ColumnFromIndex(index)).Size() == missingOne ||
+		b.SquareValues(indexes.SquareFromIndex(index)).Size() == missingOne
 }

@@ -127,7 +127,6 @@ type runnerState struct {
 }
 
 func (r *runner) tryNonRecursiveAlgorithms(ctx context.Context, algoState AlgorithmState) Status {
-	eliminationOnly := false
 	b := r.Board()
 	if ctx.Err() != nil {
 		return StatusError
@@ -138,9 +137,7 @@ func (r *runner) tryNonRecursiveAlgorithms(ctx context.Context, algoState Algori
 			startBoard = b.Clone(boards.Immutable)
 		}
 
-		freeBefore := b.FreeCellCount()
 		status := algo.Run(ctx, algoState)
-
 		if boards.GetIntegrityChecks() {
 			if !boards.ContainsAll(b, startBoard) {
 				panic(fmt.Errorf(
@@ -153,17 +150,6 @@ func (r *runner) tryNonRecursiveAlgorithms(ctx context.Context, algoState Algori
 					algo, startBoard, b))
 			}
 		}
-		if status == StatusSucceeded &&
-			b.FreeCellCount() == freeBefore &&
-			!r.action.LevelRequested() &&
-			b.Hint01() < 0 {
-			// If we do not need an accurate level, it is proven to be faster if we
-			// try harder algorithms if the current one was only able to eliminate some
-			// choices without finding a new value. The algos that eliminate only need to
-			// check for the zero-or-one allowed left in the cell post elimination.
-			eliminationOnly = true
-			continue
-		}
 		if status != StatusUnknown {
 			return status
 		}
@@ -175,9 +161,6 @@ func (r *runner) tryNonRecursiveAlgorithms(ctx context.Context, algoState Algori
 					algo, startBoard, b))
 			}
 		}
-	}
-	if eliminationOnly {
-		return StatusSucceeded
 	}
 
 	// all traditional algos failed, return back to allow caller try trial-and-error
