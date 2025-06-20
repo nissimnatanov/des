@@ -55,7 +55,7 @@ func logResult(res *Result) {
 		return
 	}
 	// already have enough logged below 80K
-	if res.Complexity < 80000 {
+	if res.Complexity < 90000 {
 		return
 	}
 	serialized := boards.Serialize(res.Input)
