@@ -1,6 +1,7 @@
 package boards_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/nissimnatanov/des/go/boards"
@@ -78,9 +79,24 @@ func assertSampleBoard(t *testing.T, b *boards.Game) {
 func TestValidBoard(t *testing.T) {
 	b := newSampleBoard()
 	// cspell:disable-next-line
-	bs := boards.Format(b, "vt")
-	t.Log("\n" + bs)
-	t.Fail()
+	vtFormat := boards.Format(b, "vt")
+	t.Log("\n" + vtFormat)
+	assert.Equal(t, strings.TrimSpace(`
+╔═══════╦═══════╦═══════╗
+║ 1 2 3 ║ 4 5 6 ║ 7 8 9 ║
+║ 7.8.9.║ 1.2.3.║ 4.5.6.║
+║ 4.5.6.║ 7.8.9.║ 1.2.3.║
+╠═══════╬═══════╬═══════╣
+║ 0.0.0.║ 0.0.0.║ 0.0.0.║
+║ 0.0.0.║ 0.0.0.║ 0.0.0.║
+║ 0.0.0.║ 0.0.0.║ 0.0.0.║
+╠═══════╬═══════╬═══════╣
+║ 0.0.0.║ 0.0.0.║ 0.0.0.║
+║ 0.0.0.║ 0.0.0.║ 0.0.0.║
+║ 0.0.0.║ 0.0.0.║ 0.0.0.║
+╚═══════╩═══════╩═══════╝
+Serialized: 1234567897_8_9_1_2_3_4_5_6_4_5_6_7_8_9_1_2_3_ZZB
+`), strings.TrimSpace(vtFormat))
 
 	assertSampleBoard(t, b)
 
