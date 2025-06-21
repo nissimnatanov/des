@@ -125,16 +125,16 @@ func BenchmarkHardOrVeryHard(b *testing.B) {
 // *   [4] Total: 94, Success: 39(41.49%), Failed: 0(0.00%)
 // *   [5] Total: 55, Success: 55(100.00%), Failed: 0(0.00%)
 // * ], Complexities: 166 | 149.5; 1205 | 690.0; 4334 | 1973.4; 8699 | 4382.6; 9670 | 5496.1; 9670 | 5157.5
-// TopN and more improvements:
-// * 3	 432520445 ns/op	163305234 B/op	  958904 allocs/op
-// * Solutions: 3, ~Elapsed: 41.638µs, ~Retries: 0.000
-// * Solver Cache: hits=65489 (43.16%, unknown=0.57%), misses=85384, sets=85398 (unknown=2690)
-// * Game Generations: 300, ~Elapsed: 4.32518ms, ~Retries: 0.013. Stages: [
-// *   [2] Total: 369, Success: 125(33.88%), Failed: 0(0.00%), ~Candidates: 100.0
-// *   [3] Total: 244, Success: 153(62.70%), Failed: 0(0.00%), ~Candidates: 50.0
-// *.  [4] Total: 91, Success: 76(83.52%), Failed: 0(0.00%), ~Candidates: 40.0
-// *   [5] Total: 15, Success: 15(100.00%), Failed: 0(0.00%), ~Candidates: 28.0
-// * ], Complexities: [0] 344/203 [1] 1332/1117 [2] 7179/6479 [3] 7108/6266 [4] 6742/5845 [5] 4949/4949
+// TopN, ProveOnly and more perf improvements:
+// * 3	 414796222 ns/op	136639650 B/op	  808240 allocs/op
+// * Solutions: 7, ~Elapsed: 53.696µs, ~Retries: 0.000
+// * Solver Cache: hits=99550 (63.55%, unknown=0.54%), misses=56242, sets=56250 (unknown=2104)
+// * Game Generations: 300, ~Elapsed: 4.147318ms, ~Retries: 0.023. Stages: [
+// *   [2] Total: 382, Success: 90(23.56%), Failed: 0(0.00%), ~Candidates: 94.3
+// *   [3] Total: 292, Success: 195(66.78%), Failed: 0(0.00%), ~Candidates: 50.0
+// *   [4] Total: 97, Success: 80(82.47%), Failed: 0(0.00%), ~Candidates: 40.0
+// *   [5] Total: 17, Success: 15(88.24%), Failed: 2(11.76%), ~Candidates: 20.2
+// * ], Complexities: [0] 525/275 [1] 1015/637 [2] 8158/4297 [3] 8178/5554 [4] 7903/5705 [5] 7903/7498
 
 func BenchmarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelEvil, solver.LevelEvil, 100)
@@ -177,15 +177,15 @@ func BenchmarkEvil(b *testing.B) {
 // *   [4] Total: 77, Success: 15(19.48%), Failed: 0(0.00%)
 // *   [5] Total: 62, Success: 11(17.74%), Failed: 51(82.26%)
 // * ], Complexities: 443 | 184.0; 900 | 619.4; 2750 | 1691.1; 29082 | 8323.8; 29087 | 9585.3; 29087 | 9101.6
-// TopN and more improvements:
-// * 1	3219336041 ns/op	1179418072 B/op	 7052071 allocs/op
-// * Solutions: 1, ~Elapsed: 43.208µs, ~Retries: 0.000
-// * Solver Cache: hits=187246 (46.49%, unknown=0.72%), misses=212643, sets=212662 (unknown=6674)
-// * Game Generations: 100, ~Elapsed: 32.193332ms, ~Retries: 0.090. Stages: [
-// *   [3] Total: 116, Success: 15(12.93%), Failed: 0(0.00%), ~Candidates: 50.0
-// *   [4] Total: 101, Success: 75(74.26%), Failed: 0(0.00%), ~Candidates: 40.0
-// *   [5] Total: 26, Success: 22(84.62%), Failed: 4(15.38%), ~Candidates: 25.3
-// * ], Complexities: [0] 564/249 [1] 2902/1611 [2] 22255/9662 [3] 22270/11442 [4] 22270/11437 [5] 22270/15730
+// TopN, ProveOnly and more perf improvements:
+// * 1	7007583583 ns/op	2734085904 B/op	15746173 allocs/op
+// * Solutions: 15, ~Elapsed: 49.008µs, ~Retries: 0.000
+// * Solver Cache: hits=564743 (57.52%, unknown=0.37%), misses=413576, sets=413622 (unknown=9973)
+// * Game Generations: 100, ~Elapsed: 70.068484ms, ~Retries: 0.450. Stages: [
+// *   [3] Total: 149, Success: 17(11.41%), Failed: 0(0.00%), ~Candidates: 50.0
+// *   [4] Total: 132, Success: 79(59.85%), Failed: 0(0.00%), ~Candidates: 40.0
+// *   [5] Total: 53, Success: 16(30.19%), Failed: 37(69.81%), ~Candidates: 23.4
+// * ], Complexities: [0] 420/236 [1] 1290/732 [2] 4395/2128 [3] 22183/6119 [4] 22183/6581 [5] 22183/13946
 
 func BenchmarkDarkEvil(b *testing.B) {
 	runBenchmark(b, solver.LevelDarkEvil, solver.LevelDarkEvil, 100)

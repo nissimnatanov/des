@@ -22,6 +22,9 @@ type Result struct {
 	// Steps are the steps that led to the current level.
 	Steps Steps `json:"level_steps"`
 
+	// RecursionDepth is the depth of the recursion used to solve the board, only set on Solve.
+	RecursionDepth int8 `json:"recursion_depth,omitempty"`
+
 	// AllSteps includes all all the steps performed by the solver, including those that
 	// are not directly related to the current level, but had to be performed (like Proof before
 	// the actual solving, or layered recursion).
@@ -49,6 +52,7 @@ func (r *Result) completeWith(runRes *runResult) *Result {
 	r.Count = runRes.Count
 	r.Complexity = runRes.Complexity
 	r.Solutions = r.Solutions.With(runRes.Solutions)
+	r.RecursionDepth = runRes.RecursionDepth
 	if r.Status == StatusSucceeded {
 		r.Level = LevelFromComplexity(r.Complexity)
 		r.Steps.Merge(runRes.Steps)

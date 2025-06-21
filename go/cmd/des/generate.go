@@ -87,7 +87,6 @@ func runStatsReporter(ctx context.Context, duration time.Duration, skipOnSilence
 		for ctx.Err() == nil {
 			select {
 			case <-ctx.Done():
-				break
 			case <-ticker.C:
 				nowGenerated := generatedSoFar.Load()
 				if nowGenerated == prevGenerated {

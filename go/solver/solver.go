@@ -42,6 +42,19 @@ type options struct {
 	action    Action
 	withSteps bool
 	cache     *Cache
+
+	// maxRecursionDepth is for board generators only, it will skew complexity result if misused
+	minRecursionDepth int8
+}
+
+// WithMinRecursionDepth is used to set the minimum recursion depth for the solver.
+// It is for board generators only, and it is used to ensure that the solver
+// always starts with a minimum recursion depth when using layered recursion.
+// It is not used if Action is not Solve.
+type WithMinRecursionDepth int8
+
+func (w WithMinRecursionDepth) applySolverOptions(opts *options) {
+	opts.minRecursionDepth = int8(w)
 }
 
 type Option interface {
@@ -137,7 +150,7 @@ func (s *Solver) run(ctx context.Context, b *boards.Game, opts options) *runResu
 		if status == StatusSucceeded {
 			rr.Solutions = rr.Solutions.Append(boards.NewSolution(b))
 		}
-		return (&runResult{}).complete(status)
+		return rr.complete(status)
 	}
 
 	var algorithms []Algorithm
@@ -168,6 +181,7 @@ func (s *Solver) run(ctx context.Context, b *boards.Game, opts options) *runResu
 		// zero is not a valid value
 		// note: recursion with this package is almost 'allocation-free', and it is fast
 		maxRecursionDepth: maxRecursionDepthLimit,
+		minRecursionDepth: opts.minRecursionDepth,
 	}
 
 	// must run inside nested func to catch panic from run only
@@ -186,8 +200,7 @@ func (s *Solver) run(ctx context.Context, b *boards.Game, opts options) *runResu
 			} else {
 				err = fmt.Errorf("panic: %w\n%s\n", err, stack)
 			}
-			rr = &runResult{}
-			rr.completeErr(err)
+			rr = r.newRunResult().completeErr(err)
 		}()
 		rr = r.run(ctx)
 	}()

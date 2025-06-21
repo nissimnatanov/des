@@ -155,6 +155,13 @@ func TestCacheSolve(t *testing.T) {
 func testSanity(t *testing.T, action solver.Action, testBoards []testBoard, opts ...solver.Option) []*solver.Result {
 	boards.SetIntegrityChecks(true)
 
+	hasCache := false
+	for _, opt := range opts {
+		if _, ok := opt.(*solver.Cache); ok {
+			hasCache = true
+			break
+		}
+	}
 	ctx := t.Context()
 	s := solver.New()
 	allResults := make([]*solver.Result, 0, len(testBoards))
@@ -181,6 +188,28 @@ func testSanity(t *testing.T, action solver.Action, testBoards []testBoard, opts
 					}
 					if sample.expectedComplexity > 0 {
 						assert.Check(t, cmp.Equal(res.Complexity, sample.expectedComplexity))
+					}
+					expectedRecDepth := int8(0)
+					switch {
+					case res.Steps[solver.TrialAndErrorStepName][solver.StepComplexityRecursion4] > 0:
+						expectedRecDepth = 4
+					case res.Steps[solver.TrialAndErrorStepName][solver.StepComplexityRecursion3] > 0:
+						expectedRecDepth = 3
+					case res.Steps[solver.TrialAndErrorStepName][solver.StepComplexityRecursion2] > 0:
+						expectedRecDepth = 2
+					case res.Steps[solver.TrialAndErrorStepName][solver.StepComplexityRecursion1] > 0:
+						expectedRecDepth = 1
+					}
+					assert.Equal(t, res.RecursionDepth, expectedRecDepth)
+
+					if !hasCache && res.RecursionDepth != 0 {
+						// solving with recursion depth set directly must not change complexity
+						withMinRD := append([]solver.Option{solver.WithMinRecursionDepth(res.RecursionDepth)}, optsWithAction...)
+						resWithMinRD := s.Run(ctx, b, withMinRD...)
+						assert.NilError(t, resWithMinRD.Error)
+						assert.Equal(t, resWithMinRD.Status, res.Status)
+						assert.Check(t, cmp.Equal(resWithMinRD.Level, res.Level))
+						assert.Check(t, cmp.Equal(resWithMinRD.Complexity, res.Complexity))
 					}
 				}
 
@@ -401,7 +430,13 @@ func benchRun(b *testing.B, action solver.Action, testBoards []testBoard) {
 			assert.Equal(b, res.Status, expected)
 			if expected == solver.StatusSucceeded {
 				if action.LevelRequested() {
-					assert.Assert(b, res.Level >= solver.LevelDarkEvil)
+					if testBoards[i].expectedLevel != solver.LevelUnknown {
+						assert.Check(b, cmp.Equal(res.Level, testBoards[i].expectedLevel))
+					} else {
+						// if no expected level is set, we expect at least LevelDarkEvil
+						// since the boards are not trivial
+						assert.Assert(b, res.Level >= solver.LevelDarkEvil)
+					}
 				}
 				assert.Equal(b, len(res.Solutions), 1)
 			}

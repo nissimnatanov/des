@@ -5,3 +5,5 @@ func DisableNLog(disable bool) bool {
 	disableNLog = disable
 	return old
 }
+
+const TrialAndErrorStepName = trialAndErrorStepName

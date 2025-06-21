@@ -25,32 +25,64 @@ type BoardState struct {
 	candidates indexes.BitSet81
 }
 
-// newBoardState creates a new BoardState for the given board.
-// if solver fails, it returns nil with the failed result
-func newBoardState(
-	ctx context.Context, state *SolutionState, levelRange LevelRange, srcBoard *boards.Game,
-) (*BoardState, *solver.Result) {
+func (bs *BoardState) tryCleanIndexes(ctx context.Context, indexesToClean []int, proveOnly bool) *BoardState {
+	if len(indexesToClean) == 0 {
+		panic("indexesToClean cannot be empty")
+	}
+	defer bs.checkIntegrity()
+
+	b := bs.board()
+	for _, index := range indexesToClean {
+		b.Set(index, 0)
+	}
+
 	// we could prob create fake result for solutions, but it does not matter much
-	res := state.solver.Run(ctx, srcBoard, solver.ActionSolve, state.cache)
+	// if we know current board required at least some recursion depth,
+	// we can pass it to the solver of the child board to save tons of time on redundant sub-layer tries
+	action := solver.ActionSolve
+	minRecDepth := int8(0)
+	if bs.res.Action == solver.ActionSolve {
+		// we can only use the recursion depth from the previous result if it was a Solve action
+		// Prove does not have limits and its recursion depth is not relevant and can be too deep
+		minRecDepth = bs.res.RecursionDepth
+	}
+	if proveOnly {
+		action = solver.ActionProve
+	}
+	res := bs.solState.solver.Run(ctx, b, action, bs.solState.cache,
+		solver.WithMinRecursionDepth(minRecDepth))
+
+	// always restore the board to its original state
+	for _, index := range indexesToClean {
+		b.SetReadOnly(index, bs.solState.solution.Get(index))
+	}
+
 	// capture all, including unsolved (those also contribute to the slow generation)
 	SlowBoards.Add(res)
 
 	if res.Status != solver.StatusSucceeded {
-		return nil, res
+		return nil
 	}
+
 	// preserve the clone as Edit board instead of the original board
 	editBoard := res.Input.Clone(boards.Edit)
 	res.Input = editBoard
-	progress := levelRange.shouldContinue(state.rand, editBoard, res)
-	bs := &BoardState{
-		solState:          state,
-		res:               res,
-		desiredLevelRange: levelRange,
-		progress:          progress,
-		candidates:        editBoard.EmptyCells().Complement(),
+	progress := TooEarly
+	if action == solver.ActionSolve {
+		progress = bs.desiredLevelRange.shouldContinue(bs.solState.rand, editBoard, res)
 	}
-	bs.checkIntegrity()
-	return bs, res
+	// if the parent board had some candidates removed, we should remove them from the child state as well
+	childCandidates := editBoard.EmptyCells().Complement().Intersect(bs.candidates)
+
+	child := &BoardState{
+		solState:          bs.solState,
+		res:               res,
+		desiredLevelRange: bs.desiredLevelRange,
+		progress:          progress,
+		candidates:        childCandidates,
+	}
+	child.checkIntegrity()
+	return child
 }
 
 func newSolutionBoardState(
@@ -58,7 +90,7 @@ func newSolutionBoardState(
 ) *BoardState {
 	// we could prob create fake result for solutions, but it does not matter much
 	editBoard := sol.Clone(boards.Edit)
-	res := state.solver.Run(ctx, editBoard, solver.ActionSolve, state.cache)
+	res := state.solver.Run(ctx, editBoard, solver.ActionProve, state.cache)
 	if res.Status != solver.StatusSucceeded {
 		panic("failed to solve a solution")
 	}
@@ -100,6 +132,10 @@ func (bs *BoardState) SolutionState() *SolutionState {
 	return bs.solState
 }
 
+func (bs *BoardState) Action() solver.Action {
+	return bs.res.Action
+}
+
 func (bs *BoardState) Complexity() solver.StepComplexity {
 	return bs.res.Complexity
 }
@@ -133,6 +169,7 @@ type RemoveArgs struct {
 	BatchMinToRemove int
 	BatchMaxToRemove int
 	BatchMaxTries    int
+	ProveOnly        bool
 }
 
 func (bs *BoardState) Remove(ctx context.Context, args RemoveArgs) *BoardState {
@@ -188,7 +225,7 @@ func (bs *BoardState) Remove(ctx context.Context, args RemoveArgs) *BoardState {
 
 // RemoveOneByOne tries to remove indexes one by one, until the board reaches the desired level
 // or the number of free cells is less than MaxFreeCellsForValidBoard.
-func (bs *BoardState) RemoveOneByOne(ctx context.Context, freeCells int) *BoardState {
+func (bs *BoardState) RemoveOneByOne(ctx context.Context, freeCells int, proveOnly bool) *BoardState {
 	if bs.progress == InRangeStop || bs.progress == AboveMaxLevel {
 		// we already overflowed the level, no point in removing anything
 		panic("do not use RemoveOneByOne if already reached the desired level or overflowed it")
@@ -215,23 +252,27 @@ func (bs *BoardState) RemoveOneByOne(ctx context.Context, freeCells int) *BoardS
 		}
 
 		{
-			nextRemoved := next.tryRemoveCandidates(ctx, candidates[ci:ci+1])
+			nextRemoved := next.tryRemoveCandidates(ctx, candidates[ci:ci+1], proveOnly)
 			if nextRemoved == nil {
 				continue
 			}
 			next = nextRemoved
 		}
 		// tryRemoveOne does not overflow the level
+		done := false
 		switch next.progress {
 		case TooEarly, BelowMinLevel, InRangeKeepGoing:
 			// keep removing more
 		case InRangeStop:
 			// we are done
-			break
+			done = true
 		case AboveMaxLevel:
 			panic("tryRemoveOne should not overflow the level")
 		default:
 			panic(fmt.Sprintf("unexpected progress value after tryRemoveOne: %d", next.progress))
+		}
+		if done {
+			break
 		}
 	}
 	// if we tried all the candidates and reached the level, we can stop
@@ -269,7 +310,7 @@ func (bs *BoardState) tryRemove(ctx context.Context, args *RemoveArgs) *BoardSta
 		currentBatch = min(currentBatch, allowedToRemove)
 
 		{
-			nextRemoved := next.tryRemoveCandidates(ctx, candidates[:currentBatch])
+			nextRemoved := next.tryRemoveCandidates(ctx, candidates[:currentBatch], args.ProveOnly)
 			if nextRemoved == nil {
 				continue // try again
 			}
@@ -294,33 +335,49 @@ func (bs *BoardState) tryRemove(ctx context.Context, args *RemoveArgs) *BoardSta
 	return next
 }
 
+func (bs *BoardState) Solve(ctx context.Context) {
+	defer bs.checkIntegrity()
+	// capture the original editable board
+	editBoard := bs.board()
+	if bs.res.Action == solver.ActionSolve {
+		return
+	}
+	res := bs.solState.solver.Run(ctx, bs.board(), solver.ActionSolve, bs.solState.cache)
+	// capture all, including unsolved (those also contribute to the slow generation)
+	SlowBoards.Add(res)
+
+	if res.Status != solver.StatusSucceeded {
+		panic("cannot solve the board, which was proven before")
+	}
+
+	// revert back to the editable board
+	res.Input = editBoard
+	bs.res = res
+	bs.progress = bs.desiredLevelRange.shouldContinue(bs.solState.rand, editBoard, res)
+	// do not reset candidates, we did not change the board and candidates are still valid
+}
+
 // tryRemoveCandidates tries to remove a batch of indexes from the board, only once.
 // If it fails, it returns nil.
 // If successful, it returns a new state board
 // If level overflows, this method reverts back and returns Failed.
 // If batchSize is 1, the index is removed from the remained list.
-func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int) *BoardState {
+func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int, proveOnly bool) *BoardState {
 	defer bs.checkIntegrity()
-	if len(candidates) == 0 {
-		panic("candidates cannot be empty")
-	}
 
 	if boards.GetIntegrityChecks() {
 		res := bs.solState.solver.Run(ctx, bs.board(), solver.ActionProve, bs.solState.cache)
 		if res.Status != solver.StatusSucceeded {
 			panic("do not use invalid boards as an input here")
 		}
+		if bs.Complexity() != res.Complexity {
+			panic(fmt.Sprintf("complexity mismatch: %d != %d, board has already changed",
+				bs.Complexity(), res.Complexity))
+		}
 	}
 
-	for _, index := range candidates {
-		bs.board().Set(index, 0)
-	}
+	next := bs.tryCleanIndexes(ctx, candidates, proveOnly)
 
-	next, _ := newBoardState(ctx, bs.solState, bs.desiredLevelRange, bs.board())
-	// always restore the board to its original state
-	for _, index := range candidates {
-		bs.board().SetReadOnly(index, bs.solState.solution.Get(index))
-	}
 	if next != nil {
 		// if we overflowed the desired level, consider it a failure as well
 		if next.progress == AboveMaxLevel {
@@ -329,9 +386,6 @@ func (bs *BoardState) tryRemoveCandidates(ctx context.Context, candidates []int)
 	}
 	if next != nil {
 		// prove succeeded and we did not overflow the level
-		// if previous state had some of its candidates removed (because they lead to a failure),
-		// we should remove them from the new state as well.
-		next.candidates = next.candidates.Intersect(bs.candidates)
 		return next
 	}
 
@@ -373,15 +427,7 @@ func (bs *BoardState) RemoveVal(ctx context.Context, v values.Value, count int) 
 		vIndexes = vIndexes[:count]
 	}
 
-	for _, index := range vIndexes {
-		bs.board().Set(index, 0)
-	}
-	next, _ := newBoardState(ctx, bs.solState, bs.desiredLevelRange, bs.board())
-	// always restore the board to its original state
-	for _, index := range vIndexes {
-		bs.board().SetReadOnly(index, bs.solState.solution.Get(index))
-	}
-	return next
+	return bs.tryCleanIndexes(ctx, vIndexes, true)
 }
 
 type TopNArgs struct {
@@ -389,6 +435,7 @@ type TopNArgs struct {
 	TopN       int
 	FreeCells  int
 	SelectBest int
+	ProveOnly  bool
 }
 
 type TopNResult struct {
@@ -431,7 +478,7 @@ func TopN(ctx context.Context, args *TopNArgs) TopNResult {
 			// try the remained indexes one by one
 			nextPerCandidate.Reset()
 			for index := range bs.candidates.Indexes {
-				removed := bs.tryRemoveCandidates(ctx, []int{index})
+				removed := bs.tryRemoveCandidates(ctx, []int{index}, args.ProveOnly)
 				if removed == nil {
 					continue
 				}

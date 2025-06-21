@@ -6,12 +6,13 @@ import (
 )
 
 type runResult struct {
-	Status     Status         `json:"status"`
-	Count      int64          `json:"count"`
-	Complexity StepComplexity `json:"complexity"`
-	Error      error          `json:"error,omitempty"`
-	Steps      Steps          `json:"steps"`
-	Solutions  Solutions      `json:"-"`
+	Status         Status         `json:"status"`
+	Count          int64          `json:"count"`
+	Complexity     StepComplexity `json:"complexity"`
+	Error          error          `json:"error,omitempty"`
+	Steps          Steps          `json:"steps"`
+	Solutions      Solutions      `json:"-"`
+	RecursionDepth int8           `json:"recursion_depth,omitempty"`
 }
 
 func (rr *runResult) complete(status Status) *runResult {
@@ -63,4 +64,5 @@ func (rr *runResult) mergeStatsOnly(other *runResult) {
 	rr.Complexity += other.Complexity
 	rr.Steps.Merge(other.Steps)
 	rr.Solutions = rr.Solutions.With(other.Solutions)
+	rr.RecursionDepth = max(rr.RecursionDepth, other.RecursionDepth)
 }

@@ -8,18 +8,20 @@ import (
 )
 
 type runner struct {
-	action                Action
-	input                 *boards.Game
-	play                  *boards.Game
+	action     Action
+	input      *boards.Game
+	play       *boards.Game
+	algorithms []Algorithm
+	withSteps  bool
+	cache      *Cache
+
 	currentRecursionDepth int8
 	maxRecursionDepth     int8
-	algorithms            []Algorithm
-	withSteps             bool
-	cache                 *Cache
+	minRecursionDepth     int8
 }
 
 func (r *runner) newRunResult() *runResult {
-	rr := &runResult{}
+	rr := &runResult{RecursionDepth: r.currentRecursionDepth}
 	if r.withSteps {
 		rr.Steps = make(Steps)
 	}
@@ -27,7 +29,7 @@ func (r *runner) newRunResult() *runResult {
 }
 
 func (r *runner) run(ctx context.Context) *runResult {
-	if !r.Action().LevelRequested() || (r.maxRecursionDepth-r.currentRecursionDepth) < 2 {
+	if !r.Action().LevelRequested() || r.currentRecursionDepth != 0 || r.maxRecursionDepth < 2 {
 		return r.runAlgorithms(ctx, runAll)
 	}
 
@@ -39,12 +41,28 @@ func (r *runner) run(ctx context.Context) *runResult {
 
 	// For accurate leveling, use layer recursion: start with the recursion depth of current+1 and slowly
 	// increase it until we reach the max recursion or the board is solved.
-	maxRecursionOriginal := r.maxRecursionDepth
-	for maxRecursionCurrent := r.currentRecursionDepth + 1; maxRecursionCurrent <= maxRecursionOriginal; maxRecursionCurrent++ {
-		r.maxRecursionDepth = maxRecursionCurrent
+	originalMaxRD := r.maxRecursionDepth
+	startRD := max(r.currentRecursionDepth+1, r.minRecursionDepth)
+	if boards.GetIntegrityChecks() {
+		// if integrity checks are enabled, ignore min recursion depth here and start from 1 to confirm
+		// that the caller's call to set custom minRecursionDepth is correct
+		startRD = r.currentRecursionDepth + 1
+	}
+
+	for currentMaxRD := startRD; currentMaxRD <= originalMaxRD; currentMaxRD++ {
+		r.maxRecursionDepth = currentMaxRD
 		// since we already tried and applied non-recursive algos, we can start with recursion
 		teResult := r.runAlgorithms(ctx, startWithRecursion)
 		if teResult.Status != StatusUnknown {
+			if currentMaxRD < r.minRecursionDepth {
+				// With integrity checks, we ignore the minRecursionDepth and always start from 1, in order
+				// to confirm that the board is indeed unsolvable below that recursion. If it is solvable,
+				// then there is something wrong with the minRecursionDepth logic - it should not be set.
+				panic(fmt.Sprintf(
+					"minRecursionDepth of %d was provided but the board is solvable below this depth at %d",
+					r.minRecursionDepth, currentMaxRD))
+			}
+
 			// merge the pre-recursion stats into the recursive result
 			teResult.mergeStatsOnly(rr)
 			return teResult

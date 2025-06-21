@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"context"
+	"fmt"
 	"slices"
 
 	"github.com/nissimnatanov/des/go/internal/collections"
@@ -43,6 +45,24 @@ func (sbs *SortedBoardStates) Boards(yield func(*BoardState) bool) {
 	}
 }
 
+func (sbs *SortedBoardStates) SolveAll(ctx context.Context) {
+	if len(sbs.sorted) == 0 || sbs.sorted[0].Action() == solver.ActionSolve {
+		return
+	}
+	for _, bs := range sbs.sorted {
+		bs.Solve(ctx)
+	}
+	// before we sort, throw away the overflow boards
+	sbs.sorted = slices.DeleteFunc(sbs.sorted, func(bs *BoardState) bool {
+		return bs.Progress() == AboveMaxLevel
+	})
+
+	// now re-sort the boards
+	slices.SortFunc(sbs.sorted, func(a, b *BoardState) int {
+		return int(b.Complexity() - a.Complexity())
+	})
+}
+
 // Add adds a new board to the sorted list if it is not a duplicate.
 func (sbs *SortedBoardStates) Add(newBoard *BoardState) bool {
 	_, added := sbs.addInternal(newBoard, 0)
@@ -50,6 +70,12 @@ func (sbs *SortedBoardStates) Add(newBoard *BoardState) bool {
 }
 
 func (sbs *SortedBoardStates) addInternal(newBoard *BoardState, from int) (int, bool) {
+	if len(sbs.sorted) > 0 && sbs.sorted[0].Action() != newBoard.Action() {
+		// if the first board is below the current level, we cannot add any new boards
+		panic(fmt.Sprintf(
+			"cannot add a board with a different action to the sorted list: had %s, wanted %s",
+			sbs.sorted[0].Action(), newBoard.Action()))
+	}
 	if len(sbs.sorted) == sbs.maxSize {
 		if sbs.sorted[sbs.maxSize-1].Complexity() >= newBoard.Complexity() {
 			// do not add boards that are below the current min complexity if at capacity

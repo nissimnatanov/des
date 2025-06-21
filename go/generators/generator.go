@@ -103,14 +103,14 @@ func (g *Generator) Generate(ctx context.Context) []*solver.Result {
 		return g.generateSlow(ctx)
 	}
 
-	// cache degrades generation performance for fast boards
-	initState := g.newInitialBoardState(ctx, false)
 	count := g.count
 	if count == 0 {
 		count = 1 // default to 1 for fast generation
 	}
 	results := make([]*solver.Result, 0, count)
 	for len(results) < count && ctx.Err() == nil {
+		// cache degrades generation performance for fast boards
+		initState := g.newInitialBoardState(ctx, false)
 		bs := g.removeSingleValue(ctx, initState)
 		bs = g.generateFast(ctx, bs)
 		results = append(results, bs.Result())
@@ -162,11 +162,19 @@ func (g *Generator) tryGenerateFastOnce(ctx context.Context, initState *internal
 		BatchMaxToRemove: 15,
 		// first pass is usually needs to retry only once in hundreds of runs
 		BatchMaxTries: 3,
+		ProveOnly:     true, // we only want to prove the board is solvable
 	})
 	if bs == nil {
 		return nil, stage
 	}
+	// switch from prove only mode to a solve
+	bs.Solve(ctx)
 
+	if bs.Progress() == internal.AboveMaxLevel {
+		// once we moved from prove to solve, the level overflows, just throw it away
+		// for free cells of 45, it happens less than 2% of the time
+		return nil, stage
+	}
 	if bs.Progress() == internal.InRangeStop {
 		return bs, stage
 	}
@@ -177,6 +185,8 @@ func (g *Generator) tryGenerateFastOnce(ctx context.Context, initState *internal
 		BatchMinToRemove: 2,
 		BatchMaxToRemove: 4,
 		BatchMaxTries:    40,
+		// we need the level now
+		ProveOnly: false,
 	})
 	if bs == nil {
 		return nil, stage
@@ -187,7 +197,8 @@ func (g *Generator) tryGenerateFastOnce(ctx context.Context, initState *internal
 
 	stage++
 	// we have not reached the desired level yet, from this point remove one by one
-	bs = bs.RemoveOneByOne(ctx, solver.MaxFreeCellsForValidBoard)
+	// and from now we solve the board (and not just prove it)
+	bs = bs.RemoveOneByOne(ctx, solver.MaxFreeCellsForValidBoard, false)
 	if bs == nil {
 		return nil, stage
 	}
