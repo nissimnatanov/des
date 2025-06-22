@@ -195,7 +195,7 @@ func BenchmarkDarkEvil(b *testing.B) {
 }
 
 func BenchmarkNightmareOrBlackHole(b *testing.B) {
-	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole, 2)
+	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole, 10)
 }
 
 func runBenchmark(b *testing.B, min, max solver.Level, count int) {
@@ -217,7 +217,7 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 		OutputFile:    logFile,
 	}
 
-	r.Run(ctx)
+	r.Run()
 	defer r.Stop()
 
 	cmd := exec.Command("code", logFile)
@@ -241,7 +241,7 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 	for b.Loop() {
 		res := g.Generate(ctx)
 		if len(res) == 0 && ctx.Err() == nil {
-			b.Fatalf("failed to generate any result")
+			assert.Check(b, false, "failed to generate any result")
 		}
 		for ri, res := range res {
 			if res.Status != solver.StatusSucceeded {

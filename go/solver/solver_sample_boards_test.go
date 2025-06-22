@@ -202,4 +202,18 @@ var otherBoards = []testBoard{
 		expectedLevel: solver.LevelNightmare,
 		solution:      "64_9_812_73_5_71_3_4_5_6_8_92_8_5_23_9_7_6_4_13_6_8_92_1_5_7_412_75_43_9_6_8_5_9_46_7_81_23_97_12_8_43_56_4_3_5_1_6_9_2_87_286_7_3_54_1_9",
 	},
+	{
+		name:               "my board 16",
+		board:              "7E1B5E746A61G7C453C3A9D4C1A8C8A5B6E6A3A7I4",
+		expectedLevel:      solver.LevelNightmare,
+		expectedComplexity: 114620,
+		solution:           "73_4_9_5_6_18_2_52_9_1_3_8_7468_614_7_2_3_9_5_9_78_2_6_4531_6_1_38_95_4_2_7_45_2_3_17_86_9_2_87_54_9_61_3_1_4_5_62_39_78_3_9_6_7_8_1_2_5_4",
+	},
+	{
+		name:               "my board 17 (BlackHole)",
+		board:              "F7A3A6A9C5D2J258A3A2B8A6B8B6I3B1A918C3A8D92A5",
+		expectedLevel:      solver.LevelBlackHole,
+		expectedComplexity: 144157,
+		solution:           "9_1_8_4_5_6_72_32_67_93_1_4_58_5_4_3_28_7_9_1_6_6_7_4_3_1_2589_35_27_9_81_64_1_89_5_64_3_7_2_7_2_5_6_4_38_9_14_9182_5_6_37_83_6_1_7_924_5",
+	},
 }

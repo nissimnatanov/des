@@ -28,6 +28,9 @@ func (stages *GameStages) ReportBestComplexity(stage int, complexity int64) {
 	if complexity < 0 {
 		panic("negative complexity")
 	}
+	if complexity == 0 {
+		return
+	}
 	(*stages)[stage].TotalComplexity += complexity
 	(*stages)[stage].BestComplexity = max((*stages)[stage].BestComplexity, complexity)
 	(*stages)[stage].ComplexityCount++

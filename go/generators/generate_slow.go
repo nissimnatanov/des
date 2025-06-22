@@ -98,11 +98,9 @@ func (g *Generator) generateSlow(ctx context.Context) []*solver.Result {
 			}
 			stage := stages[si]
 			newFinal, newCandidates, bestComplexity := g.generateSlowStage(ctx, candidates, stage, g.count)
-			if bestComplexity > 0 {
-				// report the complexity of the candidates per stage
-				stageStats.ReportBestComplexity(si, int64(bestComplexity))
-			}
-			if newFinal.Size() == 0 && (newCandidates.Size() == 0 || si == len(stages)-1) {
+			// report the complexity of the candidates per stage, ignored if 0
+			stageStats.ReportBestComplexity(si, int64(bestComplexity))
+			if ctx.Err() != nil || newFinal.Size() == 0 && (newCandidates.Size() == 0 || si == len(stages)-1) {
 				// if we got no finals and we are at the last stage or no new candidates left,
 				// report this stage as empty
 				stageStats.Report(0, si)
@@ -182,6 +180,9 @@ func (g *Generator) generateSlowStage(
 		if !proveOnly {
 			// switching from prove to solve, update all candidates to solve
 			candidates.SolveAll(ctx)
+			if ctx.Err() != nil {
+				return nil, nil, 0
+			}
 		}
 	case proveOnly:
 		if candidates.Get(0).Action() != solver.ActionProve {
@@ -199,9 +200,7 @@ func (g *Generator) generateSlowStage(
 			SelectBest: stage.SelectBest,
 			ProveOnly:  proveOnly,
 		})
-		bestComplexity = updateBestComplexityFromBest(bestComplexity, topN.Ready)
-		bestComplexity = updateBestComplexityFromBest(bestComplexity, topN.Next)
-		return topN.Ready, topN.Next, bestComplexity
+		return topN.Ready, topN.Next, topN.BestComplexity
 	}
 
 	next = internal.NewSortedBoardStates(stage.SelectBest)
@@ -214,7 +213,7 @@ func (g *Generator) generateSlowStage(
 			bs.Solve(ctx)
 			if bs.Progress().InRange() {
 				ready.Add(bs)
-				bestComplexity = updateBestComplexity(bestComplexity, bs)
+				bestComplexity = internal.MaxComplexity(bestComplexity, bs)
 			}
 			// throw this candidate away, it is below the desired level
 			continue
@@ -227,14 +226,14 @@ func (g *Generator) generateSlowStage(
 				}
 				// even if we about to throw this candidate away, we still want to report
 				// its best complexity
-				bestComplexity = updateBestComplexity(bestComplexity, bs)
+				bestComplexity = internal.MaxComplexity(bestComplexity, bs)
 			}
 			continue
 		}
 		for range stage.GeneratePerCandidate {
 			if bs.Candidates().Size() == 0 {
 				// no more candidates to remove, we can stop
-				bestComplexity = updateBestComplexity(bestComplexity, bs)
+				bestComplexity = internal.MaxComplexity(bestComplexity, bs)
 				bs.Solve(ctx)
 				if bs.Progress().InRange() {
 					ready.Add(bs)
@@ -244,7 +243,7 @@ func (g *Generator) generateSlowStage(
 			if bs.Progress() == internal.InRangeStop {
 				// we can stop with this candidate if it is already at the desired level
 				ready.Add(bs)
-				bestComplexity = updateBestComplexity(bestComplexity, bs)
+				bestComplexity = internal.MaxComplexity(bestComplexity, bs)
 				break
 			}
 			var bsForked *internal.BoardState
@@ -264,7 +263,7 @@ func (g *Generator) generateSlowStage(
 				// try another removal combination of the same board
 				continue
 			}
-			bestComplexity = updateBestComplexity(bestComplexity, bsForked)
+			bestComplexity = internal.MaxComplexity(bestComplexity, bsForked)
 			if bsForked.Progress() == internal.InRangeStop {
 				// capture if we have reached the desired level, or if we are at level but
 				// also the last stage
@@ -275,18 +274,4 @@ func (g *Generator) generateSlowStage(
 		}
 	}
 	return
-}
-
-func updateBestComplexity(bestComplexity solver.StepComplexity, bs *internal.BoardState) solver.StepComplexity {
-	if bs == nil {
-		return bestComplexity
-	}
-	return max(bestComplexity, bs.Complexity())
-}
-
-func updateBestComplexityFromBest(bestComplexity solver.StepComplexity, sbs *internal.SortedBoardStates) solver.StepComplexity {
-	if sbs == nil || sbs.Size() == 0 {
-		return bestComplexity
-	}
-	return updateBestComplexity(bestComplexity, sbs.Get(0))
 }

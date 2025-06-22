@@ -13,8 +13,10 @@ type Reporter struct {
 	Duration      time.Duration
 	OutputFile    string            // if empty, will use os.Stdout
 	LogExtra      func(w io.Writer) // optional function to log extra stats at the same time
+	start         time.Time
 	cancel        context.CancelFunc
 	outFile       *os.File
+	done          chan struct{} // used to signal when the reporter is done
 	extraOut      chan string
 }
 
@@ -22,12 +24,15 @@ func (r *Reporter) LogNow(s string) {
 	r.extraOut <- s
 }
 
-func (r *Reporter) Run(ctx context.Context) error {
+func (r *Reporter) Run() error {
 	if r.extraOut != nil {
 		panic("reporter already running")
 	}
+	r.start = time.Now()
+	r.done = make(chan struct{})
 	r.extraOut = make(chan string)
-	ctx, r.cancel = context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(context.Background())
+	r.cancel = cancel
 	if r.OutputFile != "" {
 		f, err := os.OpenFile(r.OutputFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 		if err != nil {
@@ -60,7 +65,7 @@ func (r *Reporter) Run(ctx context.Context) error {
 			}
 		}
 		r.report()
-		close(r.extraOut)
+		close(r.done)
 	}()
 	return nil
 }
@@ -77,22 +82,26 @@ func (r *Reporter) report() {
 	if r.LogExtra != nil {
 		r.LogExtra(w)
 	}
-	fmt.Fprintf(w, "^^^ report time: %s ^^^\n", time.Now().Format(time.RFC3339))
+	fmt.Fprintf(w,
+		"^^^ elapsed: %s, report time: %s ^^^\n",
+		time.Since(r.start).Round(time.Second),
+		time.Now().Format(time.RFC3339))
 	if r.outFile != nil {
 		r.outFile.Sync()
 	}
 }
 
 func (r *Reporter) Stop() {
-	if r.extraOut == nil {
+	if r.done == nil {
 		panic("reporter not running")
 	}
 	r.cancel()
-	<-r.extraOut
+	<-r.done
 	if r.outFile != nil {
 		r.outFile.Sync()
 		r.outFile.Close()
 	}
+	close(r.extraOut)
 }
 
 func ReportStats(w io.Writer) {

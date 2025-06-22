@@ -107,7 +107,7 @@ func generate(f *GenerateFlags) {
 			fmt.Fprintf(w, "Generated %d boards so far.\n", generatedSoFar.Load())
 		},
 	}
-	r.Run(ctx)
+	r.Run()
 	defer r.Stop()
 
 	res := g.Generate(ctx)

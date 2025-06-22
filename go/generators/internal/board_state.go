@@ -347,7 +347,11 @@ func (bs *BoardState) Solve(ctx context.Context) {
 	SlowBoards.Add(res)
 
 	if res.Status != solver.StatusSucceeded {
-		panic("cannot solve the board, which was proven before")
+		if ctx.Err() == nil {
+			panic("cannot solve the board, which was proven before")
+		} else {
+			return
+		}
 	}
 
 	// revert back to the editable board
@@ -439,8 +443,9 @@ type TopNArgs struct {
 }
 
 type TopNResult struct {
-	Next  *SortedBoardStates
-	Ready *SortedBoardStates
+	Next           *SortedBoardStates
+	Ready          *SortedBoardStates
+	BestComplexity solver.StepComplexity
 }
 
 func TopN(ctx context.Context, args *TopNArgs) TopNResult {
@@ -482,6 +487,7 @@ func TopN(ctx context.Context, args *TopNArgs) TopNResult {
 				if removed == nil {
 					continue
 				}
+				result.BestComplexity = MaxComplexity(result.BestComplexity, removed)
 				if removed.progress == InRangeStop {
 					// we reached the desired level, return it as a ready board
 					result.Ready.Add(removed)
