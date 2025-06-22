@@ -94,7 +94,7 @@ var otherBoards = []testBoard{
 		name:               "3",
 		board:              "B4B7C5D9D1A6B5B6B1A8A4A38F1D2E37D25B89C63E29B",
 		solution:           "8_9_43_5_76_1_2_56_3_2_1_97_8_4_7_12_68_4_53_9_62_5_19_83_47_389_7_4_6_2_5_14_7_1_5_23_8_9_6_9_378_6_1_4_252_4_897_5_1_631_5_6_4_3_297_8_",
-		expectedLevel:      solver.LevelNightmare,
+		expectedLevel:      solver.LevelDarkEvil,
 		expectedComplexity: 43141,
 	},
 	{
@@ -175,7 +175,7 @@ var otherBoards = []testBoard{
 	{
 		name:          "my board 11",
 		board:         "A67D3A2A5G8B6A7F92A81D879B1B63F6B8A2I9A3A2B67A",
-		expectedLevel: solver.LevelNightmare,
+		expectedLevel: solver.LevelDarkEvil,
 		solution:      "4_679_2_1_5_38_21_58_7_3_4_9_6_3_89_4_65_71_2_6_7_4_5_923_815_2_3_1_8796_4_19_8_634_2_5_7_9_4_67_5_81_23_7_5_2_3_1_6_8_4_98_31_24_9_675_",
 	},
 	{

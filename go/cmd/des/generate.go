@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"sync/atomic"
@@ -67,45 +68,6 @@ func ParseGenerateFlags(args []string) *GenerateFlags {
 
 var generatedSoFar atomic.Int32
 
-func reportStats() {
-	gameStats := stats.Stats.Game().String()
-	solStats := stats.Stats.Solution().String()
-	cacheStats := stats.Stats.Cache().String()
-	fmt.Printf("Generated %d boards so far.\n", generatedSoFar.Load())
-	fmt.Println(gameStats)
-	fmt.Println(solStats)
-	fmt.Println(cacheStats)
-}
-
-func runStatsReporter(ctx context.Context, duration time.Duration, skipOnSilence int) chan struct{} {
-	done := make(chan struct{})
-	go func() {
-		ticker := time.NewTicker(duration)
-		defer ticker.Stop()
-		skipped := 0
-		prevGenerated := int32(0)
-		for ctx.Err() == nil {
-			select {
-			case <-ctx.Done():
-			case <-ticker.C:
-				nowGenerated := generatedSoFar.Load()
-				if nowGenerated == prevGenerated {
-					skipped++
-					if skipped < skipOnSilence {
-						continue
-					}
-					skipped = 0
-				}
-				prevGenerated = nowGenerated
-				reportStats()
-			}
-		}
-		reportStats()
-		close(done)
-	}()
-	return done
-}
-
 func generate(f *GenerateFlags) {
 	if f.MinLevel > f.MaxLevel {
 		fmt.Fprintf(os.Stderr, "Min level %s is greater than max level %s\n", f.MinLevel, f.MaxLevel)
@@ -138,7 +100,16 @@ func generate(f *GenerateFlags) {
 	defer cancel()
 
 	start := time.Now()
-	statsReported := runStatsReporter(ctx, time.Minute, 10)
+	r := stats.Reporter{
+		SkipOnSilence: 10,
+		Duration:      time.Minute,
+		LogExtra: func(w io.Writer) {
+			fmt.Fprintf(w, "Generated %d boards so far.\n", generatedSoFar.Load())
+		},
+	}
+	r.Run(ctx)
+	defer r.Stop()
+
 	res := g.Generate(ctx)
 	switch len(res) {
 	case 0:
@@ -155,7 +126,6 @@ func generate(f *GenerateFlags) {
 	}
 	// stop the stats reporter and wait for it to report last batch
 	cancel()
-	<-statsReported
 
 	fmt.Printf("Generation completed successfully in %s.\n", time.Since(start).Round(time.Millisecond))
 }

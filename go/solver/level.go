@@ -64,7 +64,7 @@ const (
 	// many recursive steps are needed
 	LevelEvilBar LevelComplexityBar = 10000
 	// aligned with the second recursion step complexity
-	LevelDarkEvilBar LevelComplexityBar = 40000
+	LevelDarkEvilBar LevelComplexityBar = 50000
 	// seen only few puzzles with complexity above this level
 	LevelNightmareBar LevelComplexityBar = 120000
 )

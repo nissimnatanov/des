@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/nissimnatanov/des/go/boards"
@@ -33,12 +34,12 @@ func (s *slowSolveTracker) sort() {
 	})
 }
 
-func (s *slowSolveTracker) Log() []string {
+func (s *slowSolveTracker) Log() string {
 	logs := make([]string, 0, len(s.slow))
 	for _, res := range s.slow {
 		logs = append(logs,
 			fmt.Sprintf("{ Board: %s, Elapsed: %s, Complexity: %d, Status: %s }",
 				boards.Serialize(res.Input), res.Elapsed.Round(time.Millisecond/10), res.Complexity, res.Status))
 	}
-	return logs
+	return fmt.Sprintf("Slow boards: {\n  %s\n}", strings.Join(logs, "\n  "))
 }

@@ -3,8 +3,11 @@ package generators_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"runtime/debug"
 	"syscall"
 	"testing"
@@ -192,7 +195,7 @@ func BenchmarkDarkEvil(b *testing.B) {
 }
 
 func BenchmarkNightmareOrBlackHole(b *testing.B) {
-	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole, 5)
+	runBenchmark(b, solver.LevelNightmare, solver.LevelBlackHole, 2)
 }
 
 func runBenchmark(b *testing.B, min, max solver.Level, count int) {
@@ -200,6 +203,26 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 	ctx := b.Context()
 	ctx, sygCancel := signal.NotifyContext(ctx, os.Interrupt, os.Kill, syscall.SIGTERM)
 	defer sygCancel()
+
+	// benchmark logger truncates output after 10 lines, open a tmp log file instead
+	// and immediately show it in vscode
+	logFile := filepath.Join(os.TempDir(),
+		fmt.Sprintf("bench_%s.log", time.Now().Format("20060102_150405")))
+
+	b.Log("Log File: ", logFile)
+
+	r := stats.Reporter{
+		SkipOnSilence: 1,
+		Duration:      time.Second * 10, // report every 10 seconds
+		OutputFile:    logFile,
+	}
+
+	r.Run(ctx)
+	defer r.Stop()
+
+	cmd := exec.Command("code", logFile)
+	err := cmd.Run()
+	assert.Check(b, err, "failed to open log file with vscode")
 
 	// force stop to print stats after 8 minutes
 	var cancel context.CancelFunc
@@ -231,8 +254,6 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 	}
 	// log the slow boards
 	slowBoards := internal.SlowBoards.Log()
-	b.Log(slowBoards)
-	b.Log(stats.Stats.Solution().String())
-	b.Log(stats.Stats.Cache().String())
-	b.Log(stats.Stats.Game().String())
+	r.LogNow(slowBoards)
+	b.Log("Done")
 }

@@ -20,7 +20,7 @@ type slowStage struct {
 	ProveOnlyLevelCap solver.Level
 }
 
-var slowStages = []slowStage{
+var slowStagesEvil = []slowStage{
 	// at first we only have one candidate (e.g. solution), we can create many best forks
 	{FreeCells: 42, MinToRemove: 10, MaxToRemove: 15, GeneratePerCandidate: 10, SelectBest: 10,
 		ProveOnlyLevelCap: solver.LevelEvil},
@@ -34,6 +34,15 @@ var slowStages = []slowStage{
 		ProveOnlyLevelCap: solver.LevelUnknown},
 	{FreeCells: solver.MaxFreeCellsForValidBoard, TopN: 20, SelectBest: 20,
 		ProveOnlyLevelCap: solver.LevelUnknown},
+}
+
+var slowStagesNightmare = []slowStage{
+	// at first we only have one candidate (e.g. solution), we can create many best forks
+	{FreeCells: 49, MinToRemove: 10, MaxToRemove: 15, GeneratePerCandidate: 10, SelectBest: 10},
+	{FreeCells: 51, TopN: 10, SelectBest: 50},
+	{FreeCells: 55, MinToRemove: 2, MaxToRemove: 3, GeneratePerCandidate: 10, SelectBest: 40},
+	{FreeCells: 60, MinToRemove: 1, MaxToRemove: 3, GeneratePerCandidate: 10, SelectBest: 30},
+	{FreeCells: solver.MaxFreeCellsForValidBoard, TopN: 20, SelectBest: 20},
 }
 
 func hasEnoughFinalCandidates(finalCandidates *internal.SortedBoardStates, requestedCount int) bool {
@@ -60,7 +69,9 @@ func (g *Generator) generateSlow(ctx context.Context) []*solver.Result {
 	// by default, replace the solution every 10 tries, but with the higher levels
 	// prefer to keep it longer to benefit more from the cache
 	replaceSolutionEvery := 1
+	stages := slowStagesEvil
 	if g.lr.Min >= solver.LevelNightmare {
+		stages = slowStagesNightmare
 		replaceSolutionEvery = 5
 	} else if g.lr.Min >= solver.LevelDarkEvil {
 		replaceSolutionEvery = 3
@@ -79,19 +90,19 @@ func (g *Generator) generateSlow(ctx context.Context) []*solver.Result {
 		candidates.Add(startState)
 
 		// enhance the candidates to the desired level
-		for si := 0; si < len(slowStages) && ctx.Err() == nil; si++ {
+		for si := 0; si < len(stages) && ctx.Err() == nil; si++ {
 			stageStats.ReportCandidateCount(si, candidates.Size())
 			if candidates.Size() == 0 {
 				// stop after reporting the empty stage
 				break
 			}
-			stage := slowStages[si]
+			stage := stages[si]
 			newFinal, newCandidates, bestComplexity := g.generateSlowStage(ctx, candidates, stage, g.count)
 			if bestComplexity > 0 {
 				// report the complexity of the candidates per stage
 				stageStats.ReportBestComplexity(si, int64(bestComplexity))
 			}
-			if newFinal.Size() == 0 && (newCandidates.Size() == 0 || si == len(slowStages)-1) {
+			if newFinal.Size() == 0 && (newCandidates.Size() == 0 || si == len(stages)-1) {
 				// if we got no finals and we are at the last stage or no new candidates left,
 				// report this stage as empty
 				stageStats.Report(0, si)
