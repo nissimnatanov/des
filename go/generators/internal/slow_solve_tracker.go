@@ -14,11 +14,16 @@ const MaxSlowSolveBoards = 5
 
 var SlowBoards slowSolveTracker
 
+const SlowBoardThreshold = time.Millisecond * 10
+
 type slowSolveTracker struct {
 	slow []*solver.Result
 }
 
 func (s *slowSolveTracker) Add(res *solver.Result) {
+	if res.Elapsed < SlowBoardThreshold {
+		return
+	}
 	if len(s.slow) < MaxSlowSolveBoards {
 		s.slow = append(s.slow, res)
 		s.sort()
@@ -32,6 +37,10 @@ func (s *slowSolveTracker) sort() {
 	slices.SortFunc(s.slow, func(a, b *solver.Result) int {
 		return int(b.Elapsed - a.Elapsed)
 	})
+}
+
+func (s *slowSolveTracker) HasLog() bool {
+	return len(s.slow) > 0
 }
 
 func (s *slowSolveTracker) Log() string {

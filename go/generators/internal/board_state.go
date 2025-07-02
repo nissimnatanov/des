@@ -434,6 +434,12 @@ func (bs *BoardState) RemoveVal(ctx context.Context, v values.Value, count int) 
 	return bs.tryCleanIndexes(ctx, vIndexes, true)
 }
 
+type Results struct {
+	Ready          *SortedBoardStates
+	Next           *SortedBoardStates
+	BestComplexity solver.StepComplexity
+}
+
 type TopNArgs struct {
 	In         *SortedBoardStates
 	TopN       int
@@ -442,17 +448,11 @@ type TopNArgs struct {
 	ProveOnly  bool
 }
 
-type TopNResult struct {
-	Next           *SortedBoardStates
-	Ready          *SortedBoardStates
-	BestComplexity solver.StepComplexity
-}
-
-func TopN(ctx context.Context, args *TopNArgs) TopNResult {
+func TopN(ctx context.Context, args *TopNArgs) Results {
 	if args.In == nil || args.In.Size() == 0 {
 		panic("In must be provided for TopN")
 	}
-	result := TopNResult{
+	results := Results{
 		Next:  NewSortedBoardStates(args.SelectBest),
 		Ready: NewSortedBoardStates(args.SelectBest),
 	}
@@ -472,11 +472,11 @@ func TopN(ctx context.Context, args *TopNArgs) TopNResult {
 				continue
 			case bs.progress == InRangeStop:
 				// reached the level
-				result.Ready.Add(bs)
+				results.Ready.Add(bs)
 				continue
 			case bs.board().FreeCellCount() >= args.FreeCells:
 				// reached the desired free cell
-				result.Next.Add(bs)
+				results.Next.Add(bs)
 				continue
 			}
 
@@ -487,10 +487,10 @@ func TopN(ctx context.Context, args *TopNArgs) TopNResult {
 				if removed == nil {
 					continue
 				}
-				result.BestComplexity = MaxComplexity(result.BestComplexity, removed)
+				results.BestComplexity = MaxComplexity(results.BestComplexity, removed)
 				if removed.progress == InRangeStop {
 					// we reached the desired level, return it as a ready board
-					result.Ready.Add(removed)
+					results.Ready.Add(removed)
 					continue
 				}
 				nextPerCandidate.Add(removed)
@@ -499,7 +499,7 @@ func TopN(ctx context.Context, args *TopNArgs) TopNResult {
 			if nextPerCandidate.Size() == 0 && bs.progress == InRangeKeepGoing {
 				// if the board in range and we could not enhance it further, capture as ready
 				bs.progress = InRangeStop
-				result.Ready.Add(bs)
+				results.Ready.Add(bs)
 			}
 			for nbs := range nextPerCandidate.Boards {
 				// if we tried to remove the candidate index from parent and it lead to a failure,
@@ -508,5 +508,5 @@ func TopN(ctx context.Context, args *TopNArgs) TopNResult {
 			}
 		}
 	}
-	return result
+	return results
 }

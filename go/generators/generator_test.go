@@ -253,7 +253,9 @@ func runBenchmark(b *testing.B, min, max solver.Level, count int) {
 		}
 	}
 	// log the slow boards
-	slowBoards := internal.SlowBoards.Log()
-	r.LogNow(slowBoards)
+	if internal.SlowBoards.HasLog() {
+		slowBoards := internal.SlowBoards.Log()
+		r.LogNow(slowBoards)
+	}
 	b.Log("Done")
 }

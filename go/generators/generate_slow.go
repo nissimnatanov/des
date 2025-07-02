@@ -9,42 +9,6 @@ import (
 	"github.com/nissimnatanov/des/go/solver"
 )
 
-type slowStage struct {
-	GeneratePerCandidate int // how many candidates to fork from each
-	SelectBest           int
-	FreeCells            int
-	MinToRemove          int
-	MaxToRemove          int
-	// TopN means we are interested in the top N sub-candidates for each candidate
-	TopN              int
-	ProveOnlyLevelCap solver.Level
-}
-
-var slowStagesEvil = []slowStage{
-	// at first we only have one candidate (e.g. solution), we can create many best forks
-	{FreeCells: 42, MinToRemove: 10, MaxToRemove: 15, GeneratePerCandidate: 10, SelectBest: 10,
-		ProveOnlyLevelCap: solver.LevelEvil},
-	{FreeCells: 49, MinToRemove: 2, MaxToRemove: 5, GeneratePerCandidate: 10, SelectBest: 100,
-		ProveOnlyLevelCap: solver.LevelEvil},
-	{FreeCells: 51, TopN: 10, SelectBest: 50,
-		ProveOnlyLevelCap: solver.LevelDarkEvil},
-	{FreeCells: 55, MinToRemove: 2, MaxToRemove: 3, GeneratePerCandidate: 10, SelectBest: 40,
-		ProveOnlyLevelCap: solver.LevelNightmare},
-	{FreeCells: 60, MinToRemove: 1, MaxToRemove: 3, GeneratePerCandidate: 10, SelectBest: 30,
-		ProveOnlyLevelCap: solver.LevelUnknown},
-	{FreeCells: solver.MaxFreeCellsForValidBoard, TopN: 20, SelectBest: 20,
-		ProveOnlyLevelCap: solver.LevelUnknown},
-}
-
-var slowStagesNightmare = []slowStage{
-	// at first we only have one candidate (e.g. solution), we can create many best forks
-	{FreeCells: 49, MinToRemove: 10, MaxToRemove: 15, GeneratePerCandidate: 10, SelectBest: 10},
-	{FreeCells: 51, TopN: 10, SelectBest: 50},
-	{FreeCells: 55, MinToRemove: 2, MaxToRemove: 3, GeneratePerCandidate: 10, SelectBest: 40},
-	{FreeCells: 60, MinToRemove: 1, MaxToRemove: 3, GeneratePerCandidate: 10, SelectBest: 30},
-	{FreeCells: solver.MaxFreeCellsForValidBoard, TopN: 20, SelectBest: 20},
-}
-
 func hasEnoughFinalCandidates(finalCandidates *internal.SortedBoardStates, requestedCount int) bool {
 	if requestedCount <= 0 {
 		return finalCandidates.Size() > 0
@@ -69,9 +33,8 @@ func (g *Generator) generateSlow(ctx context.Context) []*solver.Result {
 	// by default, replace the solution every 10 tries, but with the higher levels
 	// prefer to keep it longer to benefit more from the cache
 	replaceSolutionEvery := 1
-	stages := slowStagesEvil
+	stages := slowStages
 	if g.lr.Min >= solver.LevelNightmare {
-		stages = slowStagesNightmare
 		replaceSolutionEvery = 5
 	} else if g.lr.Min >= solver.LevelDarkEvil {
 		replaceSolutionEvery = 3
@@ -85,8 +48,7 @@ func (g *Generator) generateSlow(ctx context.Context) []*solver.Result {
 		tries++
 
 		candidates.Reset()
-		startState := initState
-		startState = g.removeSingleValue(ctx, initState)
+		startState := g.removeSingleValue(ctx, initState)
 		candidates.Add(startState)
 
 		// enhance the candidates to the desired level
@@ -97,25 +59,25 @@ func (g *Generator) generateSlow(ctx context.Context) []*solver.Result {
 				break
 			}
 			stage := stages[si]
-			newFinal, newCandidates, bestComplexity := g.generateSlowStage(ctx, candidates, stage, g.count)
+			results := g.generateSlowStage(ctx, candidates, stage, g.count)
 			// report the complexity of the candidates per stage, ignored if 0
-			stageStats.ReportBestComplexity(si, int64(bestComplexity))
-			if ctx.Err() != nil || newFinal.Size() == 0 && (newCandidates.Size() == 0 || si == len(stages)-1) {
+			stageStats.ReportBestComplexity(si, int64(results.BestComplexity))
+			if ctx.Err() != nil || results.Ready.Size() == 0 && (results.Next.Size() == 0 || si == len(stages)-1) {
 				// if we got no finals and we are at the last stage or no new candidates left,
 				// report this stage as empty
 				stageStats.Report(0, si)
 				break
 			}
 			if g.onNewResult != nil {
-				for _, res := range newFinal.Results() {
+				for _, res := range results.Ready.Results() {
 					g.onNewResult(res)
 				}
 			}
-			finalCandidates.AddAll(newFinal)
-			if newFinal.Size() > 0 {
-				stageStats.Report(newFinal.Size(), si)
+			finalCandidates.AddAll(results.Ready)
+			if results.Ready.Size() > 0 {
+				stageStats.Report(results.Ready.Size(), si)
 			}
-			candidates = newCandidates
+			candidates = results.Next
 			if hasEnoughFinalCandidates(finalCandidates, g.count) {
 				break
 			}
@@ -162,13 +124,9 @@ func (g *Generator) generateSlow(ctx context.Context) []*solver.Result {
 func (g *Generator) generateSlowStage(
 	ctx context.Context,
 	candidates *internal.SortedBoardStates,
-	stage slowStage,
+	stage stage,
 	maxReady int,
-) (
-	ready *internal.SortedBoardStates,
-	next *internal.SortedBoardStates,
-	bestComplexity solver.StepComplexity,
-) {
+) internal.Results {
 	if stage.SelectBest <= 0 {
 		panic("slow stage must have SelectBest > 0")
 	}
@@ -181,7 +139,7 @@ func (g *Generator) generateSlowStage(
 			// switching from prove to solve, update all candidates to solve
 			candidates.SolveAll(ctx)
 			if ctx.Err() != nil {
-				return nil, nil, 0
+				return internal.Results{}
 			}
 		}
 	case proveOnly:
@@ -200,11 +158,13 @@ func (g *Generator) generateSlowStage(
 			SelectBest: stage.SelectBest,
 			ProveOnly:  proveOnly,
 		})
-		return topN.Ready, topN.Next, topN.BestComplexity
+		return topN
 	}
 
-	next = internal.NewSortedBoardStates(stage.SelectBest)
-	ready = internal.NewSortedBoardStates(maxReady)
+	next := internal.NewSortedBoardStates(stage.SelectBest)
+	ready := internal.NewSortedBoardStates(maxReady)
+	var bestComplexity solver.StepComplexity
+
 	// refine the candidates to the desired level
 	for bs := range candidates.Boards {
 		switch bs.Candidates().Size() {
@@ -273,5 +233,9 @@ func (g *Generator) generateSlowStage(
 			}
 		}
 	}
-	return
+	return internal.Results{
+		Ready:          ready,
+		Next:           next,
+		BestComplexity: bestComplexity,
+	}
 }

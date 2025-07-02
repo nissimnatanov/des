@@ -8,6 +8,11 @@ import (
 
 var slowSolve = []testBoard{
 	{
+		// 21037 ns
+		board:    "7C9A3A4J917B82B39E5A7A5C1B4A1G5D7F8C41B2B8A",
+		expected: solver.StatusMoreThanOneSolution,
+	},
+	{
 		// 70508 ns
 		board:         "71A3B6B4A9A6C1A56A4A9B6A3B12E2B1D2B3A9C7A1D2B93D9A1C34A",
 		expected:      solver.StatusSucceeded,
@@ -50,5 +55,5 @@ var slowSolve = []testBoard{
 // start: 5876	    196460 ns/op	   42394 B/op	     318 allocs/op
 
 func BenchmarkSlowSolve(b *testing.B) {
-	benchRun(b, solver.ActionSolve, slowSolve[1:2])
+	benchRun(b, solver.ActionSolve, slowSolve[:])
 }
